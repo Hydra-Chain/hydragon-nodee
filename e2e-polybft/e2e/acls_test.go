@@ -1,9 +1,10 @@
 package e2e
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/e2e-polybft/framework"

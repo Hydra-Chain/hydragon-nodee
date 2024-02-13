@@ -1,9 +1,10 @@
 package polybft
 
 import (
-	"fmt"
 	"math/big"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
@@ -241,6 +242,7 @@ func (m *systemStateMock) GetEpoch() (uint64, error) {
 		return epochNumber, nil
 	} else if len(args) == 2 {
 		epochNumber, _ := args.Get(0).(uint64)
+
 		err, ok := args.Get(1).(error)
 		if ok {
 			return epochNumber, err
@@ -259,6 +261,7 @@ func (s *systemStateMock) GetValidatorBlsKey(addr types.Address) (*bls.PublicKey
 func (s *systemStateMock) GetVotingPowerExponent() (*BigNumDecimal, error) {
 	args := s.Called()
 	exp, _ := args.Get(0).(*BigNumDecimal)
+
 	var err error
 	if args.Get(1) != nil {
 		err, _ = args.Get(1).(error)
@@ -270,6 +273,7 @@ func (s *systemStateMock) GetVotingPowerExponent() (*BigNumDecimal, error) {
 func (s *systemStateMock) GetBaseReward() (*BigNumDecimal, error) {
 	args := s.Called()
 	reward, _ := args.Get(0).(*BigNumDecimal)
+
 	var err error
 	if args.Get(1) != nil {
 		err, _ = args.Get(1).(error)
@@ -280,7 +284,9 @@ func (s *systemStateMock) GetBaseReward() (*BigNumDecimal, error) {
 
 func (s *systemStateMock) GetStakedBalance() (*big.Int, error) {
 	args := s.Called()
+
 	balance, _ := args.Get(0).(*big.Int)
+
 	var err error
 	if args.Get(1) != nil {
 		err, _ = args.Get(1).(error)

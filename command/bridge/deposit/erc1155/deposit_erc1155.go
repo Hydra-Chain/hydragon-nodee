@@ -1,9 +1,10 @@
 package erc1155
 
 import (
-	"fmt"
 	"math/big"
 	"strings"
+
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/umbracle/ethgo"

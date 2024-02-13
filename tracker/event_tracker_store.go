@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	hcf "github.com/hashicorp/go-hclog"

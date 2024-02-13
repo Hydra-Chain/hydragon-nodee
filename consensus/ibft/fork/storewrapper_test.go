@@ -3,10 +3,11 @@ package fork
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/ibft/signer"
 	testHelper "github.com/0xPolygon/polygon-edge/helper/tests"

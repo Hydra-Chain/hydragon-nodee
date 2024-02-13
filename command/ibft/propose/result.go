@@ -2,6 +2,7 @@ package propose
 
 import (
 	"bytes"
+
 	"fmt"
 )
 

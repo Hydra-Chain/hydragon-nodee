@@ -1,12 +1,13 @@
 package property
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"

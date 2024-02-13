@@ -1,8 +1,9 @@
 package stakemanager
 
 import (
-	"fmt"
 	"os"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	rootHelper "github.com/0xPolygon/polygon-edge/command/rootchain/helper"

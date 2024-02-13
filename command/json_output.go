@@ -2,8 +2,9 @@ package command
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
+
+	"fmt"
 )
 
 // cliOutput implements OutputFormatter interface by printing the output into std out in JSON format

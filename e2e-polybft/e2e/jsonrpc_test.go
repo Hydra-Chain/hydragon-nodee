@@ -1,9 +1,10 @@
 package e2e
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
+
+	"fmt"
 
 	"github.com/stretchr/testify/require"
 	"github.com/umbracle/ethgo"

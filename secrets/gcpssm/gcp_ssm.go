@@ -2,8 +2,9 @@ package gcpssm
 
 import (
 	"context"
-	"fmt"
 	"os"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/secrets"
 	"github.com/hashicorp/go-hclog"

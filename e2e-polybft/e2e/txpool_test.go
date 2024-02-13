@@ -1,11 +1,12 @@
 package e2e
 
 import (
-	"fmt"
 	"math/big"
 	"sync"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

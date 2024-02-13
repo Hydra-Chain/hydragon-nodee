@@ -1,8 +1,9 @@
 package jsonrpc
 
 import (
-	"fmt"
 	"strconv"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/types"
 )

@@ -2,9 +2,10 @@ package itrie
 
 import (
 	"errors"
-	"fmt"
 	"hash"
 	"sync"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/umbracle/fastrlp"
@@ -117,6 +118,7 @@ func (t *Txn) Hash() ([]byte, error) {
 		}
 	} else {
 		tmp := val.MarshalTo(nil)
+
 		h.hash.Reset()
 		h.hash.Write(tmp)
 

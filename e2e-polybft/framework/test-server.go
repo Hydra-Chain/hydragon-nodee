@@ -2,7 +2,6 @@ package framework
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"math/big"
 	"strconv"
@@ -10,6 +9,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	rootHelper "github.com/0xPolygon/polygon-edge/command/rootchain/helper"

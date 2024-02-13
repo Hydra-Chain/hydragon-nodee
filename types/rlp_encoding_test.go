@@ -1,10 +1,11 @@
 package types
 
 import (
-	"fmt"
 	"math/big"
 	"reflect"
 	"testing"
+
+	"fmt"
 
 	"github.com/umbracle/fastrlp"
 

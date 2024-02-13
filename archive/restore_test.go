@@ -3,10 +3,11 @@ package archive
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
 	"github.com/0xPolygon/polygon-edge/helper/progress"

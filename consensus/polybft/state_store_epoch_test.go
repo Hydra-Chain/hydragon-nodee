@@ -1,9 +1,10 @@
 package polybft
 
 import (
-	"fmt"
 	"sync"
 	"testing"
+
+	"fmt"
 
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
@@ -91,6 +92,7 @@ func TestState_cleanValidatorSnapshotsFromDb(t *testing.T) {
 		snapshotFromDB, err = state.EpochStore.getValidatorSnapshot(epoch)
 		assert.NoError(t, err)
 		assert.NotNil(t, snapshotFromDB)
+
 		epoch--
 	}
 }

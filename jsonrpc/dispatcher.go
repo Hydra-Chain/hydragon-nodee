@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
+
+	"fmt"
 
 	"github.com/armon/go-metrics"
 	"github.com/hashicorp/go-hclog"
@@ -207,6 +208,7 @@ func (d *Dispatcher) handleSubscribe(req Request, conn wsConn) (string, Error) {
 		if err != nil {
 			return "", NewInternalError(err.Error())
 		}
+
 		filterID = d.filterManager.NewLogFilter(logQuery, conn)
 	} else if subscribeMethod == "newPendingTransactions" {
 		filterID = d.filterManager.NewPendingTxFilter(conn)

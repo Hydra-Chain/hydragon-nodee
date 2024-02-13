@@ -2,9 +2,10 @@ package contractsapi
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
 	"reflect"
+
+	"fmt"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/umbracle/ethgo"

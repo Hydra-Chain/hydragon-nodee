@@ -2,9 +2,10 @@ package target
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"time"
+
+	"fmt"
 )
 
 type testLintStruct struct {

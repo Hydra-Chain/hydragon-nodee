@@ -2,12 +2,13 @@ package jsonrpc
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/versioning"
 	"github.com/gorilla/websocket"
@@ -158,6 +159,7 @@ func middlewareFactory(config *Config) func(http.Handler) http.Handler {
 					break
 				}
 			}
+
 			next.ServeHTTP(w, r)
 		})
 	}

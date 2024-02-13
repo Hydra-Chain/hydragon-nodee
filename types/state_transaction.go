@@ -1,8 +1,9 @@
 package types
 
 import (
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/umbracle/ethgo"
 	"github.com/umbracle/ethgo/abi"

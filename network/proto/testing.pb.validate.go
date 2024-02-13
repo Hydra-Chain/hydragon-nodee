@@ -6,7 +6,6 @@ package proto
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"net"
 	"net/mail"
 	"net/url"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"fmt"
 
 	"google.golang.org/protobuf/types/known/anypb"
 )

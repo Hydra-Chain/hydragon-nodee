@@ -2,8 +2,9 @@ package state
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	iradix "github.com/hashicorp/go-immutable-radix"
 	lru "github.com/hashicorp/golang-lru"
@@ -347,6 +348,7 @@ func (txn *Txn) IncrNonce(addr types.Address) error {
 
 			return
 		}
+
 		object.Account.Nonce++
 	})
 
@@ -430,6 +432,7 @@ func (txn *Txn) Suicide(addr types.Address) bool {
 			suicided = true
 			object.Suicide = true
 		}
+
 		if object != nil {
 			object.Account.Balance = new(big.Int)
 		}
@@ -555,6 +558,7 @@ func (txn *Txn) CleanDeleteObjects(deleteEmptyObjects bool) error {
 		if !ok {
 			return false
 		}
+
 		if a.Suicide || a.Empty() && deleteEmptyObjects {
 			remove = append(remove, k)
 		}
@@ -621,6 +625,7 @@ func (txn *Txn) Commit(deleteEmptyObjects bool) ([]*Object, error) {
 					} else {
 						store.Val = v.([]byte) //nolint:forcetypeassert
 					}
+
 					obj.Storage = append(obj.Storage, store)
 
 					return false

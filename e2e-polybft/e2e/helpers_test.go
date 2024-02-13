@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"math/big"
 	"net/http"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/stretchr/testify/require"
 	"github.com/umbracle/ethgo"

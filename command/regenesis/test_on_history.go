@@ -2,8 +2,9 @@ package regenesis
 
 import (
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	leveldb2 "github.com/0xPolygon/polygon-edge/blockchain/storage/leveldb"
 	"github.com/0xPolygon/polygon-edge/command"

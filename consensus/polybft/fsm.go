@@ -3,9 +3,10 @@ package polybft
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"math/big"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/go-ibft/messages"
 	"github.com/0xPolygon/go-ibft/messages/proto"
@@ -135,7 +136,6 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 		// if err := f.increase(); err != nil {
 		// 	return nil, err
 		// }
-
 		tx, err := f.createCommitEpochTx()
 		if err != nil {
 			return nil, err
@@ -711,7 +711,8 @@ func validateHeaderFields(parent *types.Header, header *types.Header, blockTimeD
 
 // createStateTransactionWithData creates a state transaction
 // with provided target address and inputData parameter which is ABI encoded byte array.
-func createStateTransactionWithData(blockNumber uint64, target types.Address, inputData []byte, value *big.Int) *types.Transaction {
+func createStateTransactionWithData(blockNumber uint64, target types.Address,
+	inputData []byte, value *big.Int) *types.Transaction {
 	tx := &types.Transaction{
 		From:     contracts.SystemCaller,
 		To:       &target,

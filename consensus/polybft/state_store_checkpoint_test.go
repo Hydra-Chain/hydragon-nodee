@@ -192,8 +192,10 @@ func insertTestExitEvents(t *testing.T, state *State,
 						EpochNumber: i,
 						BlockNumber: block,
 					}
+
 				index++
 			}
+
 			block++
 		}
 	}

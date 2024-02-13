@@ -2,8 +2,9 @@ package bls
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	bn256 "github.com/umbracle/go-eth-bn256"
 )

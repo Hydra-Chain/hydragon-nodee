@@ -2,11 +2,12 @@ package jsonrpc
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"reflect"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/txpool/proto"
 	"github.com/0xPolygon/polygon-edge/types"
@@ -469,20 +470,24 @@ func TestDispatcherBatchRequest(t *testing.T) {
 			assert.Equal(t, c.err, resp.Error)
 		} else {
 			var batchResp []SuccessResponse
+
 			assert.NoError(t, expectBatchJSONResult(res, &batchResp))
 
 			if c.name == "leading-whitespace" {
 				assert.Len(t, batchResp, 4)
+
 				for index, resp := range batchResp {
 					assert.Equal(t, c.batchResponse[index].Error, resp.Error)
 				}
 			} else if c.name == "valid-batch-req" {
 				assert.Len(t, batchResp, 6)
+
 				for index, resp := range batchResp {
 					assert.Equal(t, c.batchResponse[index].Error, resp.Error)
 				}
 			} else if c.name == "no-limits" {
 				assert.Len(t, batchResp, 12)
+
 				for index, resp := range batchResp {
 					assert.Equal(t, c.batchResponse[index].Error, resp.Error)
 				}

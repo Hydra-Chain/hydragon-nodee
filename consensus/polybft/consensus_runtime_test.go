@@ -1,12 +1,13 @@
 package polybft
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/go-ibft/messages/proto"
 	"github.com/0xPolygon/polygon-edge/consensus"
@@ -396,9 +397,12 @@ func TestConsensusRuntime_FSM_EndOfEpoch_BuildCommitEpoch(t *testing.T) {
 
 	stateProviderMock := new(stateProviderMock)
 	systemStateMock := new(systemStateMock)
+
 	blockchainMock.On("GetStateProviderForBlock", mock.Anything).Return(stateProviderMock, nil)
 	blockchainMock.On("GetSystemState", stateProviderMock).Return(systemStateMock)
+
 	minStakedBalance := new(big.Int).Mul(big.NewInt(1), big.NewInt(1e18))
+
 	systemStateMock.On("GetStakedBalance").Return(minStakedBalance, nil)
 	systemStateMock.On("GetBaseReward").Return(&BigNumDecimal{Numerator: big.NewInt(500), Denominator: big.NewInt(10000)}, nil)
 
@@ -564,6 +568,8 @@ func TestConsensusRuntime_calculateCommitEpochTxValue(t *testing.T) {
 	block := &types.Header{}
 
 	t.Run("return err of inner call", func(t *testing.T) {
+		t.Parallel()
+
 		blockchainMock := new(blockchainMock)
 		blockchainMock.On("GetStateProviderForBlock", block).Return(nil, assert.AnError)
 
@@ -581,11 +587,15 @@ func TestConsensusRuntime_calculateCommitEpochTxValue(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
 		blockchainMock := new(blockchainMock)
 		stateProviderMock := new(stateProviderMock)
 		systemStateMock := new(systemStateMock)
+
 		blockchainMock.On("GetStateProviderForBlock", block).Return(stateProviderMock, nil)
 		blockchainMock.On("GetSystemState", stateProviderMock).Return(systemStateMock)
+
 		minStakedBalance := new(big.Int).Mul(big.NewInt(1), big.NewInt(1e18))
 		systemStateMock.On("GetStakedBalance").Return(minStakedBalance, nil)
 		systemStateMock.On("GetBaseReward").Return(&BigNumDecimal{Numerator: big.NewInt(500), Denominator: big.NewInt(10000)}, nil)
@@ -1103,6 +1113,7 @@ func createTestBitmaps(t *testing.T, validators validator.AccountSet, numberOfBl
 
 			if !bitmap.IsSet(index) {
 				bitmap.Set(index)
+
 				j++
 			}
 		}

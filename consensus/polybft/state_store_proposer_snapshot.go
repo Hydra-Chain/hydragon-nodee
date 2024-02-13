@@ -2,6 +2,7 @@ package polybft
 
 import (
 	"encoding/json"
+
 	"fmt"
 
 	bolt "go.etcd.io/bbolt"

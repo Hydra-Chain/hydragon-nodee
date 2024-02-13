@@ -3,9 +3,10 @@ package common
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"math/big"
 	"strings"
+
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/umbracle/ethgo"

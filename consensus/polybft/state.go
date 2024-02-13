@@ -70,12 +70,15 @@ func (s *State) initStorages() error {
 		if err := s.StateSyncStore.initialize(tx); err != nil {
 			return err
 		}
+
 		if err := s.CheckpointStore.initialize(tx); err != nil {
 			return err
 		}
+
 		if err := s.EpochStore.initialize(tx); err != nil {
 			return err
 		}
+
 		if err := s.ProposerSnapshotStore.initialize(tx); err != nil {
 			return err
 		}

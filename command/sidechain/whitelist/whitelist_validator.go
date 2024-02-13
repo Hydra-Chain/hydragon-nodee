@@ -1,8 +1,9 @@
 package whitelist
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
@@ -86,6 +87,9 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	encoded, err := whitelistFn.Encode([]interface{}{
 		[]types.Address{types.StringToAddress(params.newValidatorAddress)},
 	})
+	if err != nil {
+		return fmt.Errorf("enlist validator failed: %w", err)
+	}
 
 	txn := &ethgo.Transaction{
 		From:     governanceAccount.Ecdsa.Address(),

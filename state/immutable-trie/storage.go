@@ -1,8 +1,9 @@
 package itrie
 
 import (
-	"fmt"
 	"sync"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 	"github.com/0xPolygon/polygon-edge/types"
@@ -238,12 +239,15 @@ func decodeNode(v *fastrlp.Value, s Storage) (Node, error) {
 	} else if ll == 17 {
 		// full node
 		nc := &FullNode{}
+
 		for i := 0; i < 16; i++ {
 			if v.Get(i).Type() == fastrlp.TypeBytes && len(v.Get(i).Raw()) == 0 {
 				// empty
 				continue
 			}
+
 			nc.children[i], err = decodeNode(v.Get(i), s)
+
 			if err != nil {
 				return nil, err
 			}
@@ -252,6 +256,7 @@ func decodeNode(v *fastrlp.Value, s Storage) (Node, error) {
 		if v.Get(16).Type() != fastrlp.TypeBytes {
 			return nil, fmt.Errorf("full node value expected to be bytes")
 		}
+
 		if len(v.Get(16).Raw()) != 0 {
 			vv := &ValueNode{}
 			vv.buf = append(vv.buf[:0], v.Get(16).Raw()...)

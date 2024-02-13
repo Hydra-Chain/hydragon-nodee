@@ -2,8 +2,9 @@ package supernet
 
 import (
 	"bytes"
-	"fmt"
 	"os"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"

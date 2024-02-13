@@ -3,6 +3,7 @@ package polybft
 import (
 	"bytes"
 	"errors"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"

@@ -2,9 +2,10 @@ package polybft
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"time"
+
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 

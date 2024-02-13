@@ -1,8 +1,9 @@
 package polybft
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus"
 	"github.com/0xPolygon/polygon-edge/state"

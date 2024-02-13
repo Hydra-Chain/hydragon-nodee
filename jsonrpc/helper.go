@@ -2,8 +2,9 @@ package jsonrpc
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/types"
 )
@@ -176,6 +177,7 @@ func DecodeTxn(arg *txnArgs, blockNumber uint64, store nonceGetter, forceSetNonc
 		if err != nil {
 			return nil, err
 		}
+
 		arg.Nonce = argUintPtr(nonce)
 	}
 

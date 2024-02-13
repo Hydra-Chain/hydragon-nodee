@@ -3,8 +3,9 @@ package discovery
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/network/common"
 	"github.com/0xPolygon/polygon-edge/network/event"

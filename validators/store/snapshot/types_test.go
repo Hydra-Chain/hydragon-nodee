@@ -2,9 +2,10 @@ package snapshot
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/crypto"
 	"github.com/0xPolygon/polygon-edge/types"
@@ -637,6 +638,7 @@ func TestSnapshotCopy(t *testing.T) {
 
 			// check addresses of Votes are different
 			assert.Equal(t, len(test.snapshot.Votes), len(copied.Votes))
+
 			for idx := range test.snapshot.Votes {
 				assert.NotSame(t, test.snapshot.Votes[idx], copied.Votes[idx])
 			}

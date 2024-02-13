@@ -1,9 +1,10 @@
 package staking
 
 import (
-	"fmt"
 	"math/big"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
@@ -109,6 +110,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		delegateToAddress := types.StringToAddress(params.delegateAddress)
 		encoded, err = contractsapi.ChildValidatorSet.Abi.Methods["delegate"].Encode(
 			[]interface{}{ethgo.Address(delegateToAddress), false})
+
 		if err != nil {
 			return err
 		}

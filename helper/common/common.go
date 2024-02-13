@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/fs"
 	"math"
 	"math/big"
@@ -16,6 +15,8 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 	"github.com/sethvargo/go-retry"

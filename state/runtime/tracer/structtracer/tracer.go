@@ -2,9 +2,10 @@ package structtracer
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"sync"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 	"github.com/0xPolygon/polygon-edge/state/runtime"

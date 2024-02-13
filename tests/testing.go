@@ -3,13 +3,14 @@ package tests
 import (
 	"embed"
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"fmt"
 
 	"github.com/umbracle/fastrlp"
 

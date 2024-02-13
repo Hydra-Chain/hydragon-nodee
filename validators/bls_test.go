@@ -2,9 +2,10 @@ package validators
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 	"github.com/0xPolygon/polygon-edge/types"

@@ -2,8 +2,9 @@ package syncer
 
 import (
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/progress"
 	"github.com/0xPolygon/polygon-edge/network/event"

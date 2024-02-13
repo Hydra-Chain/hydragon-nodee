@@ -2,9 +2,10 @@ package blockchain
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain/storage"
 	"github.com/0xPolygon/polygon-edge/blockchain/storage/memory"

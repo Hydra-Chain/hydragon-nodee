@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"

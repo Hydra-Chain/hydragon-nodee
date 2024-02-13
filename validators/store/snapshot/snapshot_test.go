@@ -2,10 +2,11 @@ package snapshot
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"sync"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/crypto"
 	testHelper "github.com/0xPolygon/polygon-edge/helper/tests"

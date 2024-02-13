@@ -3,9 +3,10 @@ package fork
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	testHelper "github.com/0xPolygon/polygon-edge/helper/tests"

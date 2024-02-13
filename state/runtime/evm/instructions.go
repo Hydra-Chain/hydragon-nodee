@@ -3,10 +3,11 @@ package evm
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"math/bits"
 	"sync"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/crypto"
 	"github.com/0xPolygon/polygon-edge/helper/keccak"
@@ -69,9 +70,11 @@ func opSDiv(c *state) {
 	} else {
 		neg := a.Sign() != b.Sign()
 		b.Div(a.Abs(a), b.Abs(b))
+
 		if neg {
 			b.Neg(b)
 		}
+
 		toU256(b)
 	}
 }
@@ -99,9 +102,11 @@ func opSMod(c *state) {
 	} else {
 		neg := a.Sign() < 0
 		b.Mod(a.Abs(a), b.Abs(b))
+
 		if neg {
 			b.Neg(b)
 		}
+
 		toU256(b)
 	}
 }
@@ -1268,6 +1273,7 @@ func (c *state) buildCallContract(op OpCode) (*runtime.Contract, uint64, uint64,
 
 			return nil, 0, 0, nil
 		}
+
 		gas = initialGas.Uint64()
 	}
 

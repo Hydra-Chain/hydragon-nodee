@@ -1,8 +1,9 @@
 package generate
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/secrets"

@@ -2,8 +2,9 @@ package bls
 
 import (
 	"encoding/base64"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	bn256 "github.com/umbracle/go-eth-bn256"

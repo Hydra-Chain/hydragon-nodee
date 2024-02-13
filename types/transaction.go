@@ -1,9 +1,10 @@
 package types
 
 import (
-	"fmt"
 	"math/big"
 	"sync/atomic"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
 )

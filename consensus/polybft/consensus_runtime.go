@@ -3,11 +3,12 @@ package polybft
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"math/big"
 	"sort"
 	"sync"
 	"sync/atomic"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
@@ -230,7 +231,6 @@ func (c *consensusRuntime) initCheckpointManager(logger hcf.Logger) error {
 func (c *consensusRuntime) initStakeManager(logger hcf.Logger) error {
 	// H_MODIFY: Root chain is unused so we remove initialization of root relayer
 	// rootRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(c.config.PolyBFTConfig.Bridge.JSONRPCEndpoint))
-
 	var err error
 	c.stakeManager, err = newStakeManager(
 		logger.Named("stake-manager"),
@@ -400,6 +400,9 @@ func (c *consensusRuntime) FSM() error {
 		}
 
 		ff.commitEpochTxValue, err = c.calculateCommitEpochTxValue(parent)
+		if err != nil {
+			return fmt.Errorf("cannot update validator set on epoch when calculating tx value: %w", err)
+		}
 
 		ff.newValidatorsDelta, err = c.stakeManager.UpdateValidatorSet(epoch.Number, epoch.Validators.Copy())
 		if err != nil {
@@ -425,6 +428,7 @@ func (c *consensusRuntime) FSM() error {
 // returns *epochMetadata different from nil if the lastEpoch is not the current one and everything was successful
 func (c *consensusRuntime) restartEpoch(header *types.Header) (*epochMetadata, error) {
 	lastEpoch := c.epoch
+
 	systemState, err := c.getSystemState(header)
 	if err != nil {
 		return nil, fmt.Errorf("get system state: %w", err)
@@ -441,6 +445,7 @@ func (c *consensusRuntime) restartEpoch(header *types.Header) (*epochMetadata, e
 		// Otherwise, reset the epoch metadata and restart the async services
 		if lastEpoch.Number == epochNumber {
 			fmt.Println("Epoch already in memory, nothing to do")
+
 			return lastEpoch, nil
 		}
 	}

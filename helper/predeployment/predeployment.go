@@ -3,10 +3,11 @@ package predeployment
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"os"
+
+	"fmt"
 
 	"github.com/umbracle/ethgo/abi"
 

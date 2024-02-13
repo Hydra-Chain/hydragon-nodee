@@ -2,10 +2,11 @@ package polybft
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
 	"sort"
 	"strconv"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"

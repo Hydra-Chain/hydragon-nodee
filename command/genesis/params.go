@@ -2,13 +2,14 @@ package genesis
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/command"

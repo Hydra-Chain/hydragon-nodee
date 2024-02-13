@@ -3,9 +3,10 @@ package archive
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/server/proto"

@@ -1,10 +1,11 @@
 package common
 
 import (
-	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 )

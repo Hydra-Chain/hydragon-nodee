@@ -3,6 +3,7 @@ package wallet
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
+
 	"fmt"
 
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"

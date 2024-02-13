@@ -2,6 +2,7 @@ package list
 
 import (
 	"bytes"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command/helper"
@@ -37,6 +38,7 @@ func (r *PeersListResult) GetOutput() string {
 		for i, p := range r.Peers {
 			rows[i] = fmt.Sprintf("[%d]|%s", i, p)
 		}
+		
 		buffer.WriteString(helper.FormatKV(rows))
 	}
 

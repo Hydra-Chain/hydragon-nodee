@@ -2,10 +2,11 @@ package hex
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 type DecError struct{ msg string }

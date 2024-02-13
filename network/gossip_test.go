@@ -3,9 +3,10 @@ package network
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
+
+	"fmt"
 
 	testproto "github.com/0xPolygon/polygon-edge/network/proto"
 	"github.com/libp2p/go-libp2p/core/peer"

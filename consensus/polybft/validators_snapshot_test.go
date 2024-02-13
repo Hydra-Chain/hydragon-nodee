@@ -1,8 +1,9 @@
 package polybft
 
 import (
-	"fmt"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/types"
@@ -149,6 +150,7 @@ func TestValidatorsSnapshotCache_Cleanup(t *testing.T) {
 
 	for i := uint64(0); i < validatorSnapshotLimit; i++ {
 		require.NoError(cache.storeSnapshot(&validatorSnapshot{i, i * 10, snapshot}))
+
 		maxEpoch++
 	}
 

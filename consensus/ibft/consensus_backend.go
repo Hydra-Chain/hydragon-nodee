@@ -2,9 +2,10 @@ package ibft
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/go-ibft/messages"
 	"github.com/0xPolygon/go-ibft/messages/proto"

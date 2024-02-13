@@ -2,11 +2,12 @@ package framework
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/types"

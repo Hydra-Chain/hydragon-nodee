@@ -2,9 +2,10 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"net"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command/server/config"
 

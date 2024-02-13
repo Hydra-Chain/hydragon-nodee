@@ -1,8 +1,9 @@
 package polybft
 
 import (
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
@@ -80,6 +81,8 @@ func NewSystemState(valSetAddr types.Address, stateRcvAddr types.Address, provid
 // TODO: getValidatorTotalStake is a temporary solution and must be removed
 // (check the func in the contract for more info)
 // GetStakeOnValidatorSet retrieves stake of given validator on ValidatorSet contract
+//
+//nolint:godox
 func (s *SystemStateImpl) GetStakeOnValidatorSet(validatorAddr types.Address) (*big.Int, error) {
 	rawResult, err := s.validatorContract.Call("getValidatorTotalStake", ethgo.Latest, validatorAddr)
 	if err != nil {

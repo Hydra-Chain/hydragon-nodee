@@ -3,7 +3,6 @@ package genesis
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"

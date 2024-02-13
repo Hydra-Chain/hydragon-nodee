@@ -2,10 +2,11 @@ package archive
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"math/big"
 	"os"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
 	"github.com/0xPolygon/polygon-edge/helper/common"

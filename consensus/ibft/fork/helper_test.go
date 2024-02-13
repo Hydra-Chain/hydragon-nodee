@@ -149,6 +149,7 @@ func Test_readDataStore(t *testing.T) {
 
 		dirPath := createTestTempDirectory(t)
 		filePath := path.Join(dirPath, "test.dat")
+
 		var data interface{}
 
 		assert.Equal(

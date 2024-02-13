@@ -2,9 +2,10 @@ package predeployment
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"strings"
+
+	"fmt"
 )
 
 func ParseArguments(raws []string) ([]interface{}, error) {

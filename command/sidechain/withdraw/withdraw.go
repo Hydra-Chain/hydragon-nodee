@@ -1,8 +1,9 @@
 package withdraw
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/umbracle/ethgo"
@@ -74,6 +75,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	withdrawFn := &contractsapi.WithdrawValidatorSetFn{To: (types.Address)(validatorAccount.Ecdsa.Address())}
+
 	encoded, err := withdrawFn.EncodeAbi()
 	if err != nil {
 		return err

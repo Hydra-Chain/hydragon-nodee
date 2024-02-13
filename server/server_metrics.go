@@ -1,9 +1,10 @@
 package server
 
 import (
-	"fmt"
 	"os"
 	"time"
+
+	"fmt"
 
 	"github.com/armon/go-metrics"
 	"github.com/armon/go-metrics/prometheus"

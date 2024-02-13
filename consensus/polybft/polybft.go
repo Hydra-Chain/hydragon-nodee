@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 	"path/filepath"
 	"time"
+
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 
@@ -650,6 +651,7 @@ func (p *Polybft) startConsensusProtocol() {
 		case _, ok := <-sequenceCh:
 			if !ok {
 				sequenceCh = nil
+
 				p.logger.Debug("Sequence channel closed")
 			}
 		case <-p.closeCh:

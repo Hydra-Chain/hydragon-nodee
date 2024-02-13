@@ -2,10 +2,11 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/e2e/framework"
 	"github.com/0xPolygon/polygon-edge/server/proto"

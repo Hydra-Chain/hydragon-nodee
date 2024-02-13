@@ -3,6 +3,7 @@ package validators
 import (
 	"bytes"
 	"errors"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"

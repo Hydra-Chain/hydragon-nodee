@@ -1,8 +1,9 @@
 package staking
 
 import (
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/helper/common"

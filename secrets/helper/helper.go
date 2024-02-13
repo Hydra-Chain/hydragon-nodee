@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+
 	"fmt"
 
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"

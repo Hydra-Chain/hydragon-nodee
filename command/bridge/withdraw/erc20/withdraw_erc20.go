@@ -2,8 +2,9 @@ package erc20
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/umbracle/ethgo"

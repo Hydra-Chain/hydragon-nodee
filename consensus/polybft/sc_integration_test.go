@@ -444,6 +444,9 @@ func leftPadBytes(slice []byte, length int) []byte {
 	if len(slice) >= length {
 		return slice
 	}
-	padding := make([]byte, length-len(slice))
+
+	paddingSize := length - len(slice)
+	padding := make([]byte, paddingSize, paddingSize)
+
 	return append(padding, slice...)
 }

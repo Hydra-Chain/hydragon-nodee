@@ -4,11 +4,12 @@ import (
 	"container/heap"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
 	"github.com/0xPolygon/polygon-edge/txpool/proto"
@@ -992,6 +993,7 @@ func (h *headElem) getUpdates() ([]*block, *headElem) {
 			if nextElem.header != nil {
 				res = append(res, nextElem.header)
 			}
+
 			cur = nextElem
 		}
 	}

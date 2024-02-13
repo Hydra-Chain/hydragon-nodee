@@ -2,8 +2,9 @@ package polybft
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/contracts"
@@ -69,7 +70,8 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 		return fmt.Errorf("LiquidityToken.initialize params encoding failed: %w", err)
 	}
 
-	return callContract(contracts.SystemCaller, contracts.LiquidityTokenContract, input, "LiquidityToken.initialize", transition)
+	return callContract(contracts.SystemCaller,
+		contracts.LiquidityTokenContract, input, "LiquidityToken.initialize", transition)
 }
 
 // // initRewardPool initializes RewardPool SC

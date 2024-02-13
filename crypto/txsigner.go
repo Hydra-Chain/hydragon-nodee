@@ -2,8 +2,9 @@ package crypto
 
 import (
 	"crypto/ecdsa"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/helper/keccak"

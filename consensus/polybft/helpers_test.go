@@ -2,12 +2,13 @@ package polybft
 
 import (
 	"crypto/rand"
-	"fmt"
 	"math/big"
 	"os"
 	"path"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/bitmap"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
@@ -90,6 +91,8 @@ func createTestCommitEpochInput(t *testing.T, epochID uint64,
 }
 
 func createTestCommitEpochTxValue(t *testing.T, transition *state.Transition) *big.Int {
+	t.Helper()
+
 	stateProvider := NewStateProvider(transition)
 	systemState := NewSystemState(contracts.ValidatorSetContract, contracts.StateReceiverContract, stateProvider)
 

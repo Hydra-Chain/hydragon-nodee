@@ -3,8 +3,9 @@ package validator
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
@@ -70,6 +71,7 @@ func (v *GenesisValidator) UnmarshalBLSSignature() (*bls.Signature, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bls.UnmarshalSignature(decoded)
 }
 
@@ -79,14 +81,17 @@ func (v GenesisValidator) ToValidatorInitAPIBinding() (*contractsapi.ValidatorIn
 	if err != nil {
 		return nil, err
 	}
+
 	signBigInts, err := blsSignature.ToBigInt()
 	if err != nil {
 		return nil, err
 	}
+
 	pubKey, err := v.UnmarshalBLSPublicKey()
 	if err != nil {
 		return nil, err
 	}
+
 	return &contractsapi.ValidatorInit{
 		Addr:      v.Address,
 		Pubkey:    pubKey.ToBigInt(),

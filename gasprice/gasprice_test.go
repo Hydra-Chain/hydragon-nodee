@@ -1,11 +1,12 @@
 package gasprice
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/crypto"

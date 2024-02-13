@@ -2,6 +2,7 @@ package itrie
 
 import (
 	"bytes"
+
 	"fmt"
 
 	"github.com/umbracle/fastrlp"

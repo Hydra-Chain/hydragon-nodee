@@ -2,6 +2,7 @@ package polybft
 
 import (
 	"encoding/json"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
@@ -93,6 +94,7 @@ func (s *EpochStore) getLastSnapshot() (*validatorSnapshot, error) {
 
 	err := s.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(validatorSnapshotsBucket).Cursor()
+
 		k, v := c.Last()
 		if k == nil {
 			// we have no snapshots in db
@@ -112,6 +114,7 @@ func (s *EpochStore) insertEpoch(epoch uint64) error {
 		if err != nil {
 			return err
 		}
+
 		_, err = epochBucket.CreateBucketIfNotExists(messageVotesBucket)
 		if err != nil {
 			return err
@@ -146,6 +149,7 @@ func (s *EpochStore) cleanEpochsFromDB() error {
 		if err := tx.DeleteBucket(epochsBucket); err != nil {
 			return err
 		}
+
 		_, err := tx.CreateBucket(epochsBucket)
 
 		return err
@@ -161,12 +165,15 @@ func (s *EpochStore) cleanValidatorSnapshotsFromDB(epoch uint64) error {
 		// paired list
 		keys := make([][]byte, 0)
 		values := make([][]byte, 0)
+
 		for i := 0; i < numberOfSnapshotsToLeaveInDB; i++ { // exclude the last inserted we already appended
 			key := common.EncodeUint64ToBytes(epoch)
+
 			value := bucket.Get(key)
 			if value == nil {
 				continue
 			}
+
 			keys = append(keys, key)
 			values = append(values, value)
 			epoch--

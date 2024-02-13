@@ -1,8 +1,9 @@
 package fund
 
 import (
-	"fmt"
 	"testing"
+
+	"fmt"
 
 	"github.com/stretchr/testify/require"
 

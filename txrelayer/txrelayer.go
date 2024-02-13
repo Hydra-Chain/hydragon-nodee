@@ -2,12 +2,13 @@ package txrelayer
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"math/big"
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/umbracle/ethgo"
@@ -261,6 +262,7 @@ func (t *TxRelayerImpl) waitForReceipt(hash ethgo.Hash) (*ethgo.Receipt, error) 
 		}
 
 		time.Sleep(t.receiptTimeout)
+
 		count++
 	}
 }

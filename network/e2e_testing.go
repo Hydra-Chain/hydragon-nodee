@@ -3,11 +3,12 @@ package network
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"sync"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/helper/common"

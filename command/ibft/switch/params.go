@@ -2,8 +2,9 @@ package ibftswitch
 
 import (
 	"errors"
-	"fmt"
 	"os"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/command"

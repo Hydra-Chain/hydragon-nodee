@@ -1,8 +1,9 @@
 package dev
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
 	"github.com/0xPolygon/polygon-edge/consensus"

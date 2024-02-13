@@ -1,8 +1,9 @@
 package jsonrpc
 
 import (
-	"fmt"
 	"runtime"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/keccak"
 	"github.com/0xPolygon/polygon-edge/versioning"

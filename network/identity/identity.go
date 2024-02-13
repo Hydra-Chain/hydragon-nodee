@@ -3,8 +3,9 @@ package identity
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/network/event"
 	"github.com/hashicorp/go-hclog"

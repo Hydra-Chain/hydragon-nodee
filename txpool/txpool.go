@@ -2,10 +2,11 @@ package txpool
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"sync/atomic"
 	"time"
+
+	"fmt"
 
 	"github.com/armon/go-metrics"
 	"github.com/golang/protobuf/ptypes/any"

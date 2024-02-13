@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain/storage"
 	"github.com/0xPolygon/polygon-edge/blockchain/storage/leveldb"
@@ -194,6 +195,7 @@ func NewServer(config *Config) (*Server, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		m.network = network
 	}
 
@@ -370,6 +372,7 @@ func NewServer(config *Config) (*Server, error) {
 		if err := m.setupConsensus(); err != nil {
 			return nil, err
 		}
+
 		m.blockchain.SetConsensus(m.consensus)
 	}
 

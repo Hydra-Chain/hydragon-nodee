@@ -3,8 +3,9 @@ package validators
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/types"
 )

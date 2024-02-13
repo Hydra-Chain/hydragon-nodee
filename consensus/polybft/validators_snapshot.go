@@ -2,8 +2,9 @@ package polybft
 
 import (
 	"errors"
-	"fmt"
 	"sync"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"

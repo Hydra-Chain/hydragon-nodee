@@ -2,8 +2,9 @@ package validators
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
+
+	"fmt"
 
 	"github.com/stretchr/testify/assert"
 )

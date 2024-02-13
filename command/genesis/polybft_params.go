@@ -3,11 +3,12 @@ package genesis
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"math/big"
 	"path"
 	"strings"
 	"time"
+
+	"fmt"
 
 	"github.com/multiformats/go-multiaddr"
 
@@ -231,6 +232,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 
 	for i, validator := range initialValidators {
 		// Hardcode the same values as the default values in the contract
+		//nolint:godox
 		// TODO: It may be beneficial to have these values configurable in the future
 		expNum := big.NewInt(5000)
 		expDen := big.NewInt(10000)

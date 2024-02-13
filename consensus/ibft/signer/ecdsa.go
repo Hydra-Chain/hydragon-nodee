@@ -2,6 +2,7 @@ package signer
 
 import (
 	"crypto/ecdsa"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/crypto"

@@ -3,13 +3,14 @@ package main
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"go/format"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
+
+	"fmt"
 
 	"github.com/umbracle/ethgo/abi"
 

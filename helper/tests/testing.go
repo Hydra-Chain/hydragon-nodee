@@ -4,11 +4,12 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
-	"fmt"
 	"math/big"
 	"net"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/golang/protobuf/ptypes/any"
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"

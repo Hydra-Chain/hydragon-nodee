@@ -2,6 +2,7 @@ package polybft
 
 import (
 	"errors"
+
 	"fmt"
 
 	bolt "go.etcd.io/bbolt"

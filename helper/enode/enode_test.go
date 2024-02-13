@@ -1,8 +1,9 @@
 package enode
 
 import (
-	"fmt"
 	"testing"
+
+	"fmt"
 )
 
 func TestParseEnode(t *testing.T) {

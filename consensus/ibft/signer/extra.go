@@ -3,6 +3,7 @@ package signer
 import (
 	"encoding/binary"
 	"errors"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/types"

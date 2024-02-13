@@ -2,8 +2,9 @@ package precompiled
 
 import (
 	"encoding/binary"
-	"fmt"
 	"math/bits"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/state/runtime"

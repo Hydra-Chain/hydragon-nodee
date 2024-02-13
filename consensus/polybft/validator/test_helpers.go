@@ -2,11 +2,12 @@ package validator
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"sort"
 	"strconv"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/bitmap"
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
@@ -165,13 +166,15 @@ func (v *TestValidator) ParamsValidator() *GenesisValidator {
 		1,
 		bls.DomainValidatorSet,
 	)
+
 	if err != nil {
-		panic(fmt.Sprintf("BUG: failed to sign validator params: %v", err))
+		panic(fmt.Sprintf("BUG: failed to sign validator params: %v", err)) //nolint:gocritic
 	}
 
 	signatureBytes, err := blsSignature.Marshal()
+
 	if err != nil {
-		panic(fmt.Sprintf("BUG: failed to marshal validator params signature: %v", err))
+		panic(fmt.Sprintf("BUG: failed to marshal validator params signature: %v", err)) //nolint:gocritic
 	}
 
 	return &GenesisValidator{

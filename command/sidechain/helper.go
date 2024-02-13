@@ -2,8 +2,9 @@ package sidechain
 
 import (
 	"errors"
-	"fmt"
 	"os"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"

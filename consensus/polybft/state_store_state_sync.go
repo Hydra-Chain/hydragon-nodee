@@ -3,6 +3,7 @@ package polybft
 import (
 	"encoding/json"
 	"errors"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
@@ -86,6 +87,7 @@ func (s *StateSyncStore) list() ([]*contractsapi.StateSyncedEvent, error) {
 			if err := json.Unmarshal(v, &event); err != nil {
 				return err
 			}
+
 			events = append(events, event)
 
 			return nil
@@ -208,6 +210,7 @@ func (s *StateSyncStore) insertMessageVote(epoch uint64, key []byte, vote *Messa
 		} else {
 			signatures = append(signatures, vote)
 		}
+
 		numSignatures = len(signatures)
 
 		raw, err := json.Marshal(signatures)
@@ -239,6 +242,7 @@ func (s *StateSyncStore) getMessageVotes(epoch uint64, hash []byte) ([]*MessageS
 		if err != nil {
 			return err
 		}
+
 		signatures = res
 
 		return nil
@@ -275,6 +279,7 @@ func (s *StateSyncStore) getMessageVotesLocked(tx *bolt.Tx, epoch uint64, hash [
 func (s *StateSyncStore) insertStateSyncProofs(stateSyncProof []*StateSyncProof) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(stateSyncProofsBucket)
+
 		for _, ssp := range stateSyncProof {
 			raw, err := json.Marshal(ssp)
 			if err != nil {

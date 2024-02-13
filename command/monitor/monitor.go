@@ -3,8 +3,9 @@ package monitor
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/helper/common"

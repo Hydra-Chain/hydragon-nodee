@@ -2,9 +2,10 @@ package polybft
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/merkle-tree"
@@ -225,11 +226,13 @@ func TestState_GetNestedBucketInEpoch(t *testing.T) {
 
 			s := newTestState(t)
 			require.NoError(t, s.EpochStore.insertEpoch(c.epochNumber))
+
 			err = s.db.View(func(tx *bbolt.Tx) error {
 				nestedBucket, err = getNestedBucketInEpoch(tx, c.epochNumber, c.bucketName)
 
 				return err
 			})
+
 			if c.errMsg != "" {
 				require.ErrorContains(t, err, c.errMsg)
 				require.Nil(t, nestedBucket)

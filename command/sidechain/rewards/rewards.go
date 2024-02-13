@@ -1,8 +1,9 @@
 package rewards
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/umbracle/ethgo"

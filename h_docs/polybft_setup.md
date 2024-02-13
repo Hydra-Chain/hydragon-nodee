@@ -146,12 +146,12 @@ Pass the env.list file when running the container:
 
 We do the following configuration:
 
-- Map port 1478 of the container to port 1478 of the host machine
-- Mounts the directory /path/on/host from the host machine to /app/node inside the container.
-- Add the following command:
-  ```
-  server --data-dir ./node --chain genesis.json --grpc-address 127.0.0.1:9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545 --prometheus 0.0.0.0:5001 --log-level DEBUG json-rpc-block-range-limit 0
-  ```
+-   Map port 1478 of the container to port 1478 of the host machine
+-   Mounts the directory /path/on/host from the host machine to /app/node inside the container.
+-   Add the following command:
+    ```
+    server --data-dir ./node --chain genesis.json --grpc-address 127.0.0.1:9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545 --prometheus 0.0.0.0:5001 --log-level DEBUG json-rpc-block-range-limit 0
+    ```
 
 ```
 docker run -p 1478:1478 -v /path/on/host:/app/node <optional env.list path> hydrag-devnet
@@ -163,8 +163,8 @@ If secrets env variables are not added, new secrets will be automatically create
 
 You need to request two things from Hydra's team:
 
-- Fulfill your account with enough Hydra
-- Whitelist your account to be able to participate as a validator
+-   Fulfill your account with enough Hydra
+-   Whitelist your account to be able to participate as a validator
 
 Open the container shell:
 

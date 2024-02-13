@@ -2,9 +2,10 @@ package signer
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/crypto"
 	testHelper "github.com/0xPolygon/polygon-edge/helper/tests"

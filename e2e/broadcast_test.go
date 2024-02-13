@@ -2,11 +2,12 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"sync"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/crypto"
 	"github.com/0xPolygon/polygon-edge/e2e/framework"

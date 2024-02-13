@@ -1,10 +1,11 @@
 package state
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/stretchr/testify/assert"

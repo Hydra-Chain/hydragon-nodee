@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"errors"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/state/runtime"

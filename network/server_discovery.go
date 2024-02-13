@@ -3,9 +3,10 @@ package network
 import (
 	"context"
 	"crypto/rand"
-	"fmt"
 	"math/big"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/network/common"
 	"github.com/0xPolygon/polygon-edge/network/discovery"

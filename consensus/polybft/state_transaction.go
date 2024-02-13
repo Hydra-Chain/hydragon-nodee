@@ -2,6 +2,7 @@ package polybft
 
 import (
 	"bytes"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"

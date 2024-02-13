@@ -3,9 +3,10 @@ package registration
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"math/big"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
@@ -92,7 +93,8 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	txRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(params.jsonRPC), txrelayer.WithReceiptTimeout(150*time.Millisecond))
+	txRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(params.jsonRPC),
+		txrelayer.WithReceiptTimeout(150*time.Millisecond))
 	if err != nil {
 		return err
 	}

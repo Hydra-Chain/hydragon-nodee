@@ -1,8 +1,9 @@
 package txpool
 
 import (
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/types"
 )

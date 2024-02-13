@@ -1,8 +1,9 @@
 package genesis
 
 import (
-	"fmt"
 	"testing"
+
+	"fmt"
 
 	"github.com/stretchr/testify/require"
 	"github.com/umbracle/ethgo"
@@ -164,6 +165,7 @@ func Test_validatePremineInfo(t *testing.T) {
 			t.Parallel()
 
 			p := &genesisParams{premine: c.premineRaw}
+
 			err := p.parsePremineInfo()
 			if c.expectedParseErrMsg != "" {
 				require.ErrorContains(t, err, c.expectedParseErrMsg)

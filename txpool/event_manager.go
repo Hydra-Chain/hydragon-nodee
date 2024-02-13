@@ -1,9 +1,10 @@
 package txpool
 
 import (
-	"fmt"
 	"sync"
 	"sync/atomic"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/txpool/proto"
 	"github.com/0xPolygon/polygon-edge/types"

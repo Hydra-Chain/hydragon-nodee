@@ -2,9 +2,10 @@ package state
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"testing"
+
+	"fmt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

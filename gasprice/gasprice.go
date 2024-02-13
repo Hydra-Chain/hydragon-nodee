@@ -1,10 +1,11 @@
 package gasprice
 
 import (
-	"fmt"
 	"math/big"
 	"sort"
 	"sync"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/crypto"

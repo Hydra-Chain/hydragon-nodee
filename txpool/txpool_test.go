@@ -5,12 +5,13 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"errors"
-	"fmt"
 	"math/big"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
@@ -138,6 +139,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrInvalidTxType", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -157,7 +159,9 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrTxTypeNotSupported London hardfork not enabled", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
+
 		pool.forks.RemoveFork(chain.London)
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -177,8 +181,8 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrNegativeValue", func(t *testing.T) {
 		t.Parallel()
-		pool := setupPool()
 
+		pool := setupPool()
 		tx := newTx(defaultAddr, 0, 1)
 		tx.Value = big.NewInt(-5)
 
@@ -190,8 +194,8 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrBlockLimitExceeded", func(t *testing.T) {
 		t.Parallel()
-		pool := setupPool()
 
+		pool := setupPool()
 		tx := newTx(defaultAddr, 0, 1)
 		tx.Value = big.NewInt(1)
 		tx.Gas = 10000000000001
@@ -206,6 +210,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrExtractSignature", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -218,8 +223,8 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrInvalidSender", func(t *testing.T) {
 		t.Parallel()
-		pool := setupPool()
 
+		pool := setupPool()
 		tx := newTx(addr1, 0, 1)
 
 		// Sign with a private key that corresponds
@@ -234,6 +239,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrUnderpriced", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.priceLimit = 1000000
 
@@ -248,6 +254,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrInvalidAccountState", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.store = faultyMockStore{}
 
@@ -264,6 +271,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrTxPoolOverflow", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		// fill the pool
@@ -280,6 +288,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("FillTxPoolToTheLimit", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		// fill the pool leaving only 1 slot
@@ -296,8 +305,8 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrIntrinsicGas", func(t *testing.T) {
 		t.Parallel()
-		pool := setupPool()
 
+		pool := setupPool()
 		tx := newTx(defaultAddr, 0, 1)
 		tx.Gas = 1
 		tx = signTx(tx)
@@ -310,8 +319,8 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrAlreadyKnown", func(t *testing.T) {
 		t.Parallel()
-		pool := setupPool()
 
+		pool := setupPool()
 		tx := newTx(defaultAddr, 0, 1)
 		tx = signTx(tx)
 
@@ -327,8 +336,8 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrAlreadyKnown", func(t *testing.T) {
 		t.Parallel()
-		pool := setupPool()
 
+		pool := setupPool()
 		tx := newTx(defaultAddr, 0, 1)
 		tx.GasPrice = big.NewInt(200)
 		tx = signTx(tx)
@@ -349,8 +358,8 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrOversizedData", func(t *testing.T) {
 		t.Parallel()
-		pool := setupPool()
 
+		pool := setupPool()
 		tx := newTx(defaultAddr, 0, 1)
 
 		// set oversized Input field
@@ -369,6 +378,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrNonceTooLow", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		// faultyMockStore.GetNonce() == 99999
@@ -384,8 +394,8 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrInsufficientFunds", func(t *testing.T) {
 		t.Parallel()
-		pool := setupPool()
 
+		pool := setupPool()
 		tx := newTx(defaultAddr, 0, 1)
 		tx.GasPrice.SetUint64(1000000000000)
 		tx = signTx(tx)
@@ -406,9 +416,9 @@ func TestPruneAccountsWithNonceHoles(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
-
 			pool.getOrCreateAccount(addr1)
 
 			assert.Equal(t, uint64(0), pool.gauge.read())
@@ -429,6 +439,7 @@ func TestPruneAccountsWithNonceHoles(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
@@ -436,6 +447,7 @@ func TestPruneAccountsWithNonceHoles(t *testing.T) {
 
 			// enqueue tx
 			assert.NoError(t, pool.addTx(local, tx))
+
 			acc := pool.accounts.get(addr1)
 			<-pool.promoteReqCh
 
@@ -452,7 +464,6 @@ func TestPruneAccountsWithNonceHoles(t *testing.T) {
 
 			assert.Equal(t, uint64(1), pool.gauge.read())
 			assert.Equal(t, uint64(1), pool.accounts.get(addr1).enqueued.length())
-
 			assert.Equal(t, int(1), len(acc.nonceToTx.mapping))
 		},
 	)
@@ -463,6 +474,7 @@ func TestPruneAccountsWithNonceHoles(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
@@ -500,11 +512,13 @@ func TestAddTxHighPressure(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
 			//	mock high pressure
 			slots := 1 + (highPressureMark*pool.gauge.max)/100
+
 			pool.gauge.increase(slots)
 
 			//	enqueue tx
@@ -516,6 +530,7 @@ func TestAddTxHighPressure(t *testing.T) {
 
 			//	pick up signal
 			_, ok := <-pool.pruneCh
+
 			assert.True(t, ok)
 		},
 	)
@@ -526,14 +541,17 @@ func TestAddTxHighPressure(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
 			pool.getOrCreateAccount(addr1)
+
 			pool.accounts.get(addr1).nextNonce = 5
 
 			//	mock high pressure
 			slots := 1 + (highPressureMark*pool.gauge.max)/100
+
 			pool.gauge.increase(slots)
 
 			assert.ErrorIs(t,
@@ -553,15 +571,18 @@ func TestAddTxHighPressure(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
 			pool.getOrCreateAccount(addr1)
+
 			pool.accounts.get(addr1).nextNonce = 5
 
 			//	mock high pressure
 			slots := 1 + (highPressureMark*pool.gauge.max)/100
 			println("slots", slots, "max", pool.gauge.max)
+
 			pool.gauge.increase(slots)
 
 			tx := newTx(addr1, 5, 1)
@@ -588,6 +609,7 @@ func TestAddGossipTx(t *testing.T) {
 		t.Parallel()
 
 		pool, err := newTestPool()
+
 		assert.NoError(t, err)
 		pool.SetSigner(signer)
 
@@ -604,6 +626,7 @@ func TestAddGossipTx(t *testing.T) {
 				Value: signedTx.MarshalRLP(),
 			},
 		}
+
 		pool.addGossipTx(protoTx, "")
 
 		assert.Equal(t, uint64(1), pool.accounts.get(sender).enqueued.length())
@@ -613,6 +636,7 @@ func TestAddGossipTx(t *testing.T) {
 		t.Parallel()
 
 		pool, err := newTestPool()
+
 		assert.NoError(t, err)
 		pool.SetSigner(signer)
 
@@ -631,6 +655,7 @@ func TestAddGossipTx(t *testing.T) {
 				Value: signedTx.MarshalRLP(),
 			},
 		}
+
 		pool.addGossipTx(protoTx, "")
 
 		assert.Equal(t, uint64(0), pool.accounts.get(sender).enqueued.length())
@@ -641,6 +666,7 @@ func TestDropKnownGossipTx(t *testing.T) {
 	t.Parallel()
 
 	pool, err := newTestPool()
+
 	assert.NoError(t, err)
 	pool.SetSigner(&mockSigner{})
 
@@ -672,6 +698,7 @@ func TestEnqueueHandler(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
@@ -690,16 +717,19 @@ func TestEnqueueHandler(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
 			// setup prestate
 			acc := pool.getOrCreateAccount(addr1)
+
 			acc.setNonce(20)
 
 			// send tx
 			go func() {
 				err := pool.addTx(local, newTx(addr1, 10, 1)) // 10 < 20
+
 				assert.EqualError(t, err, "nonce too low")
 			}()
 
@@ -718,6 +748,7 @@ func TestEnqueueHandler(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
@@ -733,6 +764,7 @@ func TestEnqueueHandler(t *testing.T) {
 			assert.Equal(t, uint64(0), pool.accounts.get(addr1).promoted.length())
 
 			acc := pool.accounts.get(addr1)
+
 			acc.nonceToTx.lock()
 			assert.Equal(t, int(1), len(acc.nonceToTx.mapping))
 			acc.nonceToTx.unlock()
@@ -748,6 +780,7 @@ func TestEnqueueHandler(t *testing.T) {
 				//	first tx will signal promotion, grab the signal
 				//	but don't execute the handler
 				err := pool.addTx(local, newTx(addr1, 0, 1))
+
 				assert.NoError(t, err)
 
 				// catch pending promotion
@@ -755,11 +788,13 @@ func TestEnqueueHandler(t *testing.T) {
 
 				for i := uint64(1); i < num; i++ {
 					err := pool.addTx(local, newTx(addr1, i, 1))
+
 					assert.NoError(t, err)
 				}
 			}
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
@@ -774,6 +809,7 @@ func TestEnqueueHandler(t *testing.T) {
 			//	send next expected tx
 			go func() {
 				err := pool.addTx(local, newTx(addr1, 1, 1))
+
 				assert.True(t, errors.Is(err, ErrMaxEnqueuedLimitReached))
 			}()
 
@@ -783,6 +819,7 @@ func TestEnqueueHandler(t *testing.T) {
 			assert.Equal(t, uint64(0), pool.accounts.get(addr1).getNonce())
 
 			acc := pool.accounts.get(addr1)
+
 			acc.nonceToTx.lock()
 			assert.Equal(t, int(1), len(acc.nonceToTx.mapping))
 			acc.nonceToTx.unlock()
@@ -795,6 +832,7 @@ func TestEnqueueHandler(t *testing.T) {
 			t.Parallel()
 
 			pool, err := newTestPool()
+
 			assert.NoError(t, err)
 			pool.SetSigner(&mockSigner{})
 
@@ -2154,11 +2192,13 @@ func Test_TxPool_validateTx(t *testing.T) {
 
 	t.Run("tx input larger than the TxPoolMaxInitCodeSize", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.forks = chain.AllForksEnabled.Copy()
 
 		input := make([]byte, state.TxPoolMaxInitCodeSize+1)
 		_, err := rand.Read(input)
+
 		require.NoError(t, err)
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -2173,11 +2213,13 @@ func Test_TxPool_validateTx(t *testing.T) {
 
 	t.Run("tx input the same as TxPoolMaxInitCodeSize", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.forks = chain.AllForksEnabled.Copy()
 
 		input := make([]byte, state.TxPoolMaxInitCodeSize)
 		_, err := rand.Read(input)
+
 		require.NoError(t, err)
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -2297,6 +2339,7 @@ func Test_TxPool_validateTx(t *testing.T) {
 
 	t.Run("eip-1559 tx placed without eip-1559 fork enabled", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.forks = chain.AllForksEnabled.Copy()
 		pool.forks.RemoveFork(chain.London)
@@ -2587,10 +2630,13 @@ func TestResetAccounts_Enqueued(t *testing.T) {
 		// setup prestate
 		totalTx := 0
 		expectedPromoted := uint64(0)
+
 		for addr, txs := range allTxs {
 			expectedPromoted += expected.accounts[addr].promoted
+
 			for _, tx := range txs {
 				totalTx++
+
 				assert.NoError(t, pool.addTx(local, tx))
 			}
 		}
@@ -2682,10 +2728,13 @@ func TestResetAccounts_Enqueued(t *testing.T) {
 		// setup prestate
 		expectedEnqueuedTx := 0
 		expectedPromotedTx := uint64(0)
+
 		for addr, txs := range allTxs {
 			expectedPromotedTx += expected.accounts[addr].promoted
+
 			for _, tx := range txs {
 				expectedEnqueuedTx++
+
 				assert.NoError(t, pool.addTx(local, tx))
 			}
 		}
@@ -2871,6 +2920,7 @@ func TestExecutablesOrder(t *testing.T) {
 			)
 
 			expectedPromotedTx := 0
+
 			for _, txs := range test.allTxs {
 				for _, tx := range txs {
 					expectedPromotedTx++
@@ -2889,6 +2939,7 @@ func TestExecutablesOrder(t *testing.T) {
 			pool.Prepare()
 
 			var successful []*types.Transaction
+
 			for {
 				tx := pool.Peek()
 				if tx == nil {
@@ -3068,6 +3119,7 @@ func TestRecovery(t *testing.T) {
 			// setup prestate
 			totalTx := 0
 			expectedEnqueued := uint64(0)
+
 			for addr, txs := range test.allTxs {
 				// preset nonce so promotions can happen
 				acc := pool.getOrCreateAccount(addr)
@@ -3078,6 +3130,7 @@ func TestRecovery(t *testing.T) {
 				// send txs
 				for _, sTx := range txs {
 					totalTx++
+
 					assert.NoError(t, pool.addTx(local, sTx.tx))
 				}
 			}
@@ -3090,6 +3143,7 @@ func TestRecovery(t *testing.T) {
 
 			func() {
 				pool.Prepare()
+
 				for {
 					tx := pool.Peek()
 					if tx == nil {
@@ -3288,9 +3342,11 @@ func TestGetTxs(t *testing.T) {
 
 			// send txs
 			expectedPromotedTx := 0
+
 			for _, txs := range test.allTxs {
 				nonce := uint64(0)
 				promotable := uint64(0)
+
 				for _, tx := range txs {
 					// send all txs
 					if tx.Nonce == nonce+promotable {
@@ -3385,6 +3441,7 @@ func TestSetSealing(t *testing.T) {
 
 			// Set initial value
 			pool.sealing.Store(false)
+
 			if test.initialValue {
 				pool.sealing.Store(true)
 			}

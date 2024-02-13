@@ -2,11 +2,12 @@ package syncer
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"sort"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
 	"github.com/0xPolygon/polygon-edge/helper/progress"

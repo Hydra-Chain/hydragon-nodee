@@ -1,9 +1,10 @@
 package jsonrpc
 
 import (
-	"fmt"
 	"runtime"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/versioning"
 

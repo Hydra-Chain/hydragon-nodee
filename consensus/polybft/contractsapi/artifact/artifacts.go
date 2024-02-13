@@ -2,9 +2,10 @@ package artifact
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 	"github.com/umbracle/ethgo/abi"

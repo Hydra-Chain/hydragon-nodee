@@ -190,7 +190,9 @@ func TestEth_GetTransactionReceipt(t *testing.T) {
 		store := newMockBlockStore()
 		eth := newTestEthEndpoint(store)
 		block := newTestBlock(1, hash4)
+
 		store.add(block)
+
 		txn0 := newTestTransaction(uint64(0), addr0)
 		txn1 := newTestTransaction(uint64(1), addr1)
 		block.Transactions = []*types.Transaction{txn0, txn1}
@@ -216,7 +218,9 @@ func TestEth_GetTransactionReceipt(t *testing.T) {
 				},
 			},
 		}
+
 		receipt1.SetStatus(types.ReceiptSuccess)
+
 		receipt2 := &types.Receipt{
 			Logs: []*types.Log{
 				{
@@ -227,7 +231,9 @@ func TestEth_GetTransactionReceipt(t *testing.T) {
 				},
 			},
 		}
+
 		receipt2.SetStatus(types.ReceiptSuccess)
+
 		store.receipts[hash4] = []*types.Receipt{receipt1, receipt2}
 
 		res, err := eth.GetTransactionReceipt(txn1.Hash)
@@ -237,6 +243,7 @@ func TestEth_GetTransactionReceipt(t *testing.T) {
 
 		//nolint:forcetypeassert
 		response := res.(*receipt)
+
 		assert.Equal(t, txn1.Hash, response.TxHash)
 		assert.Equal(t, block.Hash(), response.BlockHash)
 		assert.NotNil(t, response.Logs)

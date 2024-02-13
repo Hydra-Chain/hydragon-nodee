@@ -1,8 +1,9 @@
 package polybft
 
 import (
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"

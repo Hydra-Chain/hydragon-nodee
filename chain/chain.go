@@ -3,9 +3,10 @@ package chain
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"os"
+
+	"fmt"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/umbracle/ethgo"

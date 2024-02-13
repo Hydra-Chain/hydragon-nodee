@@ -2,10 +2,11 @@ package blockchain
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"reflect"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/helper/hex"
@@ -450,6 +451,7 @@ func TestInsertHeaders(t *testing.T) {
 				if len(a) != len(b) {
 					t.Fatal("bad size")
 				}
+
 				for indx := range a {
 					if chain.headers[a[indx].hash].Hash != b[indx].Hash {
 						t.Fatal("bad")

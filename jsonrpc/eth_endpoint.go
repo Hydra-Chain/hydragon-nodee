@@ -3,8 +3,9 @@ package jsonrpc
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 

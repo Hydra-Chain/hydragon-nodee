@@ -2,8 +2,9 @@ package types
 
 import (
 	"encoding/binary"
-	"fmt"
 	"sync/atomic"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 )

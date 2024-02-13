@@ -3,8 +3,9 @@ package signer
 import (
 	"crypto/ecdsa"
 	"errors"
-	"fmt"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/crypto"
 	"github.com/0xPolygon/polygon-edge/helper/hex"

@@ -50,8 +50,10 @@ func TestRewardsCalculator_GetMaxReward(t *testing.T) {
 		blockchainMock := new(blockchainMock)
 		stateProviderMock := new(stateProviderMock)
 		systemStateMock := new(systemStateMock)
+
 		blockchainMock.On("GetStateProviderForBlock", block).Return(stateProviderMock, nil)
 		blockchainMock.On("GetSystemState", stateProviderMock).Return(systemStateMock)
+
 		return blockchainMock, stateProviderMock, systemStateMock
 	}
 
@@ -187,7 +189,7 @@ func TestRewardsCalculator_calcMaxReward(t *testing.T) {
 func bigIntFromString(s string) *big.Int {
 	i, ok := new(big.Int).SetString(s, 10)
 	if !ok {
-		panic("failed to parse big int")
+		panic("failed to parse big int") //nolint:gocritic
 	}
 
 	return i

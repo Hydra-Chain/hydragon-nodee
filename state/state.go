@@ -2,8 +2,9 @@ package state
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
+
+	"fmt"
 
 	iradix "github.com/hashicorp/go-immutable-radix"
 	"github.com/umbracle/fastrlp"

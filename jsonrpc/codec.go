@@ -2,8 +2,9 @@ package jsonrpc
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/types"

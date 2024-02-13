@@ -3,10 +3,11 @@ package polybft
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 	"reflect"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"

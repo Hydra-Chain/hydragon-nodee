@@ -3,8 +3,9 @@ package jsonrpc
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 	"github.com/0xPolygon/polygon-edge/state/runtime/tracer"

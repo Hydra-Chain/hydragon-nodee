@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"sort"
 	"strings"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/bitmap"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
@@ -219,6 +220,10 @@ func (s *stakeManager) updateWithReceipts(
 	}
 
 	exponent, err := systemState.GetVotingPowerExponent()
+	if err != nil {
+		return err
+	}
+
 	for _, event := range stakeChangedEvents {
 		s.logger.Debug(
 			"StakeChanged event",
@@ -232,6 +237,7 @@ func (s *stakeManager) updateWithReceipts(
 	}
 
 	blockNumber := blockHeader.Number
+
 	for addr, data := range fullValidatorSet.Validators {
 		if data.BlsKey == nil {
 			blsKey, err := s.getBlsKey(data.Address)
@@ -333,6 +339,7 @@ func (s *stakeManager) UpdateValidatorSet(
 // getBlsKey returns bls key for validator from the supernet contract
 func (s *stakeManager) getBlsKey(address types.Address) (*bls.PublicKey, error) {
 	header := s.blockchain.CurrentHeader()
+
 	systemState, err := s.getSystemStateForBlock(header)
 	if err != nil {
 		return nil, err
@@ -353,6 +360,7 @@ func (s *stakeManager) getSystemStateForBlock(block *types.Header) (SystemState,
 	}
 
 	systemState := s.blockchain.GetSystemState(provider)
+
 	return systemState, nil
 }
 
@@ -390,7 +398,9 @@ func newValidatorStakeMap(validatorSet validator.AccountSet) validatorStakeMap {
 // setStake sets given amount of stake to a validator defined by address
 func (sc *validatorStakeMap) setStake(address types.Address, stakedBalance *big.Int, exponent *BigNumDecimal) {
 	votingPower := sc.calcVotingPower(stakedBalance, exponent)
+
 	isActive := votingPower.Cmp(bigZero) > 0
+
 	if metadata, exists := (*sc)[address]; exists {
 		metadata.VotingPower = votingPower
 		metadata.IsActive = isActive

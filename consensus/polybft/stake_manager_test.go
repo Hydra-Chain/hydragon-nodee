@@ -96,13 +96,16 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		fullValidatorSet, err := state.StakeStore.getFullValidatorSet()
 		require.NoError(t, err)
+
 		var firstValidatorMeta *validator.ValidatorMetadata
 		firstValidatorMeta = nil
+
 		for _, validator := range fullValidatorSet.Validators {
 			if validator.Address.String() == validators.GetValidator(initialSetAliases[firstValidator]).Address().String() {
 				firstValidatorMeta = validator
 			}
 		}
+
 		require.NotNil(t, firstValidatorMeta)
 		require.Equal(t, bigZero, firstValidatorMeta.VotingPower)
 		require.False(t, firstValidatorMeta.IsActive)
@@ -163,12 +166,15 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		fullValidatorSet, err := state.StakeStore.getFullValidatorSet()
 		require.NoError(t, err)
+
 		var firstValidator *validator.ValidatorMetadata = nil
+
 		for _, validator := range fullValidatorSet.Validators {
 			if validator.Address.String() == validators.GetValidator(initialSetAliases[secondValidator]).Address().String() {
 				firstValidator = validator
 			}
 		}
+
 		require.NotNil(t, firstValidator)
 		require.Equal(t, validator.CalculateVPower(stakeAmount, vPowerExp.Numerator, vPowerExp.Denominator), firstValidator.VotingPower)
 		require.True(t, firstValidator.IsActive)
@@ -296,13 +302,16 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		fullValidatorSet, err := state.StakeStore.getFullValidatorSet()
 		require.NoError(t, err)
+
 		var updatedValidator *validator.ValidatorMetadata
 		updatedValidator = nil
+
 		for _, validator := range fullValidatorSet.Validators {
 			if validator.Address.String() == validators.GetValidator(initialSetAliases[secondValidator]).Address().String() {
 				updatedValidator = validator
 			}
 		}
+
 		require.NotNil(t, updatedValidator)
 		require.Equal(
 			t,
@@ -395,6 +404,7 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorToUpdate := fullValidatorSet[2]
 		validatorToUpdate.VotingPower = big.NewInt(5)
+
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
 		}))
@@ -411,6 +421,7 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorToUpdate := fullValidatorSet[3]
 		validatorToUpdate.VotingPower = bigZero
+
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
 		}))
@@ -425,6 +436,7 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorsToUpdate := fullValidatorSet[4]
 		validatorsToUpdate.VotingPower = bigZero
+
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
 		}))
@@ -541,7 +553,9 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 	bcMock.On("GetHeaderByNumber", uint64(3)).Return(&types.Header{Number: 3, Hash: header3Hash}, true).Once()
 	bcMock.On("GetHeaderByNumber", uint64(4)).Return(&types.Header{Number: 4, Hash: header4Hash}, true).Once()
 	bcMock.On("GetReceiptsByHash", header1Hash).Return([]*types.Receipt(nil), nil).Once()
+
 	stakeAmountTwo := new(big.Int).Mul(stakeAmount, big.NewInt(2))
+
 	bcMock.On("GetReceiptsByHash", header2Hash).Return([]*types.Receipt{
 		{
 			Status: &success,
@@ -555,7 +569,9 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 			},
 		},
 	}, nil).Once()
+
 	stakeAmountThree := new(big.Int).Mul(stakeAmount, big.NewInt(3))
+
 	bcMock.On("GetReceiptsByHash", header3Hash).Return([]*types.Receipt{
 		{
 			Status: &success,

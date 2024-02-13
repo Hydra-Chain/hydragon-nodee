@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
+
 	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/crypto"
@@ -183,6 +184,7 @@ func hashChecker(node Node, h *hasher, a *fastrlp.Arena, d int, storage Storage)
 				if err != nil {
 					return nil, err
 				}
+
 				val.Set(v)
 			}
 		}
@@ -195,6 +197,7 @@ func hashChecker(node Node, h *hasher, a *fastrlp.Arena, d int, storage Storage)
 			if err != nil {
 				return nil, err
 			}
+
 			val.Set(v)
 		}
 

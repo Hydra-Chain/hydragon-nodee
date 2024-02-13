@@ -2,10 +2,11 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"strings"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/network"
 	"github.com/hashicorp/hcl"

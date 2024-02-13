@@ -2,10 +2,11 @@ package precompiled
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 )

@@ -3,13 +3,14 @@ package jsonrpc
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/big"
 	"math/rand"
 	"net"
 	"strconv"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
 	"github.com/0xPolygon/polygon-edge/txpool/proto"
@@ -246,11 +247,12 @@ func Test_GetLogFilterFromID(t *testing.T) {
 		fromBlock: 0,
 	}
 
-	retrivedLogFilter, err := m.GetLogFilterFromID(
+	retrievedLogFilter, err := m.GetLogFilterFromID(
 		m.NewLogFilter(logFilter, &MockClosedWSConnection{}),
 	)
+
 	assert.NoError(t, err)
-	assert.Equal(t, logFilter, retrivedLogFilter.query)
+	assert.Equal(t, logFilter, retrievedLogFilter.query)
 }
 
 func TestFilterLog(t *testing.T) {
@@ -729,6 +731,7 @@ func TestHeadStream_Concurrent(t *testing.T) {
 
 						return
 					}
+
 					expect++
 
 					if expect == uint64(nMessages) {

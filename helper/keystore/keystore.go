@@ -2,8 +2,9 @@ package keystore
 
 import (
 	"encoding/hex"
-	"fmt"
 	"os"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
 )

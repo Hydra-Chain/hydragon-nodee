@@ -1,8 +1,9 @@
 package root
 
 import (
-	"fmt"
 	"os"
+
+	"fmt"
 
 	"github.com/spf13/cobra"
 

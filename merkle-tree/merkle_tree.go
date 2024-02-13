@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"hash"
 	"math"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/crypto"
 	"github.com/0xPolygon/polygon-edge/types"

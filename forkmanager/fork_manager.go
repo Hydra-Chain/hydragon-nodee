@@ -1,10 +1,11 @@
 package forkmanager
 
 import (
-	"fmt"
 	"reflect"
 	"sort"
 	"sync"
+
+	"fmt"
 )
 
 var (

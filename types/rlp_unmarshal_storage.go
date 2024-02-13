@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+
 	"fmt"
 
 	"github.com/umbracle/fastrlp"

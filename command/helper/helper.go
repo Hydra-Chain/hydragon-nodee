@@ -3,11 +3,12 @@ package helper
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 	"net"
 	"net/url"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/command"

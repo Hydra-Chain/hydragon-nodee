@@ -2,8 +2,9 @@ package contract
 
 import (
 	"errors"
-	"fmt"
 	"testing"
+
+	"fmt"
 
 	testHelper "github.com/0xPolygon/polygon-edge/helper/tests"
 	"github.com/0xPolygon/polygon-edge/state"

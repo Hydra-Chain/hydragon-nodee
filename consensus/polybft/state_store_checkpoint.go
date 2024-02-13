@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sort"
+
+	"fmt"
 
 	"github.com/umbracle/ethgo"
 	bolt "go.etcd.io/bbolt"
@@ -82,6 +83,7 @@ func (s *CheckpointStore) insertExitEvents(exitEvents []*ExitEvent) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		exitEventBucket := tx.Bucket(exitEventsBucket)
 		lookupBucket := tx.Bucket(exitEventToEpochLookupBucket)
+
 		for i := 0; i < len(exitEvents); i++ {
 			if err := insertExitEventToBucket(exitEventBucket, lookupBucket, exitEvents[i]); err != nil {
 				return err

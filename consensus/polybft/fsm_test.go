@@ -2,11 +2,12 @@ package polybft
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
 	"time"
+
+	"fmt"
 
 	"github.com/0xPolygon/go-ibft/messages"
 	"github.com/0xPolygon/go-ibft/messages/proto"

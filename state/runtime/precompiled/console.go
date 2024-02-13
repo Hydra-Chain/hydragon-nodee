@@ -3,9 +3,10 @@ package precompiled
 import (
 	_ "embed"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"regexp"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/state/runtime"

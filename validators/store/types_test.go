@@ -2,8 +2,9 @@ package store
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
+
+	"fmt"
 
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/0xPolygon/polygon-edge/validators"

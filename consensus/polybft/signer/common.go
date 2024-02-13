@@ -3,10 +3,11 @@ package bls
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"log"
 	"math/big"
+
+	"fmt"
 
 	pcrypto "github.com/0xPolygon/polygon-edge/crypto"
 	bn256 "github.com/umbracle/go-eth-bn256"
