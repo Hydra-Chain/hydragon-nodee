@@ -40,7 +40,7 @@ func ValidateSecretFlags(dataDir, config string) error {
 // GetAccount resolves secrets manager and returns an account object
 func GetAccount(accountDir, accountConfig string, insecureLocalStore bool) (*wallet.Account, error) {
 	// resolve secrets manager instance and allow usage of insecure local secrets manager
-	secretsManager, err := polybftsecrets.GetSecretsManager(accountDir, accountConfig, true)
+	secretsManager, err := polybftsecrets.GetSecretsManager(accountDir, accountConfig, insecureLocalStore)
 	if err != nil {
 		return nil, err
 	}
