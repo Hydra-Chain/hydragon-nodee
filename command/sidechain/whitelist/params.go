@@ -17,6 +17,7 @@ type whitelistParams struct {
 	accountConfig       string
 	jsonRPC             string
 	newValidatorAddress string
+	insecureLocalStore  bool
 }
 
 func (ep *whitelistParams) validateFlags() error {

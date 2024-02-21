@@ -9,9 +9,10 @@ import (
 )
 
 type withdrawRewardsParams struct {
-	accountDir    string
-	accountConfig string
-	jsonRPC       string
+	accountDir         string
+	accountConfig      string
+	jsonRPC            string
+	insecureLocalStore bool
 }
 
 type withdrawRewardResult struct {

@@ -15,11 +15,12 @@ const (
 )
 
 type registerParams struct {
-	accountDir    string
-	accountConfig string
-	jsonRPC       string
-	stake         string
-	chainID       int64
+	accountDir         string
+	accountConfig      string
+	jsonRPC            string
+	stake              string
+	chainID            int64
+	insecureLocalStore bool
 }
 
 func (rp *registerParams) validateFlags() error {

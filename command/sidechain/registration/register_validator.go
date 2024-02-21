@@ -11,6 +11,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
+	"github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
@@ -74,6 +75,13 @@ func setFlags(cmd *cobra.Command) {
 		"the ID of the chain",
 	)
 
+	cmd.Flags().BoolVar(
+		&params.insecureLocalStore,
+		sidechain.InsecureLocalStoreFlag,
+		false,
+		"a flag to indicate if the secrets used are encrypted. If set to true, the secrets are stored in plain text.",
+	)
+
 	helper.RegisterJSONRPCFlag(cmd)
 	cmd.MarkFlagsMutuallyExclusive(polybftsecrets.AccountConfigFlag, polybftsecrets.AccountDirFlag)
 }
@@ -88,7 +96,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	secretsManager, err := polybftsecrets.GetSecretsManager(params.accountDir, params.accountConfig, true)
+	secretsManager, err := polybftsecrets.GetSecretsManager(params.accountDir, params.accountConfig, params.insecureLocalStore)
 	if err != nil {
 		return err
 	}

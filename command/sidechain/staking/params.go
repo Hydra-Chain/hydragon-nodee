@@ -13,12 +13,13 @@ var (
 )
 
 type stakeParams struct {
-	accountDir      string
-	accountConfig   string
-	jsonRPC         string
-	amount          string
-	self            bool
-	delegateAddress string
+	accountDir         string
+	accountConfig      string
+	jsonRPC            string
+	amount             string
+	self               bool
+	delegateAddress    string
+	insecureLocalStore bool
 }
 
 func (v *stakeParams) validateFlags() error {

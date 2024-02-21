@@ -80,7 +80,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	validatorAccount, err := sidechainHelper.GetAccount(params.accountDir, params.accountConfig)
+	validatorAccount, err := sidechainHelper.GetAccount(params.accountDir, params.accountConfig, false)
 	if err != nil {
 		return err
 	}

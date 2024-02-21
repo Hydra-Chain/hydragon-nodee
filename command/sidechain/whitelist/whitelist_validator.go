@@ -7,6 +7,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
+	"github.com/0xPolygon/polygon-edge/command/sidechain"
 	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/contracts"
@@ -58,6 +59,13 @@ func setFlags(cmd *cobra.Command) {
 		"account address of a possible validator",
 	)
 
+	cmd.Flags().BoolVar(
+		&params.insecureLocalStore,
+		sidechain.InsecureLocalStoreFlag,
+		false,
+		"a flag to indicate if the secrets used are encrypted. If set to true, the secrets are stored in plain text.",
+	)
+
 	cmd.MarkFlagsMutuallyExclusive(polybftsecrets.AccountDirFlag, polybftsecrets.AccountConfigFlag)
 	helper.RegisterJSONRPCFlag(cmd)
 }
@@ -72,7 +80,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	governanceAccount, err := sidechainHelper.GetAccount(params.accountDir, params.accountConfig)
+	governanceAccount, err := sidechainHelper.GetAccount(params.accountDir, params.accountConfig, params.insecureLocalStore)
 	if err != nil {
 		return fmt.Errorf("enlist validator failed: %w", err)
 	}

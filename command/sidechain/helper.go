@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	SelfFlag   = "self"
-	AmountFlag = "amount"
+	SelfFlag               = "self"
+	AmountFlag             = "amount"
+	InsecureLocalStoreFlag = "insecure"
 
 	DefaultGasPrice = 1879048192 // 0x70000000
 )
@@ -37,7 +38,7 @@ func ValidateSecretFlags(dataDir, config string) error {
 }
 
 // GetAccount resolves secrets manager and returns an account object
-func GetAccount(accountDir, accountConfig string) (*wallet.Account, error) {
+func GetAccount(accountDir, accountConfig string, insecureLocalStore bool) (*wallet.Account, error) {
 	// resolve secrets manager instance and allow usage of insecure local secrets manager
 	secretsManager, err := polybftsecrets.GetSecretsManager(accountDir, accountConfig, true)
 	if err != nil {
@@ -48,8 +49,8 @@ func GetAccount(accountDir, accountConfig string) (*wallet.Account, error) {
 }
 
 // GetAccountFromDir returns an account object from local secrets manager
-func GetAccountFromDir(accountDir string) (*wallet.Account, error) {
-	return GetAccount(accountDir, "")
+func GetAccountFromDir(accountDir string, insecureLocalStore bool) (*wallet.Account, error) {
+	return GetAccount(accountDir, "", insecureLocalStore)
 }
 
 // Hydra TODO: Fix it to get validator info from child chain

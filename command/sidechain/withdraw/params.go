@@ -10,9 +10,10 @@ import (
 )
 
 type withdrawParams struct {
-	accountDir    string
-	accountConfig string
-	jsonRPC       string
+	accountDir         string
+	accountConfig      string
+	jsonRPC            string
+	insecureLocalStore bool
 }
 
 func (w *withdrawParams) validateFlags() error {

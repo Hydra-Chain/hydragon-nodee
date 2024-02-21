@@ -14,10 +14,11 @@ var (
 )
 
 type unstakeParams struct {
-	accountDir    string
-	accountConfig string
-	jsonRPC       string
-	amount        string
+	accountDir         string
+	accountConfig      string
+	jsonRPC            string
+	amount             string
+	insecureLocalStore bool
 
 	amountValue *big.Int
 }
