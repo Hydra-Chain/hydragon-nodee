@@ -9,7 +9,7 @@ To begin your journey as a validator, you'll first need to obtain the software f
 - #### Executable
 
 Download the executable for the Hydragon Node directly from [Github Releases](https://github.com/Hydra-Chain/hydragon-node/releases/latest).
-After downloading, unzip the file. The extracted folder, named identically to the zip file, contains the polygon-edge executable. To enhance convenience, you may want to move this executable to your system's bin directory to run it from anywhere.
+After downloading, unzip the file. The extracted folder, named identically to the zip file, contains the `hydra` executable. To enhance convenience, you may want to move this executable to your system's bin directory to run it from anywhere.
 
 - #### Build from source
 
@@ -22,6 +22,7 @@ After downloading, unzip the file. The extracted folder, named identically to th
 1. Clone the node source code from our [Github Repository](https://github.com/Hydra-Chain/hydragon-node/tree/prod) or download it from from our [latest release](https://github.com/Hydra-Chain/hydragon-node/releases/latest).
 
 **Note!** Please make sure to check out the `prod` branch if you have opted to clone the repository.
+
 ```
 git checkout prod
 ```
@@ -31,14 +32,14 @@ git checkout prod
 4. Build the node
 
 ```
-CGO_ENABLED=0 go build -o polygon-edge -a -installsuffix cgo  main.go
+CGO_ENABLED=0 go build -o hydra -a -installsuffix cgo  main.go
 ```
 
 **CGO_ENABLED=0**: This environment variable disables CGO, which is a feature in Go that allows for the creation of Go packages that call C code. Setting CGO_ENABLED=0 makes the build static, meaning it does not depend on C libraries at runtime, enhancing portability across different environments without needing those C libraries installed.
 
 **go build**: This is the Go command to compile packages and dependencies into a binary executable.
 
-**-o polygon-edge**: The -o flag specifies the output file name for the compiled binary. In this case, the binary will be named polygon-edge.
+**-o hydra**: The -o flag specifies the output file name for the compiled binary. In this case, the binary will be named `hydra`.
 
 **-a**: This flag forces a rebuild of all packages that are part of the binary. It's useful to ensure you're compiling with the most up-to-date version of the code and dependencies.
 
@@ -51,14 +52,14 @@ To build Go applications for different platforms directly from your command line
 Example:
 
 ```
-CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o polygon-edge -a -installsuffix cgo  main.go
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o hydra -a -installsuffix cgo  main.go
 ```
 
 4. Add the generated binary to your system's PATH environment variable to allow its execution from any directory.
 
 - #### Docker image
 
-Alternatively, pull the Docker image for Hydragon from our repository at [Docker Hub](https://hub.docker.com/repository/docker/rsantev/polygon-edge/general). This method is ideal for users who prefer containerized environments.
+Alternatively, pull the Docker image for Hydragon from our repository at [Docker Hub](https://hub.docker.com/repository/docker/rsantev/hydra-client/general). This method is ideal for users who prefer containerized environments.
 
 ### Generate secrets
 
@@ -71,7 +72,7 @@ The foundation of your validator identity is built upon three distinct private k
 There are different options on how and where the secrets to be stored but we recommend storing the keys encrypted on your local file system and maintaining offline backups. To generate these keys, use the following command, which encrypts them locally:
 
 ```
-polygon-edge polybft-secrets --chain-id 8844 --data-dir node-secrets
+hydra secrets init --chain-id 8844 --data-dir node-secrets
 ```
 
 This command initiates the creation of your node's secrets for a testnet chain with ID 8844, storing them in a directory named node-secrets. During this process, you'll confirm each secret and establish a password for file encryption.
@@ -108,7 +109,7 @@ Paste the file in your node directory.
 Run your node with the following command from its directory:
 
 ```
-polygon-edge server --data-dir ./node-secrets --chain ./genesis.json --grpc-address :9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545  --secrets-config ./secrets-config.json
+hydra server --data-dir ./node-secrets --chain ./genesis.json --grpc-address :9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545  --secrets-config ./secrets-config.json
 ```
 
 This process may take some time, as the node needs to fully sync with the blockchain. Once the syncing process is complete, you will need to restart the node by running the same command.
@@ -126,7 +127,7 @@ Once your node is operational and fully synced, you're ready to become a validat
 Check your public secrets data with the following command:
 
 ```
-polygon-edge polybft-secrets output --data-dir node-secrets
+hydra secrets output --data-dir node-secrets
 ```
 
 You need the following value:
@@ -143,7 +144,7 @@ Send it to Hydra's team, so they can whitelist your address to be able to partic
 After Hydra's team confirms you are whitelisted you have to register your account as a validator and stake a given amount.
 
 ```
-polygon-edge polybft register-validator --data-dir ./node-secrets --stake 99000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
+hydra polybft register-validator --data-dir ./node-secrets --stake 99000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.
@@ -151,7 +152,7 @@ The above command both register the validator and stakes the specified amount.
 Use the following command in case you want to execute the stake operation only:
 
 ```
-polygon-edge polybft stake --data-dir ./node-secrets --self true --amount 99000000000000000000 --jsonrpc http://localhost:8545
+hydra polybft stake --data-dir ./node-secrets --self true --amount 99000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 **Note:** Amounts are specified in wei.

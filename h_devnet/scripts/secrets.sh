@@ -18,7 +18,7 @@ if [ -f "${FLAG_FILE}" ]; then
 else
   # Check if the KEY environment variable is not set
   if [ -z "${KEY}" ]; then
-    polygon-edge polybft-secrets output --chain-id 8844 --data-dir node --insecure
+    hydra secrets init --chain-id 8844 --data-dir node --insecure
   else
     # Ensure that all four environment variables are set
     if [ -z "${KEY}" ] || [ -z "${BLS_KEY}" ] || [ -z "${SIG}" ] || [ -z "${P2P_KEY}" ]; then

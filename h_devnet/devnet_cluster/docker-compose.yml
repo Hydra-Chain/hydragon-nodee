@@ -4,17 +4,17 @@ services:
   ## INITIALIZE GENESIS AND SECRETS, ETC.
   init:
     image: rsantev/devnet-cluster:latest
-    container_name: polygon-edge-bootstrapper
+    container_name: hydra-bootstrapper
     command: ["init"]
     volumes:
       - data:/data
     networks:
-      - polygon-edge-docker
+      - hydra-docker
 
   ## RUN NODES
   node-1:
     image: rsantev/devnet-cluster:latest
-    container_name: polygon-edge-validator-1
+    container_name: hydra-validator-1
     command:
       [
         "server",
@@ -42,12 +42,12 @@ services:
     volumes:
       - data:/data
     networks:
-      - polygon-edge-docker
+      - hydra-docker
     restart: on-failure
 
   node-2:
     image: rsantev/devnet-cluster:latest
-    container_name: polygon-edge-validator-2
+    container_name: hydra-validator-2
     command:
       [
         "server",
@@ -75,12 +75,12 @@ services:
     volumes:
       - data:/data
     networks:
-      - polygon-edge-docker
+      - hydra-docker
     restart: on-failure
 
   node-3:
     image: rsantev/devnet-cluster:latest
-    container_name: polygon-edge-validator-3
+    container_name: hydra-validator-3
     command:
       [
         "server",
@@ -108,12 +108,12 @@ services:
     volumes:
       - data:/data
     networks:
-      - polygon-edge-docker
+      - hydra-docker
     restart: on-failure
 
   node-4:
     image: rsantev/devnet-cluster:latest
-    container_name: polygon-edge-validator-4
+    container_name: hydra-validator-4
     command:
       [
         "server",
@@ -141,12 +141,12 @@ services:
     volumes:
       - data:/data
     networks:
-      - polygon-edge-docker
+      - hydra-docker
     restart: on-failure
 
   node-5:
     image: rsantev/devnet-cluster:latest
-    container_name: polygon-edge-validator-5
+    container_name: hydra-validator-5
     command:
       [
         "server",
@@ -174,13 +174,13 @@ services:
     volumes:
       - data:/data
     networks:
-      - polygon-edge-docker
+      - hydra-docker
     restart: on-failure
 
 networks:
-  polygon-edge-docker:
+  hydra-docker:
     driver: bridge
-    name: polygon-edge-docker
+    name: hydra-docker
 
 volumes:
   data:

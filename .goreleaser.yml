@@ -1,4 +1,4 @@
-project_name: polygon-edge
+project_name: hydra-client
 
 release:
   disable: false
@@ -8,7 +8,7 @@ release:
 builds:
   - id: darwin-amd64
     main: ./main.go
-    binary: polygon-edge
+    binary: hydra
     goos:
       - darwin
     goarch:
@@ -16,12 +16,11 @@ builds:
     env:
       - CC=o64-clang
       - CXX=o64-clang++
-    ldflags:
-      -s -w -X 'github.com/0xPolygon/polygon-edge/versioning.Version=v{{ .Version }}'
+    ldflags: -s -w -X 'github.com/0xPolygon/polygon-edge/versioning.Version=v{{ .Version }}'
 
   - id: darwin-arm64
     main: ./main.go
-    binary: polygon-edge
+    binary: hydra
     goos:
       - darwin
     goarch:
@@ -29,12 +28,11 @@ builds:
     env:
       - CC=oa64-clang
       - CXX=oa64-clang++
-    ldflags:
-      -s -w -X 'github.com/0xPolygon/polygon-edge/versioning.Version=v{{ .Version }}'
+    ldflags: -s -w -X 'github.com/0xPolygon/polygon-edge/versioning.Version=v{{ .Version }}'
 
   - id: linux-amd64
     main: ./main.go
-    binary: polygon-edge
+    binary: hydra
     goos:
       - linux
     goarch:
@@ -51,7 +49,7 @@ builds:
 
   - id: linux-arm64
     main: ./main.go
-    binary: polygon-edge
+    binary: hydra
     goos:
       - linux
     goarch:
@@ -67,8 +65,7 @@ builds:
       - osusergo
 
 archives:
-  -
-    files:
+  - files:
       - LICENSE
       - README.md
 
@@ -99,7 +96,7 @@ snapshot:
 
 dockers:
   - image_templates:
-      - 0xpolygon/{{ .ProjectName }}:{{ .Version }}-amd64
+      - R-Santev/{{ .ProjectName }}:{{ .Version }}-amd64
     dockerfile: Dockerfile.release
     use: buildx
     goarch: amd64
@@ -110,7 +107,7 @@ dockers:
     skip_push: false
 
   - image_templates:
-      - 0xpolygon/{{ .ProjectName }}:{{ .Version }}-arm64
+      - R-Santev/{{ .ProjectName }}:{{ .Version }}-arm64
     dockerfile: Dockerfile.release
     use: buildx
     goarch: arm64
@@ -121,14 +118,14 @@ dockers:
     skip_push: false
 
 docker_manifests:
-  - name_template: 0xpolygon/{{ .ProjectName }}:{{ .Version }}
+  - name_template: R-Santev/{{ .ProjectName }}:{{ .Version }}
     image_templates:
-      - 0xpolygon/{{ .ProjectName }}:{{ .Version }}-amd64
-      - 0xpolygon/{{ .ProjectName }}:{{ .Version }}-arm64
+      - R-Santev/{{ .ProjectName }}:{{ .Version }}-amd64
+      - R-Santev/{{ .ProjectName }}:{{ .Version }}-arm64
     skip_push: false
 
-  - name_template: 0xpolygon/{{ .ProjectName }}:latest
+  - name_template: R-Santev/{{ .ProjectName }}:latest
     image_templates:
-      - 0xpolygon/{{ .ProjectName }}:{{ .Version }}-amd64
-      - 0xpolygon/{{ .ProjectName }}:{{ .Version }}-arm64
+      - R-Santev/{{ .ProjectName }}:{{ .Version }}-amd64
+      - R-Santev/{{ .ProjectName }}:{{ .Version }}-arm64
     skip_push: auto

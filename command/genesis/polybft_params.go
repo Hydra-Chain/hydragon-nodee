@@ -210,7 +210,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	}
 
 	// deploy genesis contracts
-	allocs, err := p.deployContracts(totalStake, rewardTokenByteCode, polyBftConfig, chainConfig, burnContractAddr)
+	allocs, err := p.deployContracts(totalStake, rewardTokenByteCode)
 	if err != nil {
 		return err
 	}
@@ -327,10 +327,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 
 func (p *genesisParams) deployContracts(
 	totalStake *big.Int,
-	rewardTokenByteCode []byte,
-	polybftConfig *polybft.PolyBFTConfig,
-	chainConfig *chain.Chain,
-	burnContractAddr types.Address) (map[types.Address]*chain.GenesisAccount, error) {
+	rewardTokenByteCode []byte) (map[types.Address]*chain.GenesisAccount, error) {
 	proxyToImplAddrMap := contracts.GetProxyImplementationMapping()
 	proxyAddresses := make([]types.Address, 0, len(proxyToImplAddrMap))
 

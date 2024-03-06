@@ -10,12 +10,10 @@ import (
 	"github.com/0xPolygon/polygon-edge/command/bridge"
 	"github.com/0xPolygon/polygon-edge/command/genesis"
 	"github.com/0xPolygon/polygon-edge/command/helper"
-	"github.com/0xPolygon/polygon-edge/command/ibft"
 	"github.com/0xPolygon/polygon-edge/command/license"
 	"github.com/0xPolygon/polygon-edge/command/monitor"
 	"github.com/0xPolygon/polygon-edge/command/peers"
 	"github.com/0xPolygon/polygon-edge/command/polybft"
-	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/command/regenesis"
 	"github.com/0xPolygon/polygon-edge/command/secrets"
 	"github.com/0xPolygon/polygon-edge/command/server"
@@ -31,7 +29,7 @@ type RootCommand struct {
 func NewRootCommand() *RootCommand {
 	rootCommand := &RootCommand{
 		baseCmd: &cobra.Command{
-			Short: "Polygon Edge is a framework for building Ethereum-compatible Blockchain networks",
+			Short: "Welcome to the HydraChain node CLI",
 		},
 	}
 
@@ -50,12 +48,11 @@ func (rc *RootCommand) registerSubCommands() {
 		secrets.GetCommand(),
 		peers.GetCommand(),
 		monitor.GetCommand(),
-		ibft.GetCommand(),
+		// ibft.GetCommand(),
 		backup.GetCommand(),
 		genesis.GetCommand(),
 		server.GetCommand(),
 		license.GetCommand(),
-		polybftsecrets.GetCommand(),
 		polybft.GetCommand(),
 		bridge.GetCommand(),
 		regenesis.GetCommand(),

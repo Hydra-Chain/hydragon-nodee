@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/shHYDRA_NODE_BIN
 
 set -e
 
@@ -8,13 +8,13 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
-POLYGON_EDGE_BIN=polygon-edge
+HYDRA_NODE_BIN=hydra
 CHAIN_CUSTOM_OPTIONS=$(
   tr "\n" " " <<EOL
 --block-gas-limit 10000000
 --epoch-size 500
 --chain-id 8844
---name polygon-edge-docker
+--name hydra-docker
 --premine 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c:0x314dc6448d932ae0a456589c0000
 --premine 0x8c293C5b70b6493856CF4C7419E1Fb137b97B25d:0xD3C21BCECCEDA1000000
 --proxy-contracts-admin 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c
@@ -25,7 +25,7 @@ case "$1" in
 "init")
   # Check if secrets already exist
   if [ -f /data/data-1/libp2p/libp2p.key ]; then
-    echo "PolyBFT secrets already exist, skipping secret generation."
+    echo "Hydragon secrets already exist, skipping secret generation."
 
     # Loop through each data directory and delete specific subdirectories
     for i in 1 2 3 4 5; do
@@ -33,18 +33,18 @@ case "$1" in
       rm -rf /data/data-$i/blockchain /data/data-$i/consensus/polybft /data/data-$i/consensus/validator.sig /data/data-$i/trie
 
       # This will generate new signatures without modifying the keys that are already present
-      "$POLYGON_EDGE_BIN" polybft-secrets init --insecure --chain-id 8844 --num 5 --data-dir /data/data- --json
+      "$HYDRA_NODE_BIN" secrets init --insecure --chain-id 8844 --num 5 --data-dir /data/data- --json
     done
   else
-    echo "Generating PolyBFT secrets..."
+    echo "Generating secrets..."
   fi
 
-  secrets=$("$POLYGON_EDGE_BIN" polybft-secrets init --insecure --chain-id 8844 --num 5 --data-dir /data/data- --json)
+  secrets=$("$HYDRA_NODE_BIN" secrets init --insecure --chain-id 8844 --num 5 --data-dir /data/data- --json)
 
   rm -f /data/genesis.json
 
   echo "Generating PolyBFT genesis file..."
-  "$POLYGON_EDGE_BIN" genesis $CHAIN_CUSTOM_OPTIONS \
+  "$HYDRA_NODE_BIN" genesis $CHAIN_CUSTOM_OPTIONS \
     --dir /data/genesis.json \
     --consensus polybft \
     --validators-path /data \
@@ -58,7 +58,7 @@ case "$1" in
     --bootnode "/dns4/node-5/tcp/1478/p2p/$(echo "$secrets" | jq -r '.[4] | .node_id')"
   ;;
 *)
-  echo "Executing polygon-edge..."
-  exec "$POLYGON_EDGE_BIN" "$@"
+  echo "Executing hydra..."
+  exec "$HYDRA_NODE_BIN" "$@"
   ;;
 esac

@@ -1,4 +1,4 @@
-FROM rsantev/polygon-edge:latest
+FROM rsantev/hydra-client:latest
 
 WORKDIR /app
 

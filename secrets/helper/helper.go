@@ -28,7 +28,7 @@ func SetupEncryptedLocalSecretsManager(dataDir string) (secrets.SecretsManager, 
 		nil, // Local secrets manager doesn't require a config
 		&secrets.SecretsManagerParams{
 			Logger: hclog.New(&hclog.LoggerOptions{
-				Name:  "polybft-secrets",
+				Name:  "secrets",
 				Level: hclog.Info,
 			}),
 			Extra: map[string]interface{}{

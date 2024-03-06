@@ -7,13 +7,13 @@ Information about building and using the application
 1. MacOS ARM64
 
 ```
-CGO_ENABLED=0 GOOS=darwin GOARCH=arm64  go build -o polygon-edge -a -installsuffix cgo  main.go
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64  go build -o hydra -a -installsuffix cgo  main.go
 ```
 
 2. Linux
 
 ```
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o polygon-edge -a -installsuffix cgo  main.go
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hydra -a -installsuffix cgo  main.go
 ```
 
 ## Move to path
@@ -21,7 +21,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o polygon-edge -a -installsuffix
 1. Linux
 
 ```
-sudo mv polygon-edge /usr/local/bin
+sudo mv hydra /usr/local/bin
 ```
 
 ## Build devnet node docker image
@@ -29,13 +29,13 @@ sudo mv polygon-edge /usr/local/bin
 1. Build node source code
 
 ```
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o polygon-edge -a -installsuffix cgo  main.go
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hydra -a -installsuffix cgo  main.go
 ```
 
 2. Build node image
 
 ```
-docker build --platform linux/amd64 -t rsantev/polygon-edge:latest -f Dockerfile.release .
+docker build --platform linux/amd64 -t rsantev/hydra-client:latest -f Dockerfile.release .
 ```
 
 3. Push node image to DockerHub
@@ -43,7 +43,7 @@ docker build --platform linux/amd64 -t rsantev/polygon-edge:latest -f Dockerfile
 Use Docker Desktop or:
 
 ```
-docker push rsantev/polygon-edge:latest
+docker push rsantev/hydra-client:latest
 ```
 
 4. Build hydrag devnet image
