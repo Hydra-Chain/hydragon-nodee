@@ -1,7 +1,6 @@
 .PHONY: download-submodules
 download-submodules: check-git
-	git submodule init
-	git submodule update
+	git submodule update --init  --remote ./core-contracts
 
 .PHONY: check-git
 check-git:
@@ -39,14 +38,14 @@ protoc: check-protoc
 .PHONY: build
 build: check-go check-git
 	$(eval COMMIT_HASH = $(shell git rev-parse HEAD))
-	$(eval VERSION = $(shell git tag --points-at $COMMIT_HASH))
+	$(eval VERSION = $(shell git tag --points-at $(COMMIT_HASH)))
 	$(eval BRANCH = $(shell git rev-parse --abbrev-ref HEAD | tr -d '\040\011\012\015\n'))
 	$(eval TIME = $(shell date))
-	go build -o polygon-edge -ldflags="\
-    	-X 'github.com/0xPolygon/polygon-edge/versioning.Version=$(VERSION)' \
-		-X 'github.com/0xPolygon/polygon-edge/versioning.Commit=$(COMMIT_HASH)'\
-		-X 'github.com/0xPolygon/polygon-edge/versioning.Branch=$(BRANCH)'\
-		-X 'github.com/0xPolygon/polygon-edge/versioning.BuildTime=$(TIME)'" \
+	go build -o hydra -ldflags="\
+    	-X 'github.com/Hydra-Chain/hydragon-node/versioning.Version=$(VERSION)' \
+		-X 'github.com/Hydra-Chain/hydragon-node/versioning.Commit=$(COMMIT_HASH)'\
+		-X 'github.com/Hydra-Chain/hydragon-node/versioning.Branch=$(BRANCH)'\
+		-X 'github.com/Hydra-Chain/hydragon-node/versioning.BuildTime=$(TIME)'" \
 	main.go
 
 .PHONY: lint
