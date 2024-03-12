@@ -353,6 +353,10 @@ func (p *genesisParams) deployContracts(
 			artifact: contractsapi.LiquidityToken,
 			address:  contracts.LiquidityTokenContract,
 		},
+		{
+			artifact: contractsapi.FeeHandler,
+			address:  contracts.FeeHandlerContractV1,
+		},
 	}
 
 	// if !params.nativeTokenConfig.IsMintable {

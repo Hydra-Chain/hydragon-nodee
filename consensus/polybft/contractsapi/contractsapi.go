@@ -327,7 +327,7 @@ type InitializeRewardPoolFn struct {
 	NewValidatorSet  types.Address `abi:"newValidatorSet"`
 	NewRewardWallet  types.Address `abi:"newRewardWallet"`
 	NewMinDelegation *big.Int      `abi:"newMinDelegation"`
-	AprManager       types.Address `abi:"aprManager"`
+	Manager          types.Address `abi:"manager"`
 }
 
 func (i *InitializeRewardPoolFn) Sig() []byte {
@@ -392,6 +392,22 @@ func (i *InitializeLiquidityTokenFn) EncodeAbi() ([]byte, error) {
 
 func (i *InitializeLiquidityTokenFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(LiquidityToken.Abi.Methods["initialize"], buf, i)
+}
+
+type InitializeFeeHandlerFn struct {
+	Owner types.Address `abi:"owner"`
+}
+
+func (i *InitializeFeeHandlerFn) Sig() []byte {
+	return FeeHandler.Abi.Methods["initialize"].ID()
+}
+
+func (i *InitializeFeeHandlerFn) EncodeAbi() ([]byte, error) {
+	return FeeHandler.Abi.Methods["initialize"].Encode(i)
+}
+
+func (i *InitializeFeeHandlerFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(FeeHandler.Abi.Methods["initialize"], buf, i)
 }
 
 type ProtectSetUpProxyGenesisProxyFn struct {

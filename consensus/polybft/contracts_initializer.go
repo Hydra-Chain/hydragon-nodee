@@ -64,7 +64,7 @@ func initRewardPool(polybftConfig PolyBFTConfig, transition *state.Transition) e
 		NewRewardWallet:  types.Address{0x22}, // TODO: Remove reward wallet or fully implement it in the contracts
 		NewMinDelegation: big.NewInt(minDelegation),
 		// TODO: AprManager is temporary solution to enable update in the parameters. Remove it when "Dynamic APR variables" epic is finished
-		AprManager: polybftConfig.Governance,
+		Manager: polybftConfig.Governance,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -74,6 +74,19 @@ func initRewardPool(polybftConfig PolyBFTConfig, transition *state.Transition) e
 
 	return callContract(contracts.SystemCaller,
 		contracts.RewardPoolContract, input, "RewardPool.initialize", transition)
+}
+
+func initFeeHandler(polybftConfig PolyBFTConfig, transition *state.Transition) error {
+	initFn := &contractsapi.InitializeFeeHandlerFn{
+		Owner: polybftConfig.Governance,
+	}
+
+	input, err := initFn.EncodeAbi()
+	if err != nil {
+		return fmt.Errorf("FeeHandler.initialize params encoding failed: %w", err)
+	}
+
+	return callContract(contracts.SystemCaller, contracts.FeeHandlerContract, input, "FeeHandler.initialize", transition)
 }
 
 func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {

@@ -150,10 +150,6 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		input, err := commitEpochInput.EncodeAbi()
 		require.NoError(t, err)
 
-		// Normally injecting balance to the system caller is handled by a higher order method in the executor.go
-		// but here we use call2 directly so we need to do it manually
-		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
-
 		// call commit epoch
 		result := transition.Call2(contracts.SystemCaller, contracts.ValidatorSetContract, input, big.NewInt(0), 10000000000)
 		require.NoError(t, result.Err)
@@ -164,6 +160,11 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		distributeRewards := createTestDistributeRewardsInput(t, 1, accSet, polyBFTConfig.EpochSize)
 		distributeRewardsInput, err := distributeRewards.EncodeAbi()
 		require.NoError(t, err)
+
+		// Normally injecting balance to the system caller is handled by a higher order method in the executor.go
+		// but here we use call2 directly so we need to do it manually
+		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
+
 		// call reward distributor
 		result = transition.Call2(contracts.SystemCaller, contracts.RewardPoolContract, distributeRewardsInput, maxRewardToDistribute, 10000000000)
 		require.NoError(t, result.Err)
@@ -173,8 +174,6 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		input, err = commitEpochInput.EncodeAbi()
 		require.NoError(t, err)
 
-		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
-
 		// call commit epoch
 		result = transition.Call2(contracts.SystemCaller, contracts.ValidatorSetContract, input, big.NewInt(0), 10000000000)
 		require.NoError(t, result.Err)
@@ -183,11 +182,60 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		distributeRewards = createTestDistributeRewardsInput(t, 2, accSet, polyBFTConfig.EpochSize)
 		distributeRewardsInput, err = distributeRewards.EncodeAbi()
 		require.NoError(t, err)
+
+		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
+
 		// call reward distributor
 		result = transition.Call2(contracts.SystemCaller, contracts.RewardPoolContract, distributeRewardsInput, maxRewardToDistribute, 10000000000)
 		require.NoError(t, result.Err)
 		t.Logf("Number of validators %d on reward distribution when we add %d of delegators, Gas used %+v\n", accSet.Len(), accSet.Len()*delegatorsPerValidator, result.GasUsed)
 	}
+}
+
+// Test Transaction fees distribution to FeeHandler
+func TestIntegration_DistributeFee(t *testing.T) {
+	fromAddr := types.Address{0x1}
+	toAddr := &types.Address{0x2}
+	value := big.NewInt(1)
+	gasPrice := big.NewInt(10)
+	txFees := new(big.Int).Mul(gasPrice, big.NewInt(21000))
+	fromBalance := new(big.Int).Add(value, txFees)
+
+	alloc := map[types.Address]*chain.GenesisAccount{
+		contracts.FeeHandlerContract: {
+			Code: contractsapi.FeeHandler.DeployedBytecode,
+		},
+		fromAddr: {
+			Balance: fromBalance,
+		},
+	}
+
+	transition := newTestTransition(t, alloc)
+
+	polyBFTConfig := PolyBFTConfig{
+		// just an address for governance
+		Governance: *toAddr,
+	}
+
+	// init ValidatorSet
+	err := initFeeHandler(polyBFTConfig, transition)
+	require.NoError(t, err)
+
+	tx := &types.Transaction{
+		Nonce:    0,
+		From:     fromAddr,
+		To:       toAddr,
+		Value:    value,
+		Type:     types.LegacyTx,
+		GasPrice: gasPrice,
+		Gas:      21000,
+	}
+
+	err = transition.Write(tx)
+	require.NoError(t, err)
+
+	// Balance of FeeHandler must increase with 50% of the reward
+	require.Equal(t, transition.GetBalance(contracts.FeeHandlerContract), new(big.Int).Div(txFees, big.NewInt(2)))
 }
 
 func deployAndInitContract(t *testing.T, transition *state.Transition, bytecode []byte, sender types.Address,

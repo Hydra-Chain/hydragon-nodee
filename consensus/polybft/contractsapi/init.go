@@ -64,6 +64,7 @@ var (
 	TestSimple             *artifact.Artifact
 	TestRewardToken        *artifact.Artifact
 	LiquidityToken         *artifact.Artifact
+	FeeHandler             *artifact.Artifact
 )
 
 func init() {
@@ -85,6 +86,11 @@ func init() {
 	}
 
 	LiquidityToken, err = artifact.DecodeArtifact([]byte(LiquidityTokenArtifact))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	FeeHandler, err = artifact.DecodeArtifact([]byte(FeeHandlerArtifact))
 	if err != nil {
 		log.Fatal(err)
 	}

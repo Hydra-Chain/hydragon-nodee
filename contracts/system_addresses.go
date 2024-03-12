@@ -39,6 +39,10 @@ var (
 	L2StateSenderContract = types.StringToAddress("0x1002")
 	// L2StateSenderContractV1 is an address of bridge contract to the rootchain
 	L2StateSenderContractV1 = types.StringToAddress("0x10021")
+	// FeeHandlerContract is an address of the fee handler proxy contract
+	FeeHandlerContract = types.StringToAddress("0x107")
+	// FeeHandlerContract is an address of fee handler implementation contract
+	FeeHandlerContractV1 = types.StringToAddress("0x1071")
 
 	// ChildERC20Contract is an address of bridgable ERC20 token contract on the child chain
 	ChildERC20Contract = types.StringToAddress("0x1003")
@@ -94,7 +98,6 @@ var (
 	BlockListBridgeAddr = types.StringToAddress("0x0300000000000000000000000000000000000004")
 
 	// Hydra: Additional system contracts and special addresses
-	FeeHandlerContract     = types.StringToAddress("0x1012")
 	HydraBurnAddress       = types.StringToAddress("0x0000000000000000000000000000000000000000")
 	LiquidityTokenContract = types.StringToAddress("0x1013")
 )
@@ -108,6 +111,7 @@ func GetProxyImplementationMapping() map[types.Address]types.Address {
 		// L2StateSenderContract: L2StateSenderContractV1,
 		ValidatorSetContract: ValidatorSetContractV1,
 		RewardPoolContract:   RewardPoolContractV1,
+		FeeHandlerContract:   FeeHandlerContractV1,
 		// NativeERC20TokenContract: NativeERC20TokenContractV1,
 		// ChildERC20PredicateContract:          ChildERC20PredicateContractV1,
 		// ChildERC721PredicateContract:         ChildERC721PredicateContractV1,

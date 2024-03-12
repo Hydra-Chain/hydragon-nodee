@@ -82,6 +82,15 @@ func main() {
 			[]string{},
 		},
 		{
+			"FeeHandler",
+			gensc.FeeHandler,
+			false,
+			[]string{
+				"initialize",
+			},
+			[]string{},
+		},
+		{
 			"GenesisProxy",
 			gensc.GenesisProxy,
 			false,

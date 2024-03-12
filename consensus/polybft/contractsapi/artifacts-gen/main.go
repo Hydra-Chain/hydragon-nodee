@@ -49,6 +49,10 @@ func main() {
 			"LiquidityToken",
 		},
 		{
+			"FeeHandler/FeeHandler.sol",
+			"FeeHandler",
+		},
+		{
 			"GenesisProxy/GenesisProxy.sol",
 			"GenesisProxy",
 		},

@@ -151,7 +151,7 @@ func newTestTransition(t *testing.T, alloc map[types.Address]*chain.GenesisAccou
 
 	transition, err := ex.BeginTxn(
 		rootHash,
-		&types.Header{},
+		&types.Header{GasLimit: 10000000},
 		types.ZeroAddress,
 	)
 	assert.NoError(t, err)

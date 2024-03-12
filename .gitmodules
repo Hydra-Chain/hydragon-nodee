@@ -4,6 +4,6 @@
 	shallow = true
 [submodule "core-contracts"]
 	path = core-contracts
-	url = https://github.com/R-Santev/core-contracts.git
+	url = https://github.com/Hydra-Chain/hydragon-core-contracts.git
 	shallow = true
 	branch = h-main
