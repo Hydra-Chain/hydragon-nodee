@@ -323,6 +323,32 @@ func (s *StakeChangedEvent) Decode(input []byte) error {
 	return ValidatorSet.Abi.Events["StakeChanged"].Inputs.DecodeStruct(input, &s)
 }
 
+type WithdrawalFinishedEvent struct {
+	Account types.Address `abi:"account"`
+	To      types.Address `abi:"to"`
+	Amount  *big.Int      `abi:"amount"`
+}
+
+func (*WithdrawalFinishedEvent) Sig() ethgo.Hash {
+	return ValidatorSet.Abi.Events["WithdrawalFinished"].ID()
+}
+
+func (w *WithdrawalFinishedEvent) Encode() ([]byte, error) {
+	return ValidatorSet.Abi.Events["WithdrawalFinished"].Inputs.Encode(w)
+}
+
+func (w *WithdrawalFinishedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !ValidatorSet.Abi.Events["WithdrawalFinished"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(ValidatorSet.Abi.Events["WithdrawalFinished"], log, w)
+}
+
+func (w *WithdrawalFinishedEvent) Decode(input []byte) error {
+	return ValidatorSet.Abi.Events["WithdrawalFinished"].Inputs.DecodeStruct(input, &w)
+}
+
 type InitializeRewardPoolFn struct {
 	NewValidatorSet  types.Address `abi:"newValidatorSet"`
 	NewRewardWallet  types.Address `abi:"newRewardWallet"`
@@ -373,6 +399,46 @@ func (d *DistributeRewardsForRewardPoolFn) EncodeAbi() ([]byte, error) {
 
 func (d *DistributeRewardsForRewardPoolFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(RewardPool.Abi.Methods["distributeRewardsFor"], buf, d)
+}
+
+type ClaimValidatorRewardRewardPoolFn struct {
+}
+
+func (c *ClaimValidatorRewardRewardPoolFn) Sig() []byte {
+	return RewardPool.Abi.MethodsBySignature["claimValidatorReward()"].ID()
+}
+
+func (c *ClaimValidatorRewardRewardPoolFn) EncodeAbi() ([]byte, error) {
+	return RewardPool.Abi.MethodsBySignature["claimValidatorReward()"].Encode(c)
+}
+
+func (c *ClaimValidatorRewardRewardPoolFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(RewardPool.Abi.MethodsBySignature["claimValidatorReward()"], buf, c)
+}
+
+type ValidatorRewardClaimedEvent struct {
+	Validator types.Address `abi:"validator"`
+	Amount    *big.Int      `abi:"amount"`
+}
+
+func (*ValidatorRewardClaimedEvent) Sig() ethgo.Hash {
+	return RewardPool.Abi.Events["ValidatorRewardClaimed"].ID()
+}
+
+func (v *ValidatorRewardClaimedEvent) Encode() ([]byte, error) {
+	return RewardPool.Abi.Events["ValidatorRewardClaimed"].Inputs.Encode(v)
+}
+
+func (v *ValidatorRewardClaimedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !RewardPool.Abi.Events["ValidatorRewardClaimed"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(RewardPool.Abi.Events["ValidatorRewardClaimed"], log, v)
+}
+
+func (v *ValidatorRewardClaimedEvent) Decode(input []byte) error {
+	return RewardPool.Abi.Events["ValidatorRewardClaimed"].Inputs.DecodeStruct(input, &v)
 }
 
 type InitializeLiquidityTokenFn struct {

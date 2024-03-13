@@ -2,7 +2,7 @@ package polybft
 
 import (
 	// H_MODIFY: Registration module is moved to sidechain
-	withdraw "github.com/0xPolygon/polygon-edge/command/bridge/withdraw/erc721"
+
 	"github.com/0xPolygon/polygon-edge/command/sidechain/registration"
 	"github.com/0xPolygon/polygon-edge/command/sidechain/staking"
 	"github.com/0xPolygon/polygon-edge/command/sidechain/whitelist"
@@ -33,8 +33,6 @@ func GetCommand() *cobra.Command {
 		registration.GetCommand(),
 		// sidechain (validator set) command to whitelist validators
 		whitelist.GetCommand(),
-		// sidechain (validator set) command to witdhraw amount on child chain
-		withdraw.GetCommand(),
 	)
 
 	return polybftCmd

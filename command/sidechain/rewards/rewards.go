@@ -10,12 +10,10 @@ import (
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
-	rootHelper "github.com/0xPolygon/polygon-edge/command/rootchain/helper"
 	"github.com/0xPolygon/polygon-edge/command/sidechain"
 	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/contracts"
-	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/txrelayer"
 	"github.com/0xPolygon/polygon-edge/types"
 )
@@ -24,8 +22,8 @@ var params withdrawRewardsParams
 
 func GetCommand() *cobra.Command {
 	unstakeCmd := &cobra.Command{
-		Use:     "withdraw-rewards",
-		Short:   "Withdraws pending rewards on child chain for given validator",
+		Use:     "claim-rewards",
+		Short:   "Claim rewards for given validator",
 		PreRunE: runPreRun,
 		RunE:    runCommand,
 	}
@@ -77,7 +75,6 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	validatorAddr := validatorAccount.Ecdsa.Address()
-	rewardPoolAddr := ethgo.Address(contracts.RewardPoolContract)
 
 	txRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(params.jsonRPC),
 		txrelayer.WithReceiptTimeout(150*time.Millisecond))
@@ -85,27 +82,17 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	encoded, err := contractsapi.RewardPool.Abi.Methods["pendingRewards"].Encode([]interface{}{validatorAddr})
+	claimRewardsFn := contractsapi.ClaimValidatorRewardRewardPoolFn{}
+	encoded, err := claimRewardsFn.EncodeAbi()
 	if err != nil {
 		return err
 	}
 
-	response, err := txRelayer.Call(validatorAddr, rewardPoolAddr, encoded)
-	if err != nil {
-		return err
+	txn := &ethgo.Transaction{
+		From:  validatorAddr,
+		Input: encoded,
+		To:    (*ethgo.Address)(&contracts.RewardPoolContract),
 	}
-
-	amount, err := common.ParseUint256orHex(&response)
-	if err != nil {
-		return err
-	}
-
-	encoded, err = contractsapi.RewardPool.Abi.Methods["withdrawReward"].Encode([]interface{}{})
-	if err != nil {
-		return err
-	}
-
-	txn := rootHelper.CreateTransaction(validatorAddr, &rewardPoolAddr, encoded, nil, false)
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
 	if err != nil {
@@ -113,12 +100,35 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	if receipt.Status != uint64(types.ReceiptSuccess) {
-		return fmt.Errorf("withdraw transaction failed on block: %d", receipt.BlockNumber)
+		return fmt.Errorf("claim rewards transaction failed on block: %d", receipt.BlockNumber)
 	}
 
+	var (
+		claimRewardsEvent contractsapi.ValidatorRewardClaimedEvent
+		foundLog          bool
+	)
+
 	result := &withdrawRewardResult{
-		ValidatorAddress: validatorAccount.Ecdsa.Address().String(),
-		RewardAmount:     amount.Uint64(),
+		ValidatorAddress: validatorAddr.String(),
+	}
+
+	// check the logs to check for the result
+	for _, log := range receipt.Logs {
+		doesMatch, err := claimRewardsEvent.ParseLog(log)
+		if err != nil {
+			return err
+		}
+
+		if doesMatch {
+			foundLog = true
+			result.RewardAmount = claimRewardsEvent.Amount.Uint64()
+
+			break
+		}
+	}
+
+	if !foundLog {
+		return fmt.Errorf("could not find an appropriate log in receipt that rewards claim happened (claim rewards)")
 	}
 
 	outputter.WriteCommandResult(result)

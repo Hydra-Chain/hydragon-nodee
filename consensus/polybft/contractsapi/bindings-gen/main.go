@@ -60,6 +60,7 @@ func main() {
 				"Undelegated",
 				"AddedToWhitelist",
 				"StakeChanged",
+				"WithdrawalFinished",
 			},
 		},
 		{
@@ -69,8 +70,11 @@ func main() {
 			[]string{
 				"initialize",
 				"distributeRewardsFor",
+				"claimValidatorReward()",
 			},
-			[]string{},
+			[]string{
+				"ValidatorRewardClaimed",
+			},
 		},
 		{
 			"LiquidityToken",

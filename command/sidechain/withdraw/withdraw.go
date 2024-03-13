@@ -100,7 +100,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	var (
-		withdrawalEvent contractsapi.WithdrawalEvent
+		withdrawalEvent contractsapi.WithdrawalFinishedEvent
 		foundLog        bool
 	)
 
