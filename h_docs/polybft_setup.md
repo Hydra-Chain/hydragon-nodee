@@ -60,7 +60,7 @@ We need to set native token to be mintable, so we can premine balances to differ
 2. Use the governer (first validator by default) to whitelist the new account
 
 ```
-./hydra polybft whitelist-validator --data-dir ./test-chain-1 --address 0x7A94400e0d33B79B6C69979df3f7a46CF1963c69 --jsonrpc http://127.0.0.1:10001
+./hydra hydragon whitelist-validator --data-dir ./test-chain-1 --address 0x7A94400e0d33B79B6C69979df3f7a46CF1963c69 --jsonrpc http://127.0.0.1:10001
 
 ```
 
@@ -71,7 +71,7 @@ Stake tx is made in this step as well
 
 ```
 
-./hydra polybft register-validator --data-dir ./test-add-chain-1 --stake 1000000000000000000 --chain-id 8844 --jsonrpc http://127.0.0.1:10001
+./hydra hydragon register-validator --data-dir ./test-add-chain-1 --stake 1000000000000000000 --chain-id 8844 --jsonrpc http://127.0.0.1:10001
 
 ```
 
@@ -189,7 +189,7 @@ After Hydra's team confirms you are whitelisted you have to register your accoun
 In the container's shell execute:
 
 ```
-hydra polybft register-validator --data-dir ./node --stake 1000000000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
+hydra hydragon register-validator --data-dir ./node --stake 1000000000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.
@@ -197,7 +197,7 @@ The above command both register the validator and stakes the specified amount.
 Use the following command in case you want to execute the stake operation only:
 
 ```
-hydra polybft stake --data-dir ./node --self true --amount 999900000000000000000000 --jsonrpc http://localhost:8545
+hydra hydragon stake --data-dir ./node --self true --amount 999900000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 Congratulations! You are now a Hydra Chain validator!
@@ -221,5 +221,5 @@ Setup any compatible wallet and execute the transfer from there.
 In the container's shell execute:
 
 ```
-hydra polybft whitelist-validator --data-dir ./node --address <provided address> --jsonrpc http://localhost:8545
+hydra hydragon whitelist-validator --data-dir ./node --address <provided address> --jsonrpc http://localhost:8545
 ```

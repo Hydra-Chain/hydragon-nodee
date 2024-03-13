@@ -144,7 +144,7 @@ Send it to Hydra's team, so they can whitelist your address to be able to partic
 After Hydra's team confirms you are whitelisted you have to register your account as a validator and stake a given amount.
 
 ```
-hydra polybft register-validator --data-dir ./node-secrets --stake 99000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
+hydra hydragon register-validator --data-dir ./node-secrets --stake 99000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.
@@ -152,7 +152,7 @@ The above command both register the validator and stakes the specified amount.
 Use the following command in case you want to execute the stake operation only:
 
 ```
-hydra polybft stake --data-dir ./node-secrets --self true --amount 99000000000000000000 --jsonrpc http://localhost:8545
+hydra hydragon stake --data-dir ./node-secrets --self true --amount 99000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 **Note:** Amounts are specified in wei.
