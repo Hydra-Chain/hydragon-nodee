@@ -11,7 +11,7 @@ import (
 
 const (
 	DefaultGenesisFileName           = "genesis.json"
-	DefaultChainName                 = "polygon-edge"
+	DefaultChainName                 = "hydra-chain"
 	DefaultChainID                   = 187
 	DefaultConsensus                 = server.PolyBFTConsensus
 	DefaultGenesisGasUsed            = 458752  // 0x70000

@@ -30,7 +30,7 @@ case "$1" in
     # Loop through each data directory and delete specific subdirectories
     for i in 1 2 3 4 5; do
       echo "Cleaning up /data/data-$i directory..."
-      rm -rf /data/data-$i/blockchain /data/data-$i/consensus/polybft /data/data-$i/consensus/validator.sig /data/data-$i/trie
+      rm -rf /data/data-$i/blockchain /data/data-$i/consensus/hydragon /data/data-$i/consensus/polybft /data/data-$i/consensus/validator.sig /data/data-$i/trie
 
       # This will generate new signatures without modifying the keys that are already present
       "$HYDRA_NODE_BIN" secrets init --insecure --chain-id 8844 --num 5 --data-dir /data/data- --json

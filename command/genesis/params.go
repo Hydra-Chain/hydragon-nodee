@@ -44,8 +44,8 @@ const (
 	blockTrackerPollIntervalFlag = "block-tracker-poll-interval"
 	proxyContractsAdminFlag      = "proxy-contracts-admin"
 
-	defaultNativeTokenName     = "Polygon"
-	defaultNativeTokenSymbol   = "MATIC"
+	defaultNativeTokenName     = "Hydra"
+	defaultNativeTokenSymbol   = "HYDRA"
 	defaultNativeTokenDecimals = uint8(18)
 	minNativeTokenParamsNumber = 4
 )

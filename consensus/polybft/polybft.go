@@ -46,7 +46,7 @@ type polybftBackend interface {
 
 // Factory is the factory function to create a discovery consensus
 func Factory(params *consensus.Params) (consensus.Consensus, error) {
-	logger := params.Logger.Named("polybft")
+	logger := params.Logger.Named("hydragon")
 
 	setupHeaderHashFunc()
 
@@ -464,7 +464,7 @@ func (p *Polybft) Initialize() error {
 	p.blockTime = time.Duration(p.config.BlockTime)
 
 	// initialize polybft consensus data directory
-	p.dataDir = filepath.Join(p.config.Config.Path, "polybft")
+	p.dataDir = filepath.Join(p.config.Config.Path, "hydragon")
 	// create the data dir if not exists
 	if err = common.CreateDirSafe(p.dataDir, 0750); err != nil {
 		return fmt.Errorf("failed to create data directory. Error: %w", err)
@@ -509,7 +509,7 @@ func ForkManagerInitialParamsFactory(config *chain.Chain) (*forkmanager.ForkPara
 
 // Start starts the consensus and servers
 func (p *Polybft) Start() error {
-	p.logger.Info("starting polybft consensus", "signer", p.key.String())
+	p.logger.Info("starting hydragon consensus", "signer", p.key.String())
 
 	// start syncer (also initializes peer map)
 	if err := p.syncer.Start(); err != nil {
