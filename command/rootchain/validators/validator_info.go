@@ -102,7 +102,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 	outputter.WriteCommandResult(&validatorsInfoResult{
 		Address:     validatorInfo.Address.String(),
-		Stake:       validatorInfo.Stake.Uint64(),
+		Stake:       validatorInfo.Stake.String(),
 		Active:      validatorInfo.IsActive,
 		Whitelisted: validatorInfo.IsWhitelisted,
 	})

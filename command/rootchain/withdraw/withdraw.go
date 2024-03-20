@@ -133,7 +133,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		result.Amount = withdrawalEvent.Amount.Uint64()
+		result.Amount = withdrawalEvent.Amount.String()
 		result.WithdrawnTo = withdrawalEvent.Recipient.String()
 		foundLog = true
 

@@ -147,7 +147,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 			result.validatorAddress = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
 			result.stakeResult = "No stake parameters have been submitted"
-			result.amount = 0
+			result.amount = "0"
 			foundLog = true
 
 			break
@@ -219,7 +219,7 @@ func populateStakeResults(receipt *ethgo.Receipt, result *registerResult) {
 				return
 			}
 
-			result.amount = event["amount"].(*big.Int).Uint64() //nolint:forcetypeassert
+			result.amount = event["amount"].(*big.Int).String() //nolint:forcetypeassert
 			result.stakeResult = "Stake succeeded"
 
 			return

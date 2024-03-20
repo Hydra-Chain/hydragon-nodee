@@ -128,7 +128,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 		if doesMatch {
 			foundLog = true
-			result.Amount = withdrawalRegisteredEvent.Amount.Uint64()
+			result.Amount = withdrawalRegisteredEvent.Amount.String()
 
 			break
 		}

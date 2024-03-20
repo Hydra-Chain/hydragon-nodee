@@ -45,7 +45,7 @@ func (rp *registerParams) validateFlags() error {
 type registerResult struct {
 	validatorAddress string
 	stakeResult      string
-	amount           uint64
+	amount           string
 }
 
 func (rr registerResult) GetOutput() string {

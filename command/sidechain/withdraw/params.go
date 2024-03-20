@@ -3,7 +3,6 @@ package withdraw
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
@@ -26,7 +25,7 @@ func (w *withdrawParams) validateFlags() error {
 
 type withdrawResult struct {
 	ValidatorAddress string   `json:"validatorAddress"`
-	Amount           *big.Int `json:"amount"`
+	Amount           string `json:"amount"`
 	BlockNumber      uint64   `json:"blockNumber"`
 }
 

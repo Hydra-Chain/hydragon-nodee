@@ -27,7 +27,7 @@ func (v *validatorInfoParams) validateFlags() error {
 
 type validatorsInfoResult struct {
 	Address     string `json:"address"`
-	Stake       uint64 `json:"stake"`
+	Stake       string `json:"stake"`
 	Active      bool   `json:"active"`
 	Whitelisted bool   `json:"whitelisted"`
 }

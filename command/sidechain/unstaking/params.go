@@ -41,7 +41,7 @@ func (v *unstakeParams) validateFlags() (err error) {
 
 type unstakeResult struct {
 	ValidatorAddress string `json:"validatorAddress"`
-	Amount           uint64 `json:"amount"`
+	Amount           string `json:"amount"`
 }
 
 func (ur unstakeResult) GetOutput() string {

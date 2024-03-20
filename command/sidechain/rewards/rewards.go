@@ -121,7 +121,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 		if doesMatch {
 			foundLog = true
-			result.RewardAmount = claimRewardsEvent.Amount.Uint64()
+			result.RewardAmount = claimRewardsEvent.Amount.String()
 
 			break
 		}
