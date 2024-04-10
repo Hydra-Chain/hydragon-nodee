@@ -213,7 +213,7 @@ Here are the HydraChain node CLI commands that currently can be used:
 | -h, --help | help for this command                                                                                                         |
 | --json     | get all outputs in json format (default false)                                                                                |
 
-- Use "[command] --help" for more information about a command.
+- Use "hydra [command] --help" for more information about a command.
 
 ## Becoming a delegator
 
