@@ -182,31 +182,38 @@ Congratulations! You have successfully become a validator on the Hydra Chain. Fo
 
 Here are the HydraChain node CLI commands that currently can be used:
 
-Usage:
-  hydra [command]
+- Usage:
+```
+    hydra [command]
+```
+- Available Commands:
 
-Available Commands:
-  backup      Create blockchain backup file by fetching blockchain data from the running node
-  bridge      Top level bridge command.
-  completion  Generate the autocompletion script for the specified shell
-  genesis     Generates the genesis configuration file with the passed in parameters
-  help        Help about any command
-  hydragon    Executes HydraChain's Hydragon consensus commands, including staking, unstaking, rewards management, and validator operations.
-  license     Returns Hydra Chain license and dependency attributions
-  monitor     Starts logging block add / remove events on the blockchain
-  peers       Top level command for interacting with the network peers. Only accepts subcommands.
-  regenesis   Copies trie for specific block to a separate folder
-  secrets     Top level SecretsManager command for interacting with secrets functionality. Only accepts subcommands.
-  server      The default command that starts the Hydra Chain client, by bootstrapping all modules together
-  status      Returns the status of the Hydra Chain client
-  txpool      Top level command for interacting with the transaction pool. Only accepts subcommands.
-  version     Returns the current Hydra Chain client version
+|  Command   | Description                                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| backup     | Create blockchain backup file by fetching blockchain data from the running node                                               |
+| bridge     | Top level bridge command                                                                                                      |
+| completion | Generate the autocompletion script for the specified shell                                                                    |
+| genesis    | Generates the genesis configuration file with the passed in parameters                                                        |
+| help       | Help about any command                                                                                                        |
+| hydragon   | Executes HydraChain's Hydragon consensus commands, including staking, unstaking, rewards management, and validator operations |
+| license    | Returns Hydra Chain license and dependency attributions                                                                       |
+| monitor    | Starts logging block add / remove events on the blockchain                                                                    |
+| peers      | Top level command for interacting with the network peers. Only accepts subcommands                                            |
+| regenesis  | Copies trie for specific block to a separate folder                                                                           |
+| secrets    | Top level SecretsManager command for interacting with secrets functionality. Only accepts subcommands                         |
+| server     | The default command that starts the Hydra Chain client by bootstrapping all modules together                                  |
+| status     | Returns the status of the Hydra Chain client                                                                                  |
+| txpool     | Top level command for interacting with the transaction pool. Only accepts subcommands                                         |
+| version    | Returns the current Hydra Chain client version                                                                                |
 
-Flags:
-  -h, --help   help for this command
-      --json   get all outputs in json format (default false)
+- Flags:
 
-Use " [command] --help" for more information about a command.
+|  Flag      | Description                                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| -h, --help | help for this command                                                                                                         |
+| --json     | get all outputs in json format (default false)                                                                                |
+
+- Use "[command] --help" for more information about a command.
 
 ## Becoming a delegator
 
