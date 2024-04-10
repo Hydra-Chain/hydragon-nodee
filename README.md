@@ -178,6 +178,36 @@ hydra hydragon stake --data-dir ./node-secrets --self true --amount 990000000000
 
 Congratulations! You have successfully become a validator on the Hydra Chain. For further information and support, join our Telegram group and engage with the community.
 
+### CLI commands
+
+Here are the HydraChain node CLI commands that currently can be used:
+
+Usage:
+  hydra [command]
+
+Available Commands:
+  backup      Create blockchain backup file by fetching blockchain data from the running node
+  bridge      Top level bridge command.
+  completion  Generate the autocompletion script for the specified shell
+  genesis     Generates the genesis configuration file with the passed in parameters
+  help        Help about any command
+  hydragon    Executes HydraChain's Hydragon consensus commands, including staking, unstaking, rewards management, and validator operations.
+  license     Returns Hydra Chain license and dependency attributions
+  monitor     Starts logging block add / remove events on the blockchain
+  peers       Top level command for interacting with the network peers. Only accepts subcommands.
+  regenesis   Copies trie for specific block to a separate folder
+  secrets     Top level SecretsManager command for interacting with secrets functionality. Only accepts subcommands.
+  server      The default command that starts the Hydra Chain client, by bootstrapping all modules together
+  status      Returns the status of the Hydra Chain client
+  txpool      Top level command for interacting with the transaction pool. Only accepts subcommands.
+  version     Returns the current Hydra Chain client version
+
+Flags:
+  -h, --help   help for this command
+      --json   get all outputs in json format (default false)
+
+Use " [command] --help" for more information about a command.
+
 ## Becoming a delegator
 
 We've implemented the initial version of a straightforward dashboard, enabling users to connect their wallet, request testing HYDRA coins from our Faucet, and access to [delegation](#delegation) section where one can delegate funds to validators. To access the Dashboard Interface, please visit [https://app.testnet.hydrachain.org](https://app.testnet.hydrachain.org).
