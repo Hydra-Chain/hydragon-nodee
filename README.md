@@ -178,7 +178,7 @@ hydra hydragon stake --data-dir ./node-secrets --self true --amount 990000000000
 
 Congratulations! You have successfully become a validator on the Hydra Chain. For further information and support, join our Telegram group and engage with the community.
 
-### CLI commands
+### Command Line Interface
 
 Here are the HydraChain node CLI commands that currently can be used:
 
