@@ -4,7 +4,7 @@
 
 ### System Requirements
 
-This is the minimum hardware configuration required to set up a Edge-powered chain:
+This is the minimum hardware configuration required to set up a Hydra validator node:
 
 | Component | Minimum Requirement            | Recommended                              |
 | --------- | ------------------------------ | ---------------------------------------- |
