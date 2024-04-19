@@ -46,6 +46,7 @@ func initValidatorSet(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 		NewRewardPool: contracts.RewardPoolContract,
 		Governance:    polyBFTConfig.Governance,
 		LiquidToken:   contracts.LiquidityTokenContract,
+		InitialCommission: big.NewInt(0),
 	}
 
 	input, err := initFn.EncodeAbi()

@@ -163,7 +163,7 @@ Send it to Hydra's team, so they can whitelist your address to be able to partic
 After Hydra's team confirms you are whitelisted you have to register your account as a validator and stake a given amount.
 
 ```
-hydra hydragon register-validator --data-dir ./node-secrets --stake 99000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
+hydra hydragon register-validator --data-dir ./node-secrets --stake 99000000000000000000 --commission 10 --chain-id 8844 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.
@@ -183,12 +183,14 @@ Congratulations! You have successfully become a validator on the Hydra Chain. Fo
 Here are the HydraChain node CLI commands that currently can be used:
 
 - Usage:
+
 ```
     hydra [command]
 ```
+
 - Available Commands:
 
-|  Command   | Description                                                                                                                   |
+| Command    | Description                                                                                                                   |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | backup     | Create blockchain backup file by fetching blockchain data from the running node                                               |
 | bridge     | Top level bridge command                                                                                                      |
@@ -208,10 +210,10 @@ Here are the HydraChain node CLI commands that currently can be used:
 
 - Flags:
 
-|  Flag      | Description                                                                                                                   |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| -h, --help | help for this command                                                                                                         |
-| --json     | get all outputs in json format (default false)                                                                                |
+| Flag       | Description                                    |
+| ---------- | ---------------------------------------------- |
+| -h, --help | help for this command                          |
+| --json     | get all outputs in json format (default false) |
 
 - Use "hydra [command] --help" for more information about a command.
 

@@ -26,6 +26,7 @@ func ParseUint64orHex(val *string) (uint64, error) {
 
 	return strconv.ParseUint(str, base, 64)
 }
+
 func ParseUint256orHex(val *string) (*big.Int, error) {
 	if val == nil {
 		return nil, nil
@@ -45,6 +46,14 @@ func ParseUint256orHex(val *string) (*big.Int, error) {
 	}
 
 	return b, nil
+}
+
+func ParseUint256(val *uint64) *big.Int {
+	if val == nil {
+		return nil
+	}
+
+	return new(big.Int).SetUint64(*val)	
 }
 
 func ParseBytes(val *string) ([]byte, error) {
