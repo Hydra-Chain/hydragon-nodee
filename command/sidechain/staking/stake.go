@@ -159,7 +159,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 			}
 
 			result.isSelfStake = true
-			result.amount = event["amount"].(*big.Int).Uint64() //nolint:forcetypeassert
+			result.amount = event["amount"].(*big.Int).String() //nolint:forcetypeassert
 
 			foundLog = true
 
@@ -170,7 +170,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 				return err
 			}
 
-			result.amount = event["amount"].(*big.Int).Uint64()              //nolint:forcetypeassert
+			result.amount = event["amount"].(*big.Int).String()              //nolint:forcetypeassert
 			result.delegatedTo = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
 
 			foundLog = true

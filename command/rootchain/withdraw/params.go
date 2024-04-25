@@ -38,7 +38,7 @@ func (v *withdrawParams) validateFlags() (err error) {
 
 type withdrawResult struct {
 	ValidatorAddress string `json:"validatorAddress"`
-	Amount           uint64 `json:"amount"`
+	Amount           string `json:"amount"`
 	WithdrawnTo      string `json:"withdrawnTo"`
 }
 

@@ -33,7 +33,7 @@ func (v *stakeParams) validateFlags() error {
 type stakeResult struct {
 	validatorAddress string
 	isSelfStake      bool
-	amount           uint64
+	amount           string
 	delegatedTo      string
 }
 

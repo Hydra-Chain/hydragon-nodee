@@ -17,7 +17,7 @@ type withdrawRewardsParams struct {
 
 type withdrawRewardResult struct {
 	ValidatorAddress string `json:"validatorAddress"`
-	RewardAmount     uint64 `json:"rewardAmount"`
+	RewardAmount     string `json:"rewardAmount"`
 }
 
 func (w *withdrawRewardsParams) validateFlags() error {
