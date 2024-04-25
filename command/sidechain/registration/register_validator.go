@@ -145,6 +145,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 	result := &registerResult{}
 	foundNewValidatorLog := false
+	foundSetCommissionLog := false
 
 	for _, log := range receipt.Logs {
 		if newValidatorEventABI.Match(log) {
@@ -166,11 +167,16 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 			}
 
 			result.commission = event["newCommission"].(*big.Int).Uint64() //nolint:forcetypeassert
+			foundSetCommissionLog = true
 		}
 	}
 
 	if !foundNewValidatorLog {
-		return fmt.Errorf("could not find an appropriate log in receipt that registration happened")
+		return fmt.Errorf("could not find an appropriate log in the receipt that validates the registration has happened")
+	}
+
+	if !foundSetCommissionLog {
+		return fmt.Errorf("could not find an appropriate log in the receipt that validates the commission has successfully set")
 	}
 
 	if params.stake != "" {
