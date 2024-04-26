@@ -6,4 +6,4 @@
 	path = core-contracts
 	url = https://github.com/Hydra-Chain/hydragon-core-contracts.git
 	shallow = true
-	branch = h-main
+	branch = main

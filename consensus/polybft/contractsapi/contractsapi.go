@@ -44,12 +44,13 @@ func (v *ValidatorInit) DecodeAbi(buf []byte) error {
 }
 
 type InitializeValidatorSetFn struct {
-	Init          *InitStruct      `abi:"init"`
-	NewValidators []*ValidatorInit `abi:"newValidators"`
-	NewBls        types.Address    `abi:"newBls"`
-	NewRewardPool types.Address    `abi:"newRewardPool"`
-	Governance    types.Address    `abi:"governance"`
-	LiquidToken   types.Address    `abi:"liquidToken"`
+	Init              *InitStruct      `abi:"init"`
+	NewValidators     []*ValidatorInit `abi:"newValidators"`
+	NewBls            types.Address    `abi:"newBls"`
+	NewRewardPool     types.Address    `abi:"newRewardPool"`
+	Governance        types.Address    `abi:"governance"`
+	LiquidToken       types.Address    `abi:"liquidToken"`
+	InitialCommission *big.Int         `abi:"initialCommission"`
 }
 
 func (i *InitializeValidatorSetFn) Sig() []byte {
@@ -115,8 +116,9 @@ func (a *AddToWhitelistValidatorSetFn) DecodeAbi(buf []byte) error {
 }
 
 type RegisterValidatorSetFn struct {
-	Signature [2]*big.Int `abi:"signature"`
-	Pubkey    [4]*big.Int `abi:"pubkey"`
+	Signature  [2]*big.Int `abi:"signature"`
+	Pubkey     [4]*big.Int `abi:"pubkey"`
+	Commission *big.Int    `abi:"commission"`
 }
 
 func (r *RegisterValidatorSetFn) Sig() []byte {
