@@ -10,13 +10,12 @@ import (
 )
 
 type InitStruct struct {
-	EpochReward   *big.Int `abi:"epochReward"`
-	MinStake      *big.Int `abi:"minStake"`
-	MinDelegation *big.Int `abi:"minDelegation"`
-	EpochSize     *big.Int `abi:"epochSize"`
+	EpochReward *big.Int `abi:"epochReward"`
+	MinStake    *big.Int `abi:"minStake"`
+	EpochSize   *big.Int `abi:"epochSize"`
 }
 
-var InitStructABIType = abi.MustNewType("tuple(uint256 epochReward,uint256 minStake,uint256 minDelegation,uint256 epochSize)")
+var InitStructABIType = abi.MustNewType("tuple(uint256 epochReward,uint256 minStake,uint256 epochSize)")
 
 func (i *InitStruct) EncodeAbi() ([]byte, error) {
 	return InitStructABIType.Encode(i)

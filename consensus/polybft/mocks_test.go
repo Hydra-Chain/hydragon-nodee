@@ -288,7 +288,7 @@ func (s *systemStateMock) GetMacroFactor() (*big.Int, error) {
 }
 
 func (s *systemStateMock) GetMaxRSI() (*big.Int, error) {
-	return big.NewInt(15000), nil
+	return big.NewInt(17000), nil
 }
 
 var _ contract.Provider = (*stateProviderMock)(nil)
