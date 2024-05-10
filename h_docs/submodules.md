@@ -31,7 +31,7 @@ npx hardhat compile
 Run tests to ensure everything is working properly
 
 ```
-npm run test:hydra
+npm run test
 ```
 
 ## How to generate core-contracts binaries:

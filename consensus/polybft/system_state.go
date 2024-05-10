@@ -130,14 +130,13 @@ func (s *SystemStateImpl) GetBaseReward() (baseReward *BigNumDecimal, err error)
 	return &BigNumDecimal{Numerator: numerator, Denominator: big.NewInt(10000)}, nil
 }
 
-// GetMaxRSI H: fetch the max RSI bonus from the ChildValidatorSet contract
 func (s *SystemStateImpl) GetMaxRSI() (maxRSI *big.Int, err error) {
-	rawOutput, err := s.rewardPoolContract.Call("getMaxRSI", ethgo.Latest)
+	rawOutput, err := s.rewardPoolContract.Call("MAX_RSI_BONUS", ethgo.Latest)
 	if err != nil {
 		return nil, err
 	}
 
-	maxRSI, ok := rawOutput["nominator"].(*big.Int)
+	maxRSI, ok := rawOutput["0"].(*big.Int)
 	if !ok {
 		return nil, fmt.Errorf("failed to decode max RSI numerator")
 	}

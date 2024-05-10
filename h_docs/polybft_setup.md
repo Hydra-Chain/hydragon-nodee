@@ -30,7 +30,7 @@ I am describing our custom process, because it is different.
 We need to set native token to be mintable, so we can premine balances to different addresses
 
 ```
-./hydra genesis --block-gas-limit 10000000 --epoch-size 10 --validators-path ./ --validators-prefix test-chain- --consensus polybft --native-token-config Hydra:HDR:18:true:0x211881Bb4893dd733825A2D97e48bFc38cc70a0c --reward-wallet 0x61324166B0202DB1E7502924326262274Fa4358F:1000000 --premine 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c:70000000000000000000000 --premine 0xdC3312E368A178e24850C6dAC169646c5fD14b93:700000000000000000000 --proxy-contracts-admin 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c --chain-id 8844
+./hydra genesis --block-gas-limit 10000000 --epoch-size 10 --validators-path ./ --validators-prefix test-chain- --consensus polybft --native-token-config Hydra:HDR:18:true:0x211881Bb4893dd733825A2D97e48bFc38cc70a0c --reward-wallet 0x61324166B0202DB1E7502924326262274Fa4358F:1000000 --premine 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c:70000000000000000000000 --premine 0xdC3312E368A178e24850C6dAC169646c5fD14b93:30000000000000000000000 --proxy-contracts-admin 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c --chain-id 8844
 ```
 
 3. Run the chain
@@ -60,7 +60,7 @@ We need to set native token to be mintable, so we can premine balances to differ
 2. Use the governer (first validator by default) to whitelist the new account
 
 ```
-./hydra hydragon whitelist-validator --data-dir ./test-chain-1 --address 0x7A94400e0d33B79B6C69979df3f7a46CF1963c69 --jsonrpc http://127.0.0.1:10001
+./hydra hydragon whitelist-validator --data-dir ./test-chain-1 --address 0x7A94400e0d33B79B6C69979df3f7a46CF1963c69 --jsonrpc http://127.0.0.1:10001 --insecure
 
 ```
 
@@ -71,7 +71,7 @@ Stake tx is made in this step as well
 
 ```
 
-./hydra hydragon register-validator --data-dir ./test-add-chain-1 --stake 1000000000000000000 --commission 10 --chain-id 8844 --jsonrpc http://127.0.0.1:10001
+./hydra hydragon register-validator --data-dir ./test-add-chain-1 --stake 15000000000000000000000 --chain-id 8844 --jsonrpc http://127.0.0.1:10001 --insecure
 
 ```
 

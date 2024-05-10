@@ -2,6 +2,7 @@ package polybft
 
 import (
 	"errors"
+	"math/big"
 	"testing"
 	"time"
 
@@ -18,6 +19,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/umbracle/ethgo"
+)
+
+var (
+	minStakeLimit = big.NewInt(1e18)
 )
 
 // the test initializes polybft and chain mock (map of headers) after which a new header is verified

@@ -12,12 +12,11 @@ import (
 	"github.com/umbracle/ethgo/abi"
 )
 
-const (
-	// Hydra modification: These are the minimal values that the ValidatorSet contract accept
-	minStake      = 1e18
-	minDelegation = 1e18
+var (
+	initialMinStake, _  = new(big.Int).SetString("15000000000000000000000", 10)
+	minDelegation int64 = 1e18
 
-	contractCallGasLimit = 100_000_000
+	contractCallGasLimit uint64 = 100_000_000
 )
 
 // initValidatorSet initializes ValidatorSet SC
@@ -33,12 +32,10 @@ func initValidatorSet(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 		initialValidators[i] = validatorData
 	}
 
-	// Hydra TODO: minStake and minDelegation passed to the contract can be parametrized on a later stage
 	initFn := &contractsapi.InitializeValidatorSetFn{
 		Init: &contractsapi.InitStruct{
 			EpochReward:   new(big.Int).SetUint64(polyBFTConfig.EpochReward),
-			MinStake:      big.NewInt(minStake),
-			MinDelegation: big.NewInt(minDelegation),
+			MinStake: initialMinStake,
 			EpochSize:     new(big.Int).SetUint64(polyBFTConfig.EpochSize),
 		},
 		NewValidators: initialValidators,
