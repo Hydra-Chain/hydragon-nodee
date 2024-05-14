@@ -769,6 +769,11 @@ func (c *consensusRuntime) InsertProposal(proposal *proto.Proposal, committedSea
 	c.OnBlockInserted(fullBlock)
 }
 
+// StartRound starts a new round with the given view
+func (c *consensusRuntime) StartRound(view *proto.View) error {
+	return nil
+}
+
 // ID return ID (address actually) of the current node
 func (c *consensusRuntime) ID() []byte {
 	return c.config.Key.Address().Bytes()

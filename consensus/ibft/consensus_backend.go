@@ -140,6 +140,11 @@ func (i *backendIBFT) MaximumFaultyNodes() uint64 {
 	return uint64(CalcMaxFaultyNodes(i.currentValidators))
 }
 
+// StartRound starts a new round with the given view
+func (i *backendIBFT) StartRound(view *proto.View) error {
+	return nil
+}
+
 // DISCLAIMER: IBFT will be deprecated so we set 1 as a voting power to all validators
 func (i *backendIBFT) GetVotingPowers(height uint64) (map[string]*big.Int, error) {
 	validators, err := i.forkManager.GetValidators(height)
