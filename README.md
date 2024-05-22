@@ -91,12 +91,12 @@ The foundation of your validator identity is built upon three distinct private k
 There are different options on how and where the secrets to be stored but we recommend storing the keys encrypted on your local file system and maintaining offline backups. To generate these keys, use the following command, which encrypts them locally:
 
 ```
-hydra secrets init --chain-id 8844 --data-dir node-secrets
+./hydra secrets init --chain-id 8844 --data-dir node-secrets
 ```
 
 This command initiates the creation of your node's secrets for a testnet chain with ID 8844, storing them in a directory named node-secrets. During this process, you'll confirm each secret and establish a password for file encryption.
 
-Successful execution results in a summary of your generated and initialized secrets, including your public key (address), BLS public key, and node ID.
+Successful execution results in a summary of your generated and initialized secrets, including your public key (address), BLS public key, and node ID. Example:
 
 ```
 [SECRETS GENERATED]
@@ -128,7 +128,7 @@ Paste the file in your node directory.
 Run your node with the following command from its directory:
 
 ```
-hydra server --data-dir ./node-secrets --chain ./genesis.json --grpc-address :9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545  --secrets-config ./secrets-config.json
+./hydra server --data-dir ./node-secrets --chain ./genesis.json --grpc-address :9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545  --secrets-config ./secrets-config.json
 ```
 
 This process may take some time, as the node needs to fully sync with the blockchain. Once the syncing process is complete, you will need to restart the node by running the same command.
@@ -163,7 +163,7 @@ Send it to Hydra's team, so they can whitelist your address to be able to partic
 After Hydra's team confirms you are whitelisted you have to register your account as a validator and stake a given amount.
 
 ```
-hydra hydragon register-validator --data-dir ./node-secrets --stake 99000000000000000000 --commission 10 --chain-id 8844 --jsonrpc http://localhost:8545
+./hydra hydragon register-validator --data-dir ./node-secrets --stake 100000000000000000000 --commission 10 --chain-id 8844 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.
@@ -171,7 +171,7 @@ The above command both register the validator and stakes the specified amount.
 Use the following command in case you want to execute the stake operation only:
 
 ```
-hydra hydragon stake --data-dir ./node-secrets --self true --amount 99000000000000000000 --jsonrpc http://localhost:8545
+./hydra hydragon stake --data-dir ./node-secrets --self true --amount 100000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 **Note:** Amounts are specified in wei.
@@ -185,7 +185,7 @@ Here are the HydraChain node CLI commands that currently can be used:
 - Usage:
 
 ```
-    hydra [command]
+./hydra [command]
 ```
 
 - Available Commands:
@@ -215,7 +215,7 @@ Here are the HydraChain node CLI commands that currently can be used:
 | -h, --help | help for this command                          |
 | --json     | get all outputs in json format (default false) |
 
-- Use "hydra [command] --help" for more information about a command.
+- Use "./hydra [command] --help" for more information about a command.
 
 ## Becoming a delegator
 

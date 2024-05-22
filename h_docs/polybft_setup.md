@@ -189,7 +189,7 @@ After Hydra's team confirms you are whitelisted you have to register your accoun
 In the container's shell execute:
 
 ```
-hydra hydragon register-validator --data-dir ./node --stake 1000000000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
+./hydra hydragon register-validator --data-dir ./node --stake 1000000000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.
@@ -197,7 +197,7 @@ The above command both register the validator and stakes the specified amount.
 Use the following command in case you want to execute the stake operation only:
 
 ```
-hydra hydragon stake --data-dir ./node --self true --amount 999900000000000000000000 --jsonrpc http://localhost:8545
+./hydra hydragon stake --data-dir ./node --self true --amount 999900000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 Congratulations! You are now a Hydra Chain validator!
@@ -221,5 +221,5 @@ Setup any compatible wallet and execute the transfer from there.
 In the container's shell execute:
 
 ```
-hydra hydragon whitelist-validator --data-dir ./node --address <provided address> --jsonrpc http://localhost:8545
+./hydra hydragon whitelist-validator --data-dir ./node --address <provided address> --jsonrpc http://localhost:8545
 ```
