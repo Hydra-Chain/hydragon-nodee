@@ -88,8 +88,8 @@ Stake tx is made in this step as well
 1. Generate secrets
 
 ```
-hydra secrets init --data-dir test-chain-1
-hydra secrets init --data-dir test-chain-2
+./hydra secrets init --data-dir test-chain-1
+./hydra secrets init --data-dir test-chain-2
 
 ```
 
@@ -97,19 +97,19 @@ hydra secrets init --data-dir test-chain-2
    This is the first version of edge that needs a manifest file. It contains information about the initial validators.
 
 ```
-hydra manifest --validators-prefix test-chain-
+./hydra manifest --validators-prefix test-chain-
 ```
 
 3. Generate genesis file
 
 ```
-hydra genesis --consensus polybft --ibft-validators-prefix-path test-chain-
+./hydra genesis --consensus polybft --ibft-validators-prefix-path test-chain-
 ```
 
 4. Run the chain
 
 ```
-hydra server --data-dir ./test-chain-1 --chain genesis.json --grpc-address :10000 --libp2p :10001 --jsonrpc :10002 --log-level=DEBUG
+./hydra server --data-dir ./test-chain-1 --chain genesis.json --grpc-address :10000 --libp2p :10001 --jsonrpc :10002 --log-level=DEBUG
 ```
 
 ## Devnet node setup
@@ -189,7 +189,7 @@ After Hydra's team confirms you are whitelisted you have to register your accoun
 In the container's shell execute:
 
 ```
-hydra hydragon register-validator --data-dir ./node --stake 1000000000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
+./hydra hydragon register-validator --data-dir ./node --stake 1000000000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.
@@ -197,7 +197,7 @@ The above command both register the validator and stakes the specified amount.
 Use the following command in case you want to execute the stake operation only:
 
 ```
-hydra hydragon stake --data-dir ./node --self true --amount 999900000000000000000000 --jsonrpc http://localhost:8545
+./hydra hydragon stake --data-dir ./node --self true --amount 999900000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 Congratulations! You are now a Hydra Chain validator!
@@ -221,5 +221,5 @@ Setup any compatible wallet and execute the transfer from there.
 In the container's shell execute:
 
 ```
-hydra hydragon whitelist-validator --data-dir ./node --address <provided address> --jsonrpc http://localhost:8545
+./hydra hydragon whitelist-validator --data-dir ./node --address <provided address> --jsonrpc http://localhost:8545
 ```
