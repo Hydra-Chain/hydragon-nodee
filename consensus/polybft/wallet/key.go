@@ -3,10 +3,10 @@ package wallet
 import (
 	"fmt"
 
-	"github.com/0xPolygon/go-ibft/messages/proto"
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/crypto"
 	"github.com/0xPolygon/polygon-edge/types"
+	"github.com/Hydra-Chain/go-ibft/messages/proto"
 	"github.com/umbracle/ethgo"
 	protobuf "google.golang.org/protobuf/proto"
 )

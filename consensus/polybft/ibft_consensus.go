@@ -3,7 +3,7 @@ package polybft
 import (
 	"context"
 
-	"github.com/0xPolygon/go-ibft/core"
+	"github.com/Hydra-Chain/go-ibft/core"
 )
 
 // IBFTConsensusWrapper is a convenience wrapper for the go-ibft package

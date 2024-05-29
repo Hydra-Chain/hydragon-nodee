@@ -3,7 +3,7 @@ package ibft
 import (
 	"google.golang.org/protobuf/proto"
 
-	protoIBFT "github.com/0xPolygon/go-ibft/messages/proto"
+	protoIBFT "github.com/Hydra-Chain/go-ibft/messages/proto"
 )
 
 func (i *backendIBFT) signMessage(msg *protoIBFT.Message) *protoIBFT.Message {

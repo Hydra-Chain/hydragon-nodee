@@ -3,8 +3,8 @@ package wallet
 import (
 	"testing"
 
-	"github.com/0xPolygon/go-ibft/messages/proto"
 	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
+	"github.com/Hydra-Chain/go-ibft/messages/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

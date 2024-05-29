@@ -58,13 +58,13 @@ require (
 )
 
 require (
-	github.com/0xPolygon/go-ibft v0.4.1-0.20240424093031-00f7637226a6
 	github.com/docker/docker v24.0.6+incompatible
 	github.com/docker/go-connections v0.4.0
 	go.etcd.io/bbolt v1.3.7
 )
 
 require (
+	github.com/Hydra-Chain/go-ibft v0.4.1-hydra
 	github.com/quasilyte/go-ruleguard v0.4.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22
 	github.com/sethvargo/go-retry v0.2.4
