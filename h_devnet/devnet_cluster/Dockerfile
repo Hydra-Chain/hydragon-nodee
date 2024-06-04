@@ -1,4 +1,4 @@
-FROM rsantev/hydra-client:latest
+FROM rsantev/hydra-client:dev
 
 WORKDIR /app
 

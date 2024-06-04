@@ -13,7 +13,7 @@ CHAIN_CUSTOM_OPTIONS=$(
   tr "\n" " " <<EOL
 --block-gas-limit 10000000
 --epoch-size 500
---chain-id 8844
+--chain-id 88441
 --name hydra-docker
 --premine 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c:0x314dc6448d932ae0a456589c0000
 --premine 0x8c293C5b70b6493856CF4C7419E1Fb137b97B25d:0xD3C21BCECCEDA1000000
@@ -33,13 +33,13 @@ case "$1" in
       rm -rf /data/data-$i/blockchain /data/data-$i/consensus/hydragon /data/data-$i/consensus/polybft /data/data-$i/consensus/validator.sig /data/data-$i/trie
 
       # This will generate new signatures without modifying the keys that are already present
-      "$HYDRA_NODE_BIN" secrets init --insecure --chain-id 8844 --num 5 --data-dir /data/data- --json
+      "$HYDRA_NODE_BIN" secrets init --insecure --chain-id 88441 --num 5 --data-dir /data/data- --json
     done
   else
     echo "Generating secrets..."
   fi
 
-  secrets=$("$HYDRA_NODE_BIN" secrets init --insecure --chain-id 8844 --num 5 --data-dir /data/data- --json)
+  secrets=$("$HYDRA_NODE_BIN" secrets init --insecure --chain-id 88441 --num 5 --data-dir /data/data- --json)
 
   rm -f /data/genesis.json
 
