@@ -115,7 +115,7 @@ func (vs validatorSet) TotalVotingPower() big.Int {
 }
 
 // getQuorumSize calculates quorum size as 2/3 super-majority of provided total voting power
-// Hydra modification: Qourum size is 614/1000 = 61.4% of total voting power
+// Hydra modification: Qourum size is 61.4% (614/1000) of total voting power + 1
 func getQuorumSize(blockNumber uint64, totalVotingPower *big.Int) *big.Int {
 	quorum := new(big.Int)
 	// In case for some reason voting power goes below too small value, we set quorum to total voting power
