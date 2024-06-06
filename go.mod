@@ -64,7 +64,7 @@ require (
 )
 
 require (
-	github.com/Hydra-Chain/go-ibft v0.4.3-hydra
+	github.com/Hydra-Chain/go-ibft v0.4.4-hydra
 	github.com/quasilyte/go-ruleguard v0.4.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22
 	github.com/sethvargo/go-retry v0.2.4
