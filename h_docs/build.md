@@ -35,7 +35,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hydra -a -installsuffix cgo  m
 2. Build node image
 
 ```
-docker build --platform linux/amd64 -t rsantev/hydra-client:latest -f Dockerfile.release .
+docker build --platform linux/amd64 -t rsantev/hydra-client:dev -f Dockerfile.release .
 ```
 
 3. Push node image to DockerHub
@@ -43,7 +43,7 @@ docker build --platform linux/amd64 -t rsantev/hydra-client:latest -f Dockerfile
 Use Docker Desktop or:
 
 ```
-docker push rsantev/hydra-client:latest
+docker push rsantev/hydra-client:dev
 ```
 
 4. Build hydrag devnet image
