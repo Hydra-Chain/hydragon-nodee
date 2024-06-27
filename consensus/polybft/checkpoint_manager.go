@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"math/big"
-	"sort"
 	"strconv"
 
+	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
-	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/helper/hex"
@@ -17,18 +16,19 @@ import (
 	"github.com/0xPolygon/polygon-edge/types"
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/umbracle/ethgo"
-	"github.com/umbracle/ethgo/abi"
+	bolt "go.etcd.io/bbolt"
 )
 
 var (
 	// currentCheckpointBlockNumMethod is an ABI method object representation for
 	// currentCheckpointBlockNumber getter function on CheckpointManager contract
-	currentCheckpointBlockNumMethod, _ = abi.Method{}, "" // unused in Hydra
+	currentCheckpointBlockNumMethod = contractsapi.CheckpointManager.Abi.Methods["currentCheckpointBlockNumber"]
 	// frequency at which checkpoints are sent to the rootchain (in blocks count)
 	defaultCheckpointsOffset = uint64(900)
 )
 
 type CheckpointManager interface {
+	EventSubscriber
 	PostBlock(req *PostBlockRequest) error
 	BuildEventRoot(epoch uint64) (types.Hash, error)
 	GenerateExitProof(exitID uint64) (types.Proof, error)
@@ -44,6 +44,15 @@ func (d *dummyCheckpointManager) BuildEventRoot(epoch uint64) (types.Hash, error
 }
 func (d *dummyCheckpointManager) GenerateExitProof(exitID uint64) (types.Proof, error) {
 	return types.Proof{}, nil
+}
+
+// EventSubscriber implementation
+func (d *dummyCheckpointManager) GetLogFilters() map[types.Address][]types.Hash {
+	return make(map[types.Address][]types.Hash)
+}
+func (d *dummyCheckpointManager) ProcessLog(header *types.Header,
+	log *ethgo.Log, dbTx *bolt.Tx) error {
+	return nil
 }
 
 var _ CheckpointManager = (*checkpointManager)(nil)
@@ -68,8 +77,6 @@ type checkpointManager struct {
 	logger hclog.Logger
 	// state boltDb instance
 	state *State
-	// eventGetter gets exit events (missed or current) from blocks
-	eventGetter *eventsGetter[*ExitEvent]
 }
 
 // newCheckpointManager creates a new instance of checkpointManager
@@ -77,14 +84,6 @@ func newCheckpointManager(key ethgo.Key, checkpointOffset uint64,
 	checkpointManagerSC types.Address, txRelayer txrelayer.TxRelayer,
 	blockchain blockchainBackend, backend polybftBackend, logger hclog.Logger,
 	state *State) *checkpointManager {
-	retry := &eventsGetter[*ExitEvent]{
-		blockchain: blockchain,
-		isValidLogFn: func(l *types.Log) bool {
-			return l.Address == contracts.L2StateSenderContract
-		},
-		parseEventFn: parseExitEvent,
-	}
-
 	return &checkpointManager{
 		key:                   key,
 		blockchain:            blockchain,
@@ -94,7 +93,6 @@ func newCheckpointManager(key ethgo.Key, checkpointOffset uint64,
 		checkpointManagerAddr: checkpointManagerSC,
 		logger:                logger,
 		state:                 state,
-		eventGetter:           retry,
 	}
 }
 
@@ -125,6 +123,12 @@ func (c *checkpointManager) submitCheckpoint(latestHeader *types.Header, isEndOf
 	lastCheckpointBlockNumber, err := getCurrentCheckpointBlock(c.rootChainRelayer, c.checkpointManagerAddr)
 	if err != nil {
 		return err
+	}
+
+	if lastCheckpointBlockNumber > latestHeader.Number {
+		// node is out of sync (haven't reached the tip of the chain), so even though it is a proposer,
+		// it would checkpoint block that is already checkpointed and transaction would fail anyway
+		return nil
 	}
 
 	c.logger.Debug("submitCheckpoint invoked...",
@@ -277,33 +281,8 @@ func (c *checkpointManager) isCheckpointBlock(blockNumber uint64, isEpochEndingB
 }
 
 // PostBlock is called on every insert of finalized block (either from consensus or syncer)
-// It will read any exit event that happened in block and insert it to state boltDb
+// It sends a checkpoint if given block is checkpoint block and block proposer is given validator
 func (c *checkpointManager) PostBlock(req *PostBlockRequest) error {
-	block := req.FullBlock.Block.Number()
-
-	lastBlock, err := c.state.CheckpointStore.getLastSaved()
-	if err != nil {
-		return fmt.Errorf("could not get last processed block for exit events. Error: %w", err)
-	}
-
-	exitEvents, err := c.eventGetter.getFromBlocks(lastBlock, req.FullBlock)
-	if err != nil {
-		return err
-	}
-
-	sort.Slice(exitEvents, func(i, j int) bool {
-		// keep events in sequential order
-		return exitEvents[i].ID.Cmp(exitEvents[j].ID) < 0
-	})
-
-	if err := c.state.CheckpointStore.insertExitEvents(exitEvents); err != nil {
-		return err
-	}
-
-	if err := c.state.CheckpointStore.updateLastSaved(block); err != nil {
-		return err
-	}
-
 	if c.isCheckpointBlock(req.FullBlock.Block.Header.Number, req.IsEpochEndingBlock) &&
 		bytes.Equal(c.key.Address().Bytes(), req.FullBlock.Block.Header.Miner) {
 		go func(header *types.Header, epochNumber uint64) {
@@ -438,6 +417,35 @@ func (c *checkpointManager) GenerateExitProof(exitID uint64) (types.Proof, error
 			"CheckpointBlock": checkpointBlock,
 		},
 	}, nil
+}
+
+// EventSubscriber implementation
+
+// GetLogFilters returns a map of log filters for getting desired events,
+// where the key is the address of contract that emits desired events,
+// and the value is a slice of signatures of events we want to get.
+// This function is the implementation of EventSubscriber interface
+func (c *checkpointManager) GetLogFilters() map[types.Address][]types.Hash {
+	var l2StateSyncedEvent contractsapi.L2StateSyncedEvent
+
+	return map[types.Address][]types.Hash{
+		contracts.L2StateSenderContract: {types.Hash(l2StateSyncedEvent.Sig())},
+	}
+}
+
+// ProcessLog is the implementation of EventSubscriber interface,
+// used to handle a log defined in GetLogFilters, provided by event provider
+func (c *checkpointManager) ProcessLog(header *types.Header, log *ethgo.Log, dbTx *bolt.Tx) error {
+	exitEvent, doesMatch, err := parseExitEvent(header, log)
+	if err != nil {
+		return err
+	}
+
+	if !doesMatch {
+		return nil
+	}
+
+	return c.state.CheckpointStore.insertExitEvent(exitEvent, dbTx)
 }
 
 // createExitTree creates an exit event merkle tree from provided exit events

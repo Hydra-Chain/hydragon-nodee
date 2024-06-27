@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/umbracle/ethgo"
 	"github.com/umbracle/ethgo/contract"
+	bolt "go.etcd.io/bbolt"
 )
 
 var _ blockchainBackend = (*blockchainMock)(nil)
@@ -119,6 +120,9 @@ func (m *blockchainMock) SubscribeEvents() blockchain.Subscription {
 	return nil
 }
 
+func (m *blockchainMock) UnubscribeEvents(blockchain.Subscription) {
+}
+
 func (m *blockchainMock) CalculateGasLimit(number uint64) (uint64, error) {
 	return 0, nil
 }
@@ -153,6 +157,22 @@ func (p *polybftBackendMock) GetValidators(blockNumber uint64, parents []*types.
 	}
 
 	panic("polybftBackendMock.GetValidators doesn't support such combination of arguments") //nolint:gocritic
+}
+
+func (p *polybftBackendMock) GetValidatorsWithTx(blockNumber uint64, parents []*types.Header,
+	dbTx *bolt.Tx) (validator.AccountSet, error) {
+	args := p.Called(blockNumber, parents, dbTx)
+	if len(args) == 1 {
+		accountSet, _ := args.Get(0).(validator.AccountSet)
+
+		return accountSet, nil
+	} else if len(args) == 2 {
+		accountSet, _ := args.Get(0).(validator.AccountSet)
+
+		return accountSet, args.Error(1)
+	}
+
+	panic("polybftBackendMock.GetValidatorsWithTx doesn't support such combination of arguments") //nolint:gocritic
 }
 
 var _ blockBuilder = (*blockBuilderMock)(nil)

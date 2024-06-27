@@ -11,11 +11,12 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/consensus"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
-	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
@@ -42,6 +43,11 @@ var (
 type polybftBackend interface {
 	// GetValidators retrieves validator set for the given block
 	GetValidators(blockNumber uint64, parents []*types.Header) (validator.AccountSet, error)
+
+	// GetValidators retrieves validator set for the given block
+	// Function expects that db tx is already open
+	GetValidatorsWithTx(blockNumber uint64, parents []*types.Header,
+		dbTx *bolt.Tx) (validator.AccountSet, error)
 }
 
 // Factory is the factory function to create a discovery consensus
@@ -560,6 +566,7 @@ func (p *Polybft) initRuntime() error {
 		txPool:                p.txPool,
 		bridgeTopic:           p.bridgeTopic,
 		numBlockConfirmations: p.config.NumBlockConfirmations,
+		consensusConfig:       p.config.Config,
 	}
 
 	runtime, err := newConsensusRuntime(p.logger, runtimeConfig)
@@ -591,7 +598,7 @@ func (p *Polybft) startConsensusProtocol() {
 	// p.logger.Debug("peers connected")
 
 	newBlockSub := p.blockchain.SubscribeEvents()
-	defer newBlockSub.Close()
+	defer p.blockchain.UnubscribeEvents(newBlockSub)
 
 	syncerBlockCh := make(chan struct{})
 
@@ -736,14 +743,19 @@ func (p *Polybft) verifyHeaderImpl(parent, header *types.Header, blockTimeDrift 
 
 	// validate extra data
 	return extra.ValidateFinalizedData(
-		header, parent, parents, p.blockchain.GetChainID(), p, bls.DomainCheckpointManager, p.logger)
+		header, parent, parents, p.blockchain.GetChainID(), p, signer.DomainCheckpointManager, p.logger)
 }
 
 // Hydra notes: data is not taken from smart contract but is computed
 // based on validatorSetDelta extra field in the last block of an epoch
 // Then it is saved in the db (state_store_epoch)
 func (p *Polybft) GetValidators(blockNumber uint64, parents []*types.Header) (validator.AccountSet, error) {
-	return p.validatorsCache.GetSnapshot(blockNumber, parents)
+	return p.validatorsCache.GetSnapshot(blockNumber, parents, nil)
+}
+
+func (p *Polybft) GetValidatorsWithTx(blockNumber uint64, parents []*types.Header,
+	dbTx *bolt.Tx) (validator.AccountSet, error) {
+	return p.validatorsCache.GetSnapshot(blockNumber, parents, dbTx)
 }
 
 // ProcessHeaders updates the snapshot based on the verified headers

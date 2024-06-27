@@ -244,13 +244,13 @@ func (t *TestServer) SecretsInit() (*InitIBFTResult, error) {
 
 	if t.Config.ValidatorType == validators.BLSValidatorType {
 		// Generate the BLS Key
-		_, bksKeyEncoded, keyErr := crypto.GenerateAndEncodeBLSSecretKey()
+		_, blsKeyEncoded, keyErr := crypto.GenerateAndEncodeBLSSecretKey()
 		if keyErr != nil {
 			return nil, keyErr
 		}
 
 		// Write the networking private key to the secrets manager storage
-		if setErr := localSecretsManager.SetSecret(secrets.ValidatorBLSKey, bksKeyEncoded); setErr != nil {
+		if setErr := localSecretsManager.SetSecret(secrets.ValidatorBLSKey, blsKeyEncoded); setErr != nil {
 			return nil, setErr
 		}
 	}
@@ -298,7 +298,7 @@ func (t *TestServer) GenerateGenesis() error {
 			return errors.New("prefix of IBFT directory is not set")
 		}
 
-		args = append(args, "--ibft-validators-prefix-path", t.Config.IBFTDirPrefix)
+		args = append(args, "--validators-prefix", t.Config.IBFTDirPrefix)
 
 		if t.Config.EpochSize != 0 {
 			args = append(args, "--epoch-size", strconv.FormatUint(t.Config.EpochSize, 10))
@@ -313,7 +313,7 @@ func (t *TestServer) GenerateGenesis() error {
 
 		// Set up any initial staker addresses for the predeployed Staking SC
 		for _, stakerAddress := range t.Config.DevStakers {
-			args = append(args, "--ibft-validator", stakerAddress.String())
+			args = append(args, "--validators", stakerAddress.String())
 		}
 	case ConsensusDummy:
 		args = append(args, "--consensus", "dummy")

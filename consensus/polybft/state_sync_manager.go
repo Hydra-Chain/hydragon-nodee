@@ -10,18 +10,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/0xPolygon/polygon-edge/consensus/polybft/bitmap"
-	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
-	polybftProto "github.com/0xPolygon/polygon-edge/consensus/polybft/proto"
-	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
-	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
-	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
-	"github.com/0xPolygon/polygon-edge/tracker"
-	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/hashicorp/go-hclog"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/umbracle/ethgo"
+	bolt "go.etcd.io/bbolt"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/0xPolygon/polygon-edge/bls"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/bitmap"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
+	polybftProto "github.com/0xPolygon/polygon-edge/consensus/polybft/proto"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
+	"github.com/0xPolygon/polygon-edge/contracts"
+	"github.com/0xPolygon/polygon-edge/tracker"
+	"github.com/0xPolygon/polygon-edge/types"
 )
 
 type Runtime interface {
@@ -35,6 +39,7 @@ type StateSyncProof struct {
 
 // StateSyncManager is an interface that defines functions for state sync workflow
 type StateSyncManager interface {
+	EventSubscriber
 	Init() error
 	Close()
 	Commitment(blockNumber uint64) (*CommitmentMessageSigned, error)
@@ -48,15 +53,24 @@ var _ StateSyncManager = (*dummyStateSyncManager)(nil)
 // dummyStateSyncManager is used when bridge is not enabled
 type dummyStateSyncManager struct{}
 
-func (n *dummyStateSyncManager) Init() error { return nil }
-func (n *dummyStateSyncManager) Close()      {}
-func (n *dummyStateSyncManager) Commitment(blockNumber uint64) (*CommitmentMessageSigned, error) {
+func (d *dummyStateSyncManager) Init() error { return nil }
+func (d *dummyStateSyncManager) Close()      {}
+func (d *dummyStateSyncManager) Commitment(blockNumber uint64) (*CommitmentMessageSigned, error) {
 	return nil, nil
 }
-func (n *dummyStateSyncManager) PostBlock(req *PostBlockRequest) error { return nil }
-func (n *dummyStateSyncManager) PostEpoch(req *PostEpochRequest) error { return nil }
-func (n *dummyStateSyncManager) GetStateSyncProof(stateSyncID uint64) (types.Proof, error) {
+func (d *dummyStateSyncManager) PostBlock(req *PostBlockRequest) error { return nil }
+func (d *dummyStateSyncManager) PostEpoch(req *PostEpochRequest) error { return nil }
+func (d *dummyStateSyncManager) GetStateSyncProof(stateSyncID uint64) (types.Proof, error) {
 	return types.Proof{}, nil
+}
+
+// EventSubscriber implementation
+func (d *dummyStateSyncManager) GetLogFilters() map[types.Address][]types.Hash {
+	return make(map[types.Address][]types.Hash)
+}
+func (d *dummyStateSyncManager) ProcessLog(header *types.Header,
+	log *ethgo.Log, dbTx *bolt.Tx) error {
+	return nil
 }
 
 // stateSyncConfig holds the configuration data of state sync manager
@@ -200,7 +214,7 @@ func (s *stateSyncManager) saveVote(msg *TransportMessage) error {
 		Signature: msg.Signature,
 	}
 
-	numSignatures, err := s.state.StateSyncStore.insertMessageVote(msg.EpochNumber, msg.Hash, msgVote)
+	numSignatures, err := s.state.StateSyncStore.insertMessageVote(msg.EpochNumber, msg.Hash, msgVote, nil)
 	if err != nil {
 		return fmt.Errorf("error inserting message vote: %w", err)
 	}
@@ -216,20 +230,20 @@ func (s *stateSyncManager) saveVote(msg *TransportMessage) error {
 }
 
 // Verifies signature of the message against the public key of the signer and checks if the signer is a validator
-func (s *stateSyncManager) verifyVoteSignature(valSet validator.ValidatorSet, signer types.Address, signature []byte,
-	hash []byte) error {
-	validator := valSet.Accounts().GetValidatorMetadata(signer)
+func (s *stateSyncManager) verifyVoteSignature(valSet validator.ValidatorSet, signerAddr types.Address,
+	signature []byte, hash []byte) error {
+	validator := valSet.Accounts().GetValidatorMetadata(signerAddr)
 	if validator == nil {
-		return fmt.Errorf("unable to resolve validator %s", signer)
+		return fmt.Errorf("unable to resolve validator %s", signerAddr)
 	}
 
 	unmarshaledSignature, err := bls.UnmarshalSignature(signature)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal signature from signer %s, %w", signer.String(), err)
+		return fmt.Errorf("failed to unmarshal signature from signer %s, %w", signerAddr.String(), err)
 	}
 
-	if !unmarshaledSignature.Verify(validator.BlsKey, hash, bls.DomainStateReceiver) {
-		return fmt.Errorf("incorrect signature from %s", signer)
+	if !unmarshaledSignature.Verify(validator.BlsKey, hash, signer.DomainStateReceiver) {
+		return fmt.Errorf("incorrect signature from %s", signerAddr)
 	}
 
 	return nil
@@ -263,7 +277,7 @@ func (s *stateSyncManager) AddLog(eventLog *ethgo.Log) error {
 		return err
 	}
 
-	if err := s.buildCommitment(); err != nil {
+	if err := s.buildCommitment(nil); err != nil {
 		// we don't return an error here. If state sync event is inserted in db,
 		// we will just try to build a commitment on next block or next event arrival
 		s.logger.Error("could not build a commitment on arrival of new state sync", "err", err, "stateSyncID", event.ID)
@@ -395,27 +409,28 @@ func (s *stateSyncManager) PostEpoch(req *PostEpochRequest) error {
 
 	s.lock.Unlock()
 
-	return s.buildCommitment()
+	return s.buildCommitment(req.DBTx)
 }
 
 // PostBlock notifies state sync manager that a block was finalized,
-// so that it can build state sync proofs if a block has a commitment submission transaction
+// so that it can build state sync proofs if a block has a commitment submission transaction.
+// Additionally, it will remove any processed state sync events and their proofs from the store.
 func (s *stateSyncManager) PostBlock(req *PostBlockRequest) error {
 	commitment, err := getCommitmentMessageSignedTx(req.FullBlock.Block.Transactions)
 	if err != nil {
 		return err
 	}
 
-	// no commitment message -> this is not end of epoch block
+	// no commitment message -> this is not end of sprint block
 	if commitment == nil {
 		return nil
 	}
 
-	if err := s.state.StateSyncStore.insertCommitmentMessage(commitment); err != nil {
+	if err := s.state.StateSyncStore.insertCommitmentMessage(commitment, req.DBTx); err != nil {
 		return fmt.Errorf("insert commitment message error: %w", err)
 	}
 
-	if err := s.buildProofs(commitment.Message); err != nil {
+	if err := s.buildProofs(commitment.Message, req.DBTx); err != nil {
 		return fmt.Errorf("build commitment proofs error: %w", err)
 	}
 
@@ -445,7 +460,7 @@ func (s *stateSyncManager) GetStateSyncProof(stateSyncID uint64) (types.Proof, e
 			return types.Proof{}, fmt.Errorf("cannot find commitment for StateSync id %d: %w", stateSyncID, err)
 		}
 
-		if err := s.buildProofs(commitment.Message); err != nil {
+		if err := s.buildProofs(commitment.Message, nil); err != nil {
 			return types.Proof{}, fmt.Errorf("cannot build proofs for commitment for StateSync id %d: %w", stateSyncID, err)
 		}
 
@@ -464,7 +479,8 @@ func (s *stateSyncManager) GetStateSyncProof(stateSyncID uint64) (types.Proof, e
 }
 
 // buildProofs builds state sync proofs for the submitted commitment and saves them in boltDb for later execution
-func (s *stateSyncManager) buildProofs(commitmentMsg *contractsapi.StateSyncCommitment) error {
+func (s *stateSyncManager) buildProofs(commitmentMsg *contractsapi.StateSyncCommitment,
+	dbTx *bolt.Tx) error {
 	from := commitmentMsg.StartID.Uint64()
 	to := commitmentMsg.EndID.Uint64()
 
@@ -474,7 +490,7 @@ func (s *stateSyncManager) buildProofs(commitmentMsg *contractsapi.StateSyncComm
 		"toIndex", to,
 	)
 
-	events, err := s.state.StateSyncStore.getStateSyncEventsForCommitment(from, to)
+	events, err := s.state.StateSyncStore.getStateSyncEventsForCommitment(from, to, dbTx)
 	if err != nil {
 		return fmt.Errorf("failed to get state sync events for commitment to build proofs. Error: %w", err)
 	}
@@ -509,11 +525,11 @@ func (s *stateSyncManager) buildProofs(commitmentMsg *contractsapi.StateSyncComm
 		"toIndex", to,
 	)
 
-	return s.state.StateSyncStore.insertStateSyncProofs(stateSyncProofs)
+	return s.state.StateSyncStore.insertStateSyncProofs(stateSyncProofs, dbTx)
 }
 
 // buildCommitment builds a new commitment, signs it and gossips its vote for it
-func (s *stateSyncManager) buildCommitment() error {
+func (s *stateSyncManager) buildCommitment(dbTx *bolt.Tx) error {
 	if !s.runtime.IsActiveValidator() {
 		// don't build commitment if not a validator
 		return nil
@@ -523,7 +539,7 @@ func (s *stateSyncManager) buildCommitment() error {
 	defer s.lock.Unlock()
 
 	stateSyncEvents, err := s.state.StateSyncStore.getStateSyncEventsForCommitment(s.nextCommittedIndex,
-		s.nextCommittedIndex+s.config.maxCommitmentSize-1)
+		s.nextCommittedIndex+s.config.maxCommitmentSize-1, dbTx)
 	if err != nil && !errors.Is(err, errNotEnoughStateSyncs) {
 		return fmt.Errorf("failed to get state sync events for commitment. Error: %w", err)
 	}
@@ -551,7 +567,7 @@ func (s *stateSyncManager) buildCommitment() error {
 
 	hashBytes := hash.Bytes()
 
-	signature, err := s.config.key.SignWithDomain(hashBytes, bls.DomainStateReceiver)
+	signature, err := s.config.key.SignWithDomain(hashBytes, signer.DomainStateReceiver)
 	if err != nil {
 		return fmt.Errorf("failed to sign commitment message. Error: %w", err)
 	}
@@ -561,7 +577,7 @@ func (s *stateSyncManager) buildCommitment() error {
 		Signature: signature,
 	}
 
-	if _, err = s.state.StateSyncStore.insertMessageVote(s.epoch, hashBytes, sig); err != nil {
+	if _, err = s.state.StateSyncStore.insertMessageVote(s.epoch, hashBytes, sig, dbTx); err != nil {
 		return fmt.Errorf(
 			"failed to insert signature for hash=%v to the state. Error: %w",
 			hex.EncodeToString(hashBytes),
@@ -601,4 +617,35 @@ func (s *stateSyncManager) multicast(msg interface{}) {
 	if err != nil {
 		s.logger.Warn("failed to gossip bridge message", "err", err)
 	}
+}
+
+// EventSubscriber implementation
+
+// GetLogFilters returns a map of log filters for getting desired events,
+// where the key is the address of contract that emits desired events,
+// and the value is a slice of signatures of events we want to get.
+// This function is the implementation of EventSubscriber interface
+func (s *stateSyncManager) GetLogFilters() map[types.Address][]types.Hash {
+	var stateSyncResultEvent contractsapi.StateSyncResultEvent
+
+	return map[types.Address][]types.Hash{
+		contracts.StateReceiverContract: {types.Hash(stateSyncResultEvent.Sig())},
+	}
+}
+
+// ProcessLog is the implementation of EventSubscriber interface,
+// used to handle a log defined in GetLogFilters, provided by event provider
+func (s *stateSyncManager) ProcessLog(header *types.Header, log *ethgo.Log, dbTx *bolt.Tx) error {
+	var stateSyncResultEvent contractsapi.StateSyncResultEvent
+
+	doesMatch, err := stateSyncResultEvent.ParseLog(log)
+	if err != nil {
+		return err
+	}
+
+	if !doesMatch {
+		return nil
+	}
+
+	return s.state.StateSyncStore.removeStateSyncEventsAndProofs([]uint64{stateSyncResultEvent.Counter.Uint64()})
 }

@@ -3,12 +3,13 @@ package wallet
 import (
 	"fmt"
 
-	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
-	"github.com/0xPolygon/polygon-edge/crypto"
-	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/Hydra-Chain/go-ibft/messages/proto"
 	"github.com/umbracle/ethgo"
 	protobuf "google.golang.org/protobuf/proto"
+
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
+	"github.com/0xPolygon/polygon-edge/crypto"
+	"github.com/0xPolygon/polygon-edge/types"
 )
 
 type Key struct {
@@ -34,7 +35,7 @@ func (k *Key) Address() ethgo.Address {
 // Sign signs the provided digest with BLS key
 // Used only to sign transactions
 func (k *Key) Sign(digest []byte) ([]byte, error) {
-	return k.SignWithDomain(digest, bls.DomainCommonSigning)
+	return k.SignWithDomain(digest, signer.DomainCommonSigning)
 }
 
 // SignWithDomain signs the provided digest with BLS key and provided domain

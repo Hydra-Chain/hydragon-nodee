@@ -8,7 +8,7 @@ import (
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/consensus"
-	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/helper/progress"
@@ -61,7 +61,7 @@ func TestPolybft_VerifyHeader(t *testing.T) {
 			checkpointHash, err := extra.Checkpoint.Hash(0, header.Number, header.Hash)
 			require.NoError(t, err)
 
-			extra.Committed = createSignature(t, committedAccounts, checkpointHash, bls.DomainCheckpointManager)
+			extra.Committed = createSignature(t, committedAccounts, checkpointHash, signer.DomainCheckpointManager)
 			header.ExtraData = extra.MarshalRLPTo(nil)
 		}
 
@@ -185,14 +185,18 @@ func TestPolybft_VerifyHeader(t *testing.T) {
 
 	// clean validator snapshot cache (re-instantiate it), submit invalid validator set for parent signature and expect the following error
 	polybft.validatorsCache = newValidatorsSnapshotCache(hclog.NewNullLogger(), newTestState(t), blockchainMock)
-	assert.NoError(t, polybft.validatorsCache.storeSnapshot(&validatorSnapshot{Epoch: 0, Snapshot: validatorSetCurrent})) // invalid validator set is submitted
-	assert.NoError(t, polybft.validatorsCache.storeSnapshot(&validatorSnapshot{Epoch: 1, Snapshot: validatorSetCurrent}))
+	assert.NoError(t, polybft.validatorsCache.storeSnapshot(
+		&validatorSnapshot{Epoch: 0, Snapshot: validatorSetCurrent}, nil)) // invalid validator set is submitted
+	assert.NoError(t, polybft.validatorsCache.storeSnapshot(
+		&validatorSnapshot{Epoch: 1, Snapshot: validatorSetCurrent}, nil))
 	assert.ErrorContains(t, polybft.VerifyHeader(currentHeader), "failed to verify signatures for parent of block")
 
 	// clean validators cache again and set valid snapshots
 	polybft.validatorsCache = newValidatorsSnapshotCache(hclog.NewNullLogger(), newTestState(t), blockchainMock)
-	assert.NoError(t, polybft.validatorsCache.storeSnapshot(&validatorSnapshot{Epoch: 0, Snapshot: validatorSetParent}))
-	assert.NoError(t, polybft.validatorsCache.storeSnapshot(&validatorSnapshot{Epoch: 1, Snapshot: validatorSetCurrent}))
+	assert.NoError(t, polybft.validatorsCache.storeSnapshot(
+		&validatorSnapshot{Epoch: 0, Snapshot: validatorSetParent}, nil))
+	assert.NoError(t, polybft.validatorsCache.storeSnapshot(
+		&validatorSnapshot{Epoch: 1, Snapshot: validatorSetCurrent}, nil))
 	assert.NoError(t, polybft.VerifyHeader(currentHeader))
 
 	// add current header to the blockchain (headersMap) and try validating again
@@ -209,7 +213,10 @@ func TestPolybft_Close(t *testing.T) {
 	polybft := Polybft{
 		closeCh: make(chan struct{}),
 		syncer:  syncer,
-		runtime: &consensusRuntime{stateSyncManager: &dummyStateSyncManager{}},
+		runtime: &consensusRuntime{
+			stateSyncManager: &dummyStateSyncManager{},
+			stateSyncRelayer: &dummyStateSyncRelayer{},
+		},
 	}
 
 	assert.NoError(t, polybft.Close())

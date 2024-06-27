@@ -119,6 +119,13 @@ func setFlags(cmd *cobra.Command) {
 	)
 
 	cmd.Flags().BoolVar(
+		&params.rawConfig.ShouldSeal,
+		sealFlag,
+		defaultConfig.ShouldSeal,
+		"the flag indicating that the client should seal blocks",
+	)
+
+	cmd.Flags().BoolVar(
 		&params.rawConfig.Network.NoDiscover,
 		command.NoDiscoverFlag,
 		defaultConfig.Network.NoDiscover,
@@ -226,13 +233,6 @@ func setFlags(cmd *cobra.Command) {
 		webSocketReadLimitFlag,
 		defaultConfig.WebSocketReadLimit,
 		"maximum size in bytes for a message read from the peer by websocket",
-	)
-
-	cmd.Flags().DurationVar(
-		&params.rawConfig.RelayerTrackerPollInterval,
-		relayerTrackerPollIntervalFlag,
-		defaultConfig.RelayerTrackerPollInterval,
-		"interval (number of seconds) at which relayer's tracker polls for latest block at childchain",
 	)
 
 	cmd.Flags().DurationVar(

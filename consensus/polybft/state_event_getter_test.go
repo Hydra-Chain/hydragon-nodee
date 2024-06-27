@@ -27,7 +27,9 @@ func TestEventDBInsertRetry_GetEvents(t *testing.T) {
 	backend.On("GetReceiptsByHash", mock.Anything).Return([]*types.Receipt{receipt}, nil)
 
 	retryManager := &eventsGetter[*contractsapi.StakeChangedEvent]{
-		blockchain: backend,
+		receiptsGetter: receiptsGetter{
+			blockchain: backend,
+		},
 		isValidLogFn: func(l *types.Log) bool {
 			return l.Address == contracts.ValidatorSetContract
 		},

@@ -48,6 +48,9 @@ func (m *mockBlockchain) SubscribeEvents() blockchain.Subscription {
 	return m.subscription
 }
 
+func (m *mockBlockchain) UnsubscribeEvents(blockchain.Subscription) {
+}
+
 func (m *mockBlockchain) Header() *types.Header {
 	return m.headerHandler()
 }
@@ -543,11 +546,9 @@ func TestSync(t *testing.T) {
 					return &types.FullBlock{Block: b}, nil
 				}
 			},
-			blocks: blocks[:10],
-			//nolint:godox
-			// TODO: need to fix implementation? (to be fixed in EVM-529)
-			progressionStart:   0,
-			progressionHighest: 0,
+			blocks:             blocks[:10],
+			progressionStart:   1,
+			progressionHighest: 10,
 			err:                nil,
 		},
 		{
@@ -590,11 +591,9 @@ func TestSync(t *testing.T) {
 					return &types.FullBlock{Block: b}, nil
 				}
 			},
-			blocks: blocks[:10],
-			//nolint:godox
-			// TODO: need to fix implementation? (to be fixed in EVM-529)
-			progressionStart:   0,
-			progressionHighest: 0,
+			blocks:             blocks[:10],
+			progressionStart:   1,
+			progressionHighest: 10,
 			err:                nil,
 		},
 	}
@@ -850,7 +849,7 @@ func Test_bulkSyncWithPeer(t *testing.T) {
 				)
 			)
 
-			lastSynced, shouldTerminate, err := syncer.bulkSyncWithPeer(peer.ID("X"), test.blockCallback)
+			lastSynced, shouldTerminate, err := syncer.bulkSyncWithPeer(peer.ID("X"), test.lastSyncedBlockNumber, test.blockCallback)
 
 			assert.Equal(t, test.lastSyncedBlockNumber, lastSynced)
 			assert.Equal(t, test.shouldTerminate, shouldTerminate)

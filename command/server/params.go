@@ -21,6 +21,7 @@ const (
 	prometheusAddressFlag        = "prometheus"
 	natFlag                      = "nat"
 	dnsFlag                      = "dns"
+	sealFlag                     = "seal"
 	maxPeersFlag                 = "max-peers"
 	maxInboundPeersFlag          = "max-inbound-peers"
 	maxOutboundPeersFlag         = "max-outbound-peers"
@@ -42,8 +43,6 @@ const (
 
 	concurrentRequestsDebugFlag = "concurrent-requests-debug"
 	webSocketReadLimitFlag      = "websocket-read-limit"
-
-	relayerTrackerPollIntervalFlag = "relayer-poll-interval"
 
 	metricsIntervalFlag = "metrics-interval"
 )
@@ -178,6 +177,7 @@ func (p *serverParams) generateConfig() *server.Config {
 			Chain:            p.genesisConfig,
 		},
 		DataDir:            p.rawConfig.DataDir,
+		Seal:               p.rawConfig.ShouldSeal,
 		PriceLimit:         p.rawConfig.TxPool.PriceLimit,
 		MaxSlots:           p.rawConfig.TxPool.MaxSlots,
 		MaxAccountEnqueued: p.rawConfig.TxPool.MaxAccountEnqueued,
@@ -188,9 +188,8 @@ func (p *serverParams) generateConfig() *server.Config {
 		LogFilePath:        p.logFileLocation,
 
 		// Hydra modification: relayer must be disabled
-		Relayer:                    false,
-		NumBlockConfirmations:      p.rawConfig.NumBlockConfirmations,
-		RelayerTrackerPollInterval: p.rawConfig.RelayerTrackerPollInterval,
-		MetricsInterval:            p.rawConfig.MetricsInterval,
+		Relayer:               false,
+		NumBlockConfirmations: p.rawConfig.NumBlockConfirmations,
+		MetricsInterval:       p.rawConfig.MetricsInterval,
 	}
 }

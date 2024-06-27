@@ -38,13 +38,13 @@ func TestState_Insert_And_Get_MessageVotes(t *testing.T) {
 
 	state := newTestState(t)
 	epoch := uint64(1)
-	assert.NoError(t, state.EpochStore.insertEpoch(epoch))
+	assert.NoError(t, state.EpochStore.insertEpoch(epoch, nil))
 
 	hash := []byte{1, 2}
 	_, err := state.StateSyncStore.insertMessageVote(1, hash, &MessageSignature{
 		From:      "NODE_1",
 		Signature: []byte{1, 2},
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 
@@ -67,7 +67,7 @@ func TestState_getStateSyncEventsForCommitment_NotEnoughEvents(t *testing.T) {
 		}))
 	}
 
-	_, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize-1)
+	_, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize-1, nil)
 	assert.ErrorIs(t, err, errNotEnoughStateSyncs)
 }
 
@@ -86,7 +86,7 @@ func TestState_getStateSyncEventsForCommitment(t *testing.T) {
 	t.Run("Return all - forced. Enough events", func(t *testing.T) {
 		t.Parallel()
 
-		events, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize-1)
+		events, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize-1, nil)
 		require.NoError(t, err)
 		require.Equal(t, maxCommitmentSize, len(events))
 	})
@@ -94,14 +94,14 @@ func TestState_getStateSyncEventsForCommitment(t *testing.T) {
 	t.Run("Return all - forced. Not enough events", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize+1)
+		_, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize+1, nil)
 		require.ErrorIs(t, err, errNotEnoughStateSyncs)
 	})
 
 	t.Run("Return all you can. Enough events", func(t *testing.T) {
 		t.Parallel()
 
-		events, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize-1)
+		events, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize-1, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, maxCommitmentSize, len(events))
 	})
@@ -109,7 +109,7 @@ func TestState_getStateSyncEventsForCommitment(t *testing.T) {
 	t.Run("Return all you can. Not enough events", func(t *testing.T) {
 		t.Parallel()
 
-		events, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize+1)
+		events, err := state.StateSyncStore.getStateSyncEventsForCommitment(0, maxCommitmentSize+1, nil)
 		assert.ErrorIs(t, err, errNotEnoughStateSyncs)
 		assert.Equal(t, maxCommitmentSize, len(events))
 	})
@@ -121,7 +121,7 @@ func TestState_insertCommitmentMessage(t *testing.T) {
 	commitment := createTestCommitmentMessage(t, 11)
 
 	state := newTestState(t)
-	assert.NoError(t, state.StateSyncStore.insertCommitmentMessage(commitment))
+	assert.NoError(t, state.StateSyncStore.insertCommitmentMessage(commitment, nil))
 
 	commitmentFromDB, err := state.StateSyncStore.getCommitmentMessage(commitment.Message.EndID.Uint64())
 
@@ -135,7 +135,7 @@ func TestState_StateSync_insertAndGetStateSyncProof(t *testing.T) {
 
 	state := newTestState(t)
 	commitment := createTestCommitmentMessage(t, 0)
-	require.NoError(t, state.StateSyncStore.insertCommitmentMessage(commitment))
+	require.NoError(t, state.StateSyncStore.insertCommitmentMessage(commitment, nil))
 
 	insertTestStateSyncProofs(t, state, 10)
 
@@ -224,7 +224,7 @@ func TestState_GetNestedBucketInEpoch(t *testing.T) {
 			)
 
 			s := newTestState(t)
-			require.NoError(t, s.EpochStore.insertEpoch(c.epochNumber))
+			require.NoError(t, s.EpochStore.insertEpoch(c.epochNumber, nil))
 			err = s.db.View(func(tx *bbolt.Tx) error {
 				nestedBucket, err = getNestedBucketInEpoch(tx, c.epochNumber, c.bucketName)
 
@@ -269,7 +269,7 @@ func insertTestCommitments(t *testing.T, state *State, numberOfCommitments uint6
 
 	for i := uint64(0); i <= numberOfCommitments; i++ {
 		commitment := createTestCommitmentMessage(t, i*maxCommitmentSize+1)
-		require.NoError(t, state.StateSyncStore.insertCommitmentMessage(commitment))
+		require.NoError(t, state.StateSyncStore.insertCommitmentMessage(commitment, nil))
 	}
 }
 
@@ -286,7 +286,7 @@ func insertTestStateSyncProofs(t *testing.T, state *State, numberOfProofs int64)
 		ssProofs[i] = proofs
 	}
 
-	require.NoError(t, state.StateSyncStore.insertStateSyncProofs(ssProofs))
+	require.NoError(t, state.StateSyncStore.insertStateSyncProofs(ssProofs, nil))
 }
 
 func createTestStateSync(index int64) *contractsapi.StateSyncedEvent {
@@ -296,4 +296,60 @@ func createTestStateSync(index int64) *contractsapi.StateSyncedEvent {
 		Receiver: types.ZeroAddress,
 		Data:     []byte{0, 1},
 	}
+}
+
+func TestState_StateSync_StateSyncRelayerDataAndEvents(t *testing.T) {
+	t.Parallel()
+
+	state := newTestState(t)
+
+	// update
+	require.NoError(t, state.StateSyncStore.updateStateSyncRelayerEvents([]*StateSyncRelayerEventData{
+		{EventID: 2},
+		{EventID: 4},
+		{EventID: 7, SentStatus: true, BlockNumber: 100},
+	}, []uint64{}, nil))
+
+	// get available events
+	events, err := state.StateSyncStore.getAllAvailableEvents(0)
+
+	require.NoError(t, err)
+	require.Len(t, events, 3)
+	require.Equal(t, uint64(2), events[0].EventID)
+	require.Equal(t, uint64(4), events[1].EventID)
+	require.Equal(t, uint64(7), events[2].EventID)
+
+	// update again
+	require.NoError(t, state.StateSyncStore.updateStateSyncRelayerEvents(
+		[]*StateSyncRelayerEventData{
+			{EventID: 10},
+			{EventID: 12},
+			{EventID: 11},
+		},
+		[]uint64{4, 7},
+		nil,
+	))
+
+	// get available events
+	events, err = state.StateSyncStore.getAllAvailableEvents(1000)
+
+	require.NoError(t, err)
+	require.Len(t, events, 4)
+	require.Equal(t, uint64(2), events[0].EventID)
+	require.Equal(t, uint64(10), events[1].EventID)
+	require.Equal(t, false, events[1].SentStatus)
+	require.Equal(t, uint64(11), events[2].EventID)
+	require.Equal(t, uint64(12), events[3].EventID)
+
+	events[1].SentStatus = true
+	require.NoError(t, state.StateSyncStore.updateStateSyncRelayerEvents(events[1:2], []uint64{2}, nil))
+
+	// get available events with limit
+	events, err = state.StateSyncStore.getAllAvailableEvents(2)
+
+	require.NoError(t, err)
+	require.Len(t, events, 2)
+	require.Equal(t, uint64(10), events[0].EventID)
+	require.Equal(t, true, events[0].SentStatus)
+	require.Equal(t, uint64(11), events[1].EventID)
 }

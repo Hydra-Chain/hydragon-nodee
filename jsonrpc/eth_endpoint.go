@@ -339,39 +339,9 @@ func (e *Eth) GetTransactionReceipt(hash types.Hash) (interface{}, error) {
 	}
 
 	raw := receipts[txIndex]
+	logs := toLogs(raw.Logs, uint64(logIndex), uint64(txIndex), block.Header, hash)
 
-	logs := make([]*Log, len(raw.Logs))
-	for i, elem := range raw.Logs {
-		logs[i] = &Log{
-			Address:     elem.Address,
-			Topics:      elem.Topics,
-			Data:        argBytes(elem.Data),
-			BlockHash:   block.Hash(),
-			BlockNumber: argUint64(block.Number()),
-			TxHash:      hash,
-			TxIndex:     argUint64(txIndex),
-			LogIndex:    argUint64(logIndex + i),
-			Removed:     false,
-		}
-	}
-
-	res := &receipt{
-		Root:              raw.Root,
-		CumulativeGasUsed: argUint64(raw.CumulativeGasUsed),
-		LogsBloom:         raw.LogsBloom,
-		Status:            argUint64(*raw.Status),
-		TxHash:            hash,
-		TxIndex:           argUint64(txIndex),
-		BlockHash:         block.Hash(),
-		BlockNumber:       argUint64(block.Number()),
-		GasUsed:           argUint64(raw.GasUsed),
-		ContractAddress:   raw.ContractAddress,
-		FromAddr:          txn.From,
-		ToAddr:            txn.To,
-		Logs:              logs,
-	}
-
-	return res, nil
+	return toReceipt(raw, txn, uint64(txIndex), block.Header, logs), nil
 }
 
 // GetStorageAt returns the contract storage at the index position
@@ -556,12 +526,23 @@ func (e *Eth) EstimateGas(arg *txnArgs, rawNum *BlockNumber) (interface{}, error
 		return nil, err
 	}
 
+	forksInTime := e.store.GetForksInTime(header.Number)
+
+	if transaction.IsValueTransfer() {
+		// if it is a simple value transfer or a contract creation,
+		// we already know what is the transaction gas cost, no need to apply transaction
+		gasCost, err := state.TransactionGasCost(transaction, forksInTime.Homestead, forksInTime.Istanbul)
+		if err != nil {
+			return nil, err
+		}
+
+		return argUint64(gasCost), nil
+	}
+
 	// Force transaction gas price if empty
 	if err = e.fillTransactionGasPrice(transaction); err != nil {
 		return nil, err
 	}
-
-	forksInTime := e.store.GetForksInTime(header.Number)
 
 	var standardGas uint64
 	if transaction.IsContractCreation() && forksInTime.Homestead {
@@ -584,7 +565,6 @@ func (e *Eth) EstimateGas(arg *txnArgs, rawNum *BlockNumber) (interface{}, error
 	}
 
 	gasPriceInt := new(big.Int).Set(transaction.GasPrice)
-	valueInt := new(big.Int).Set(transaction.Value)
 
 	var availableBalance *big.Int
 
@@ -607,14 +587,6 @@ func (e *Eth) EstimateGas(arg *txnArgs, rawNum *BlockNumber) (interface{}, error
 		}
 
 		availableBalance = new(big.Int).Set(accountBalance)
-
-		if transaction.Value != nil {
-			if valueInt.Cmp(availableBalance) > 0 {
-				return 0, ErrInsufficientFunds
-			}
-
-			availableBalance.Sub(availableBalance, valueInt)
-		}
 	}
 
 	// Recalculate the gas ceiling based on the available funds (if any)
@@ -668,7 +640,7 @@ func (e *Eth) EstimateGas(arg *txnArgs, rawNum *BlockNumber) (interface{}, error
 
 		transaction.Gas = gas
 
-		result, applyErr := e.store.ApplyTxn(header, transaction, nil, false)
+		result, applyErr := e.store.ApplyTxn(header, transaction, nil, true)
 
 		if result != nil {
 			data = []byte(hex.EncodeToString(result.ReturnValue))

@@ -19,13 +19,18 @@ const (
 	defaultGasPrice            = 1879048192 // 0x70000000
 	DefaultGasLimit            = 5242880    // 0x500000
 	DefaultRPCAddress          = "http://127.0.0.1:8545"
-	numRetries                 = 1000
+	defaultNumRetries          = 1000
 	gasLimitIncreasePercentage = 100
 	feeIncreasePercentage      = 100
 )
 
 var (
-	errNoAccounts = errors.New("no accounts registered")
+	errNoAccounts     = errors.New("no accounts registered")
+	errMethodNotFound = errors.New("method not found")
+
+	// dynamicFeeTxFallbackErrs represents known errors which are the reason to fallback
+	// from sending dynamic fee tx to legacy tx
+	dynamicFeeTxFallbackErrs = []error{types.ErrTxTypeNotSupported, errMethodNotFound}
 )
 
 type TxRelayer interface {
@@ -46,6 +51,7 @@ type TxRelayerImpl struct {
 	ipAddress      string
 	client         *jsonrpc.Client
 	receiptTimeout time.Duration
+	numRetries     int
 
 	lock sync.Mutex
 
@@ -56,6 +62,7 @@ func NewTxRelayer(opts ...TxRelayerOption) (TxRelayer, error) {
 	t := &TxRelayerImpl{
 		ipAddress:      DefaultRPCAddress,
 		receiptTimeout: 50 * time.Millisecond,
+		numRetries:     defaultNumRetries,
 	}
 	for _, opt := range opts {
 		opt(t)
@@ -88,13 +95,18 @@ func (t *TxRelayerImpl) Call(from ethgo.Address, to ethgo.Address, input []byte)
 func (t *TxRelayerImpl) SendTransaction(txn *ethgo.Transaction, key ethgo.Key) (*ethgo.Receipt, error) {
 	txnHash, err := t.sendTransactionLocked(txn, key)
 	if err != nil {
-		if txn.Type != ethgo.TransactionLegacy &&
-			strings.Contains(err.Error(), types.ErrTxTypeNotSupported.Error()) {
-			// downgrade transaction to legacy tx type and resend it
-			txn.Type = ethgo.TransactionLegacy
-			txn.GasPrice = 0
+		if txn.Type != ethgo.TransactionLegacy {
+			for _, fallbackErr := range dynamicFeeTxFallbackErrs {
+				if strings.Contains(
+					strings.ToLower(err.Error()),
+					strings.ToLower(fallbackErr.Error())) {
+					// "downgrade" transaction to the legacy tx type and resend it
+					txn.Type = ethgo.TransactionLegacy
+					txn.GasPrice = 0
 
-			return t.SendTransaction(txn, key)
+					return t.SendTransaction(txn, key)
+				}
+			}
 		}
 
 		return nil, err
@@ -242,9 +254,12 @@ func (t *TxRelayerImpl) sendTransactionLocalLocked(txn *ethgo.Transaction) (ethg
 }
 
 func (t *TxRelayerImpl) waitForReceipt(hash ethgo.Hash) (*ethgo.Receipt, error) {
-	count := uint(0)
+	// A negative numRetries means we don't want to receive the receipt after SendTransaction/SendTransactionLocal calls
+	if t.numRetries < 0 {
+		return nil, nil
+	}
 
-	for {
+	for count := 0; count < t.numRetries; count++ {
 		receipt, err := t.client.Eth().GetTransactionReceipt(hash)
 		if err != nil {
 			if err.Error() != "not found" {
@@ -256,13 +271,10 @@ func (t *TxRelayerImpl) waitForReceipt(hash ethgo.Hash) (*ethgo.Receipt, error) 
 			return receipt, nil
 		}
 
-		if count > numRetries {
-			return nil, fmt.Errorf("timeout while waiting for transaction %s to be processed", hash)
-		}
-
 		time.Sleep(t.receiptTimeout)
-		count++
 	}
+
+	return nil, fmt.Errorf("timeout while waiting for transaction %s to be processed", hash)
 }
 
 // ConvertTxnToCallMsg converts txn instance to call message
@@ -300,5 +312,14 @@ func WithReceiptTimeout(receiptTimeout time.Duration) TxRelayerOption {
 func WithWriter(writer io.Writer) TxRelayerOption {
 	return func(t *TxRelayerImpl) {
 		t.writer = writer
+	}
+}
+
+// WithNumRetries sets the maximum number of eth_getTransactionReceipt retries
+// before considering the transaction sending as timed out. Set to -1 to disable
+// waitForReceipt and not wait for the transaction receipt
+func WithNumRetries(numRetries int) TxRelayerOption {
+	return func(t *TxRelayerImpl) {
+		t.numRetries = numRetries
 	}
 }

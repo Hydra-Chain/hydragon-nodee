@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"os/exec"
@@ -49,13 +48,16 @@ const (
 
 	// prefix for non validators directory
 	nonValidatorPrefix = "test-non-validator-"
+
+	// NativeTokenMintableTestCfg is the test native token config for Supernets originated native tokens
+	NativeTokenMintableTestCfg = "Mintable Edge Coin:MEC:18:true:%s" //nolint:gosec
 )
 
 type NodeType int
 
 const (
 	None      NodeType = 0
-	Validator NodeType = 1 << iota
+	Validator NodeType = 1
 	Relayer   NodeType = 2
 )
 
@@ -91,7 +93,6 @@ type TestClusterConfig struct {
 
 	Name                 string
 	Premine              []string // address[:amount]
-	PremineValidators    []string // address[:amount]
 	StakeAmounts         []*big.Int
 	BootnodeCount        int
 	NonValidatorCount    int
@@ -131,8 +132,7 @@ type TestClusterConfig struct {
 	IsPropertyTest  bool
 	TestRewardToken string
 
-	RootTrackerPollInterval    time.Duration
-	RelayerTrackerPollInterval time.Duration
+	RootTrackerPollInterval time.Duration
 
 	ProxyContractsAdmin string
 
@@ -393,12 +393,6 @@ func WithRootTrackerPollInterval(pollInterval time.Duration) ClusterOption {
 	}
 }
 
-func WithRelayerTrackerPollInterval(pollInterval time.Duration) ClusterOption {
-	return func(h *TestClusterConfig) {
-		h.RelayerTrackerPollInterval = pollInterval
-	}
-}
-
 func WithProxyContractsAdmin(address string) ClusterOption {
 	return func(h *TestClusterConfig) {
 		h.ProxyContractsAdmin = address
@@ -506,9 +500,9 @@ func NewTestCluster(t *testing.T, validatorsCount int, opts ...ClusterOption) *T
 				cluster.Config.BlockTime.String())
 		}
 
-		if cluster.Config.RelayerTrackerPollInterval != 0 {
+		if cluster.Config.RootTrackerPollInterval != 0 {
 			args = append(args, "--block-tracker-poll-interval",
-				cluster.Config.RelayerTrackerPollInterval.String())
+				cluster.Config.RootTrackerPollInterval.String())
 		}
 
 		if cluster.Config.TestRewardToken != "" {
@@ -520,7 +514,11 @@ func NewTestCluster(t *testing.T, validatorsCount int, opts ...ClusterOption) *T
 			args = append(args, "--native-token-config", cluster.Config.NativeTokenConfigRaw)
 		}
 
-		if len(cluster.Config.Premine) != 0 {
+		tokenConfig, err := polybft.ParseRawTokenConfig(cluster.Config.NativeTokenConfigRaw)
+		require.NoError(t, err)
+
+		if len(cluster.Config.Premine) != 0 && tokenConfig.IsMintable {
+			// only add premine flags in genesis if token is mintable
 			for _, premine := range cluster.Config.Premine {
 				args = append(args, "--premine", premine)
 			}
@@ -634,8 +632,11 @@ func NewTestCluster(t *testing.T, validatorsCount int, opts ...ClusterOption) *T
 	polybftConfig, err := polybft.LoadPolyBFTConfig(genesisPath)
 	require.NoError(t, err)
 
-	// fund validators on the rootchain
-	err = cluster.Bridge.fundRootchainValidators(polybftConfig)
+	tokenConfig, err := polybft.ParseRawTokenConfig(cluster.Config.NativeTokenConfigRaw)
+	require.NoError(t, err)
+
+	// fund addresses on the rootchain
+	err = cluster.Bridge.fundAddressesOnRoot(tokenConfig, polybftConfig)
 	require.NoError(t, err)
 
 	// whitelist genesis validators on the rootchain
@@ -648,6 +649,13 @@ func NewTestCluster(t *testing.T, validatorsCount int, opts ...ClusterOption) *T
 
 	// do initial staking for genesis validators on the rootchain
 	err = cluster.Bridge.initialStakingOfGenesisValidators(polybftConfig)
+	require.NoError(t, err)
+
+	// add premine if token is non-mintable
+	err = cluster.Bridge.mintNativeRootToken(addresses, tokenConfig, polybftConfig)
+	require.NoError(t, err)
+
+	err = cluster.Bridge.premineNativeRootToken(tokenConfig, polybftConfig)
 	require.NoError(t, err)
 
 	// finalize genesis validators on the rootchain
@@ -695,7 +703,6 @@ func (c *TestCluster) InitTestServer(t *testing.T,
 		config.Relayer = nodeType.IsSet(Relayer)
 		config.NumBlockConfirmations = c.Config.NumBlockConfirmations
 		config.BridgeJSONRPC = bridgeJSONRPC
-		config.RelayerTrackerPollInterval = c.Config.RelayerTrackerPollInterval
 	})
 
 	// watch the server for stop signals. It is important to fix the specific
@@ -1085,11 +1092,11 @@ func CopyDir(source, destination string) error {
 			return nil
 		}
 
-		data, err := ioutil.ReadFile(filepath.Join(source, relPath))
+		data, err := os.ReadFile(filepath.Join(source, relPath))
 		if err != nil {
 			return err
 		}
 
-		return ioutil.WriteFile(filepath.Join(destination, relPath), data, 0600)
+		return os.WriteFile(filepath.Join(destination, relPath), data, 0600)
 	})
 }

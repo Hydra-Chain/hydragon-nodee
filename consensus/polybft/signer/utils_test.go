@@ -1,73 +1,14 @@
-package bls
+package signer
 
 import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func Test_SingleSign(t *testing.T) {
-	t.Parallel()
-
-	validTestMsg, invalidTestMsg := testGenRandomBytes(t, messageSize), testGenRandomBytes(t, messageSize)
-
-	blsKey, err := GenerateBlsKey() // structure which holds private/public key pair
-	require.NoError(t, err)
-
-	// Sign valid message
-	signature, err := blsKey.Sign(validTestMsg, DomainValidatorSet)
-	require.NoError(t, err)
-
-	isOk := signature.Verify(blsKey.PublicKey(), validTestMsg, DomainValidatorSet)
-	assert.True(t, isOk)
-
-	// Verify if invalid message is signed with correct private key. Only use public key for the verification
-	// this should fail => isOk = false
-	isOk = signature.Verify(blsKey.PublicKey(), invalidTestMsg, DomainValidatorSet)
-	assert.False(t, isOk)
-}
-
-func Test_AggregatedSign(t *testing.T) {
-	t.Parallel()
-
-	validTestMsg, invalidTestMsg := testGenRandomBytes(t, messageSize), testGenRandomBytes(t, messageSize)
-
-	keys, err := CreateRandomBlsKeys(participantsNumber) // create keys for validators
-	require.NoError(t, err)
-
-	pubKeys := make([]*PublicKey, len(keys))
-
-	for i, key := range keys {
-		pubKeys[i] = key.PublicKey()
-	}
-
-	var isOk bool
-
-	signatures := Signatures{}
-
-	// test all signatures at once
-	for i := 0; i < len(keys); i++ {
-		sign, err := keys[i].Sign(validTestMsg, DomainValidatorSet)
-		require.NoError(t, err)
-
-		signatures = append(signatures, sign)
-
-		// verify correctness of AggregateSignature
-		aggSig := signatures.Aggregate()
-
-		isOk = aggSig.VerifyAggregated(pubKeys[:i+1], validTestMsg, DomainValidatorSet)
-		assert.True(t, isOk)
-
-		isOk = aggSig.VerifyAggregated(pubKeys[:i+1], invalidTestMsg, DomainValidatorSet)
-		assert.False(t, isOk)
-
-		isOk = aggSig.VerifyAggregated(pubKeys[:i+1], validTestMsg, DomainCheckpointManager)
-		assert.False(t, isOk)
-	}
-}
 
 func Test_MakeKOSKSignature(t *testing.T) {
 	t.Parallel()
@@ -75,7 +16,7 @@ func Test_MakeKOSKSignature(t *testing.T) {
 	expected := "27dc197e3b3633ec47f5f9dde9a3e63fbb1117fcba189bc408593e015af2a6b92c1d3699d5a05947d3eb96241a7b9fcab34d491134e32c02663774e3265c3f77"
 	bytes, _ := hex.DecodeString("3139343634393730313533353434353137333331343333303931343932303731313035313730303336303738373134363131303435323837383335373237343933383834303135343336383231")
 
-	pk, err := UnmarshalPrivateKey(bytes)
+	pk, err := bls.UnmarshalPrivateKey(bytes)
 	require.NoError(t, err)
 
 	address := types.BytesToAddress((pk.PublicKey().Marshal())[:types.AddressLength])

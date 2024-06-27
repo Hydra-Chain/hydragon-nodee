@@ -22,6 +22,7 @@ type Config struct {
 	JSONRPCAddr              string     `json:"jsonrpc_addr" yaml:"jsonrpc_addr"`
 	Telemetry                *Telemetry `json:"telemetry" yaml:"telemetry"`
 	Network                  *Network   `json:"network" yaml:"network"`
+	ShouldSeal               bool       `json:"seal" yaml:"seal"`
 	TxPool                   *TxPool    `json:"tx_pool" yaml:"tx_pool"`
 	LogLevel                 string     `json:"log_level" yaml:"log_level"`
 	RestoreFile              string     `json:"restore_file" yaml:"restore_file"`
@@ -32,9 +33,8 @@ type Config struct {
 	JSONLogFormat            bool       `json:"json_log_format" yaml:"json_log_format"`
 	CorsAllowedOrigins       []string   `json:"cors_allowed_origins" yaml:"cors_allowed_origins"`
 
-	Relayer                    bool          `json:"relayer" yaml:"relayer"`
-	NumBlockConfirmations      uint64        `json:"num_block_confirmations" yaml:"num_block_confirmations"`
-	RelayerTrackerPollInterval time.Duration `json:"relayer_tracker_poll_interval" yaml:"relayer_tracker_poll_interval"`
+	Relayer               bool   `json:"relayer" yaml:"relayer"`
+	NumBlockConfirmations uint64 `json:"num_block_confirmations" yaml:"num_block_confirmations"`
 
 	ConcurrentRequestsDebug uint64 `json:"concurrent_requests_debug" yaml:"concurrent_requests_debug"`
 	WebSocketReadLimit      uint64 `json:"web_socket_read_limit" yaml:"web_socket_read_limit"`
@@ -94,10 +94,6 @@ const (
 	// the connection sends a close message to the peer and returns ErrReadLimit to the application.
 	DefaultWebSocketReadLimit uint64 = 8192
 
-	// DefaultRelayerTrackerPollInterval specifies time interval after which relayer node's event tracker
-	// polls child chain to get the latest block
-	DefaultRelayerTrackerPollInterval time.Duration = time.Second
-
 	// DefaultMetricsInterval specifies the time interval after which Prometheus metrics will be generated.
 	// A value of 0 means the metrics are disabled.
 	DefaultMetricsInterval time.Duration = time.Second * 8
@@ -121,7 +117,8 @@ func DefaultConfig() *Config {
 				defaultNetworkConfig.Addr.Port,
 			),
 		},
-		Telemetry: &Telemetry{},
+		Telemetry:  &Telemetry{},
+		ShouldSeal: true,
 		TxPool: &TxPool{
 			PriceLimit:         0,
 			MaxSlots:           4096,
@@ -132,15 +129,14 @@ func DefaultConfig() *Config {
 		Headers: &Headers{
 			AccessControlAllowOrigins: []string{"*"},
 		},
-		LogFilePath:                "",
-		JSONRPCBatchRequestLimit:   DefaultJSONRPCBatchRequestLimit,
-		JSONRPCBlockRangeLimit:     DefaultJSONRPCBlockRangeLimit,
-		Relayer:                    false,
-		NumBlockConfirmations:      DefaultNumBlockConfirmations,
-		ConcurrentRequestsDebug:    DefaultConcurrentRequestsDebug,
-		WebSocketReadLimit:         DefaultWebSocketReadLimit,
-		RelayerTrackerPollInterval: DefaultRelayerTrackerPollInterval,
-		MetricsInterval:            DefaultMetricsInterval,
+		LogFilePath:              "",
+		JSONRPCBatchRequestLimit: DefaultJSONRPCBatchRequestLimit,
+		JSONRPCBlockRangeLimit:   DefaultJSONRPCBlockRangeLimit,
+		Relayer:                  false,
+		NumBlockConfirmations:    DefaultNumBlockConfirmations,
+		ConcurrentRequestsDebug:  DefaultConcurrentRequestsDebug,
+		WebSocketReadLimit:       DefaultWebSocketReadLimit,
+		MetricsInterval:          DefaultMetricsInterval,
 	}
 }
 

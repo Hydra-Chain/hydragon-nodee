@@ -10,7 +10,7 @@ import (
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
-	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
@@ -83,7 +83,7 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 				Balance: oneCoin,
 			}
 
-			signature, err := bls.MakeKOSKSignature(accSetPrivateKeys[i].Bls, val.Address, 0, bls.DomainValidatorSet)
+			signature, err := signer.MakeKOSKSignature(accSetPrivateKeys[i].Bls, val.Address, 0, signer.DomainValidatorSet)
 			require.NoError(t, err)
 
 			signatureBytes, err := signature.Marshal()

@@ -5,6 +5,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	outputFlagDesc = "output the %s from the provided secrets manager"
+)
+
 func GetCommand() *cobra.Command {
 	secretsOutputCmd := &cobra.Command{
 		Use:     "output",
@@ -38,24 +42,21 @@ func setFlags(cmd *cobra.Command) {
 		&params.outputBLS,
 		blsFlag,
 		false,
-		"output only the BLS public key "+
-			"from the provided secrets manager",
+		"output only the BLS public key from the provided secrets manager",
 	)
 
 	cmd.Flags().BoolVar(
 		&params.outputNodeID,
 		nodeIDFlag,
 		false,
-		"output only the node id "+
-			"from the provided secrets manager",
+		"output only the node id from the provided secrets manager",
 	)
 
 	cmd.Flags().BoolVar(
 		&params.outputValidator,
 		validatorFlag,
 		false,
-		"output only the validator key address "+
-			"from the provided secrets manager",
+		"output only the validator key address from the provided secrets manager",
 	)
 
 	cmd.MarkFlagsMutuallyExclusive(dataDirFlag, configFlag)
