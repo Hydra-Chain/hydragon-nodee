@@ -16,7 +16,7 @@ var (
 )
 
 const (
-	DomainValidatorSetString      = "DOMAIN_CHILD_VALIDATOR_SET"
+	DomainValidatorSetString      = "DOMAIN_VALIDATOR_SET"
 	DomainCheckpointManagerString = "DOMAIN_CHECKPOINT_MANAGER"
 	DomainCommonSigningString     = "DOMAIN_COMMON_SIGNING"
 	DomainStateReceiverString     = "DOMAIN_STATE_RECEIVER"
