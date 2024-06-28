@@ -104,7 +104,7 @@ func newStakeManager(
 
 // PostBlock is called on every insert of finalized block (either from consensus or syncer)
 // It will read any StakeChanged event that happened in block and update full validator set in db
-// Note that EventSubscriber - AddLog will get all the transfer events that happened in block
+// Note that EventSubscriber - AddLog will get all the stakeChanged events that happened in block
 func (s *stakeManager) PostBlock(req *PostBlockRequest) error {
 	fullValidatorSet, err := s.getOrInitValidatorSet(req.DBTx)
 	if err != nil {
@@ -371,10 +371,10 @@ func (s *stakeManager) getSystemStateForBlock(block *types.Header) (SystemState,
 // and the value is a slice of signatures of events we want to get.
 // This function is the implementation of EventSubscriber interface
 func (s *stakeManager) GetLogFilters() map[types.Address][]types.Hash {
-	var transferEvent contractsapi.TransferEvent
+	var stakeChangedEvent contractsapi.StakeChangedEvent
 
 	return map[types.Address][]types.Hash{
-		s.validatorSetContract: {types.Hash(transferEvent.Sig())},
+		s.validatorSetContract: {types.Hash(stakeChangedEvent.Sig())},
 	}
 }
 

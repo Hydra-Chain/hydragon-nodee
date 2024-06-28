@@ -128,12 +128,7 @@ func (s *EpochStore) getLastSnapshot(dbTx *bolt.Tx) (*validatorSnapshot, error) 
 // insertEpoch inserts a new epoch to db with its meta data
 func (s *EpochStore) insertEpoch(epoch uint64, dbTx *bolt.Tx) error {
 	insertFn := func(tx *bolt.Tx) error {
-		epochBucket, err := tx.Bucket(epochsBucket).CreateBucketIfNotExists(common.EncodeUint64ToBytes(epoch))
-		if err != nil {
-			return err
-		}
-
-		_, err = epochBucket.CreateBucketIfNotExists(messageVotesBucket)
+		_, err := tx.Bucket(epochsBucket).CreateBucketIfNotExists(common.EncodeUint64ToBytes(epoch))
 		if err != nil {
 			return err
 		}

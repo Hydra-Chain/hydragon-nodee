@@ -96,11 +96,16 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 
 		validatorSetAddr := types.StringToAddress("0x0001")
 
+		systemStateMockVar := new(systemStateMock)
+		vPowerExp := &BigNumDecimal{Numerator: big.NewInt(5000), Denominator: big.NewInt(10000)}
+		systemStateMockVar.On("GetVotingPowerExponent").Return(vPowerExp, nil).Maybe()
 		bcMock := new(blockchainMock)
 		for i := 0; i < int(data.BlockID); i++ {
 			bcMock.On("CurrentHeader").Return(&types.Header{Number: 0})
 			bcMock.On("GetHeaderByNumber", mock.Anything).Return(&types.Header{Hash: types.Hash{6, 4}}, true).Once()
 			bcMock.On("GetReceiptsByHash", mock.Anything).Return([]*types.Receipt{{}}, error(nil)).Once()
+			bcMock.On("GetStateProviderForBlock", mock.Anything).Return(new(stateProviderMock), nil).Once()
+			bcMock.On("GetSystemState", mock.Anything, mock.Anything).Return(systemStateMockVar).Once()
 		}
 
 		// insert initial full validator set

@@ -172,8 +172,8 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		bcMock := new(blockchainMock)
 		bcMock.On("CurrentHeader").Return(&types.Header{Number: block - 1}, true).Twice()
-		bcMock.On("GetStateProviderForBlock", mock.Anything).Return(new(stateProviderMock), nil).Twice()
-		bcMock.On("GetSystemState", mock.Anything, mock.Anything).Return(systemStateMockVar).Twice()
+		bcMock.On("GetStateProviderForBlock", mock.Anything).Return(new(stateProviderMock), nil).Times(len(allAliases) + 1)
+		bcMock.On("GetSystemState", mock.Anything, mock.Anything).Return(systemStateMockVar).Times(len(allAliases) + 1)
 
 		state := newTestState(t)
 		// insert initial full validator set

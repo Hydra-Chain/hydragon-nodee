@@ -10,6 +10,7 @@ import (
 
 	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/bitmap"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/hashicorp/go-hclog"
@@ -159,11 +160,11 @@ func (v *TestValidator) Key() *wallet.Key {
 
 func (v *TestValidator) ParamsValidator() *GenesisValidator {
 	blskey := v.Account.Bls.PublicKey().Marshal()
-	blsSignature, err := bls.MakeKOSKSignature(
+	blsSignature, err := signer.MakeKOSKSignature(
 		v.Account.Bls,
 		types.Address(v.Account.Ecdsa.Address()),
 		1,
-		bls.DomainValidatorSet,
+		signer.DomainValidatorSet,
 	)
 	if err != nil {
 		panic(fmt.Sprintf("BUG: failed to sign validator params: %v", err))

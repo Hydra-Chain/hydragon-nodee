@@ -546,11 +546,6 @@ func (p *Polybft) Start() error {
 	// start state DB process
 	go p.state.startStatsReleasing()
 
-	if p.consensusConfig.IsBridgeEnabled() {
-		// polybft rootchain metrics
-		go p.publishRootchainMetrics(p.logger.Named("rootchain_metrics"))
-	}
-
 	return nil
 }
 
@@ -564,7 +559,6 @@ func (p *Polybft) initRuntime() error {
 		blockchain:            p.blockchain,
 		polybftBackend:        p,
 		txPool:                p.txPool,
-		bridgeTopic:           p.bridgeTopic,
 		numBlockConfirmations: p.config.NumBlockConfirmations,
 		consensusConfig:       p.config.Config,
 	}

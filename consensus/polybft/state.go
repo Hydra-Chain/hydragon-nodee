@@ -38,7 +38,6 @@ type State struct {
 	db    *bolt.DB
 	close chan struct{}
 
-	StateSyncStore        *StateSyncStore
 	CheckpointStore       *CheckpointStore
 	EpochStore            *EpochStore
 	ProposerSnapshotStore *ProposerSnapshotStore
@@ -55,7 +54,6 @@ func newState(path string, logger hclog.Logger, closeCh chan struct{}) (*State, 
 	s := &State{
 		db:                    db,
 		close:                 closeCh,
-		StateSyncStore:        &StateSyncStore{db: db},
 		CheckpointStore:       &CheckpointStore{db: db},
 		EpochStore:            &EpochStore{db: db},
 		ProposerSnapshotStore: &ProposerSnapshotStore{db: db},
@@ -73,9 +71,6 @@ func newState(path string, logger hclog.Logger, closeCh chan struct{}) (*State, 
 func (s *State) initStorages() error {
 	// init the buckets
 	return s.db.Update(func(tx *bolt.Tx) error {
-		if err := s.StateSyncStore.initialize(tx); err != nil {
-			return err
-		}
 		if err := s.CheckpointStore.initialize(tx); err != nil {
 			return err
 		}

@@ -8,12 +8,12 @@ import (
 
 	"time"
 
+	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
-	bls "github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/helper/common"
@@ -258,8 +258,8 @@ func registerValidator(sender txrelayer.TxRelayer, account *wallet.Account,
 	}
 
 	registerFn := &contractsapi.RegisterValidatorSetFn{
-		Signature: sigMarshal,
-		Pubkey:    account.Bls.PublicKey().ToBigInt(),
+		Signature:  sigMarshal,
+		Pubkey:     account.Bls.PublicKey().ToBigInt(),
 		Commission: common.ParseUint256(commission),
 	}
 

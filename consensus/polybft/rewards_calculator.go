@@ -122,12 +122,12 @@ func (r *rewardsCalculator) GetMaxReward(block *types.Header) (*big.Int, error) 
 }
 
 func (r *rewardsCalculator) getStakedBalance(block *types.Header, systemState SystemState) (*big.Int, error) {
-	reward, err := systemState.GetStakedBalance()
+	stakedBalance, err := systemState.GetStakedBalance()
 	if err != nil {
 		return nil, err
 	}
 
-	return reward, nil
+	return stakedBalance, nil
 }
 
 func (r *rewardsCalculator) getMaxBaseReward(block *types.Header, systemState SystemState) (*BigNumDecimal, error) {
@@ -174,16 +174,12 @@ func (r *rewardsCalculator) getSystemState(block *types.Header) (SystemState, er
 
 func calcMaxReward(staked *big.Int, base *big.Int, vesting *big.Int, rsi *big.Int, macro *big.Int) *big.Int {
 	res := big.NewInt(0)
-	denSum := big.NewInt(0).Mul(denominator, denominator)
-	denSum = denSum.Mul(denSum, denominator)
+	denSum := new(big.Int)
+	denSum = denSum.Mul(denominator, denominator).Mul(denSum, denominator)
 
 	baseVestingSum := big.NewInt(0).Add(base, vesting)
 	macroRsiProd := big.NewInt(0).Mul(macro, rsi)
 	nominator := big.NewInt(0).Mul(baseVestingSum, macroRsiProd)
 
-	res = res.Mul(staked, nominator)
-	res = res.Div(res, denSum)
-	res = res.Div(res, epochsInYear)
-
-	return res
+	return res.Mul(staked, nominator).Div(res, denSum).Div(res, epochsInYear)
 }

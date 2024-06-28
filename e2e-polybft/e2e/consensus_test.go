@@ -28,6 +28,10 @@ import (
 
 // Hydra TODO: Fix consensus tests
 
+const (
+	chainConfigFileName = "genesis.json"
+)
+
 var uint256ABIType = abi.MustNewType("tuple(uint256)")
 
 func TestE2E_Consensus_Basic_WithNonValidators(t *testing.T) {

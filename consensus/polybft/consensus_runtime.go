@@ -16,7 +16,6 @@ import (
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
-	"github.com/0xPolygon/polygon-edge/txrelayer"
 	"github.com/0xPolygon/polygon-edge/types"
 	bolt "go.etcd.io/bbolt"
 
@@ -81,7 +80,6 @@ type runtimeConfig struct {
 	blockchain            blockchainBackend
 	polybftBackend        polybftBackend
 	txPool                txPoolInterface
-	bridgeTopic           topic
 	numBlockConfirmations uint64
 	consensusConfig       *consensus.Config
 }
@@ -197,29 +195,8 @@ func (c *consensusRuntime) close() {
 // initStateSyncManager initializes state sync manager
 // if bridge is not enabled, then a dummy state sync manager will be used
 func (c *consensusRuntime) initStateSyncManager(logger hcf.Logger) error {
-	if c.IsBridgeEnabled() {
-		stateSenderAddr := c.config.PolyBFTConfig.Bridge.StateSenderAddr
-		stateSyncManager := newStateSyncManager(
-			logger.Named("state-sync-manager"),
-			c.config.State,
-			&stateSyncConfig{
-				key:                      c.config.Key,
-				stateSenderAddr:          stateSenderAddr,
-				stateSenderStartBlock:    c.config.PolyBFTConfig.Bridge.EventTrackerStartBlocks[stateSenderAddr],
-				jsonrpcAddr:              c.config.PolyBFTConfig.Bridge.JSONRPCEndpoint,
-				dataDir:                  c.config.DataDir,
-				topic:                    c.config.bridgeTopic,
-				maxCommitmentSize:        maxCommitmentSize,
-				numBlockConfirmations:    c.config.numBlockConfirmations,
-				blockTrackerPollInterval: c.config.PolyBFTConfig.BlockTrackerPollInterval.Duration,
-			},
-			c,
-		)
-
-		c.stateSyncManager = stateSyncManager
-	} else {
-		c.stateSyncManager = &dummyStateSyncManager{}
-	}
+	// Hydra: stateSyncManager is unused
+	c.stateSyncManager = &dummyStateSyncManager{}
 
 	return c.stateSyncManager.Init()
 }
@@ -229,22 +206,8 @@ func (c *consensusRuntime) initStateSyncManager(logger hcf.Logger) error {
 func (c *consensusRuntime) initCheckpointManager(logger hcf.Logger) error {
 	if c.IsBridgeEnabled() {
 		// enable checkpoint manager
-		txRelayer, err := txrelayer.NewTxRelayer(
-			txrelayer.WithIPAddress(c.config.PolyBFTConfig.Bridge.JSONRPCEndpoint),
-			txrelayer.WithWriter(logger.StandardWriter(&hcf.StandardLoggerOptions{})))
-		if err != nil {
-			return err
-		}
-
-		c.checkpointManager = newCheckpointManager(
-			wallet.NewEcdsaSigner(c.config.Key),
-			defaultCheckpointsOffset,
-			c.config.PolyBFTConfig.Bridge.CheckpointManagerAddr,
-			txRelayer,
-			c.config.blockchain,
-			c.config.polybftBackend,
-			logger.Named("checkpoint_manager"),
-			c.state)
+		// Hydra: checkpoint manager is unused
+		c.checkpointManager = &dummyCheckpointManager{}
 	} else {
 		c.checkpointManager = &dummyCheckpointManager{}
 	}
@@ -257,26 +220,8 @@ func (c *consensusRuntime) initCheckpointManager(logger hcf.Logger) error {
 // initStateSyncRelayer initializes state sync relayer
 // if not enabled, then a dummy state sync relayer will be used
 func (c *consensusRuntime) initStateSyncRelayer(logger hcf.Logger) error {
-	if c.config.consensusConfig.IsRelayer {
-		txRelayer, err := getStateSyncTxRelayer(c.config.consensusConfig.RPCEndpoint, logger)
-		if err != nil {
-			return err
-		}
-
-		c.stateSyncRelayer = NewStateSyncRelayer(
-			txRelayer,
-			contracts.StateReceiverContract,
-			c.state.StateSyncStore,
-			c,
-			c.config.blockchain,
-			wallet.NewEcdsaSigner(c.config.Key),
-			nil,
-			logger.Named("state_sync_relayer"))
-	} else {
-		c.stateSyncRelayer = &dummyStateSyncRelayer{}
-	}
-
-	c.eventProvider.Subscribe(c.stateSyncRelayer)
+	// Hydra: state sync relayer is unused
+	c.stateSyncRelayer = &dummyStateSyncRelayer{}
 
 	return c.stateSyncRelayer.Init()
 }

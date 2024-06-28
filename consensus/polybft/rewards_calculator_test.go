@@ -86,7 +86,7 @@ func TestRewardsCalculator_GetMaxReward(t *testing.T) {
 		reward, err := calculator.GetMaxReward(block)
 		assert.NoError(t, err)
 
-		expectedReward := big.NewInt(9564285714285)
+		expectedReward := big.NewInt(10839523809523)
 
 		assert.Equal(t, expectedReward, reward)
 	})
