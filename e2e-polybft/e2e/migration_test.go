@@ -117,7 +117,7 @@ func TestE2E_Migration(t *testing.T) {
 	tmpDir := t.TempDir()
 	defer os.RemoveAll(tmpDir)
 
-	err = frameworkpolybft.RunEdgeCommand([]string{
+	err = frameworkpolybft.RunHydraCommand([]string{
 		"regenesis",
 		"--stateRoot", block.StateRoot.String(),
 		"--source-path", path,

@@ -57,7 +57,7 @@ type TestServerConfigCallback func(*TestServerConfig)
 const (
 	serverIP    = "127.0.0.1"
 	initialPort = 12000
-	binaryName  = "polygon-edge"
+	binaryName  = "hydra"
 )
 
 type TestServer struct {
@@ -538,7 +538,10 @@ func (t *TestServer) SignTx(
 	transaction *types.Transaction,
 	privateKey *ecdsa.PrivateKey,
 ) (*types.Transaction, error) {
-	return t.Config.Signer.SignTx(transaction, privateKey)
+	signer := crypto.NewSigner(chain.AllForksEnabled.At(0), t.chainID.Uint64())
+
+	// Sign the transaction with EIP155 signer
+	return signer.SignTx(transaction, privateKey)
 }
 
 // DeployContract deploys a contract with account 0 and returns the address
@@ -984,7 +987,7 @@ func (t *TestServer) GetStdout() io.Writer {
 }
 
 func resolveBinary() string {
-	bin := os.Getenv("EDGE_BINARY")
+	bin := os.Getenv("HYDRA_BINARY")
 	if bin != "" {
 		return bin
 	}

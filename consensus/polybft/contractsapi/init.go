@@ -48,8 +48,10 @@ var (
 	L2StateSender                   *artifact.Artifact
 	CustomSupernetManager           *artifact.Artifact
 	StakeManager                    *artifact.Artifact
-	RewardPool                      *artifact.Artifact
-	ValidatorSet                    *artifact.Artifact
+	HydraChain                      *artifact.Artifact
+	HydraStaking                    *artifact.Artifact
+	HydraDelegation                 *artifact.Artifact
+	APRCalculator                   *artifact.Artifact
 	RootERC721                      *artifact.Artifact
 	RootERC1155                     *artifact.Artifact
 	EIP1559Burn                     *artifact.Artifact
@@ -57,7 +59,7 @@ var (
 	TransparentUpgradeableProxy     *artifact.Artifact
 
 	// test smart contracts
-	//go:embed test-contracts/*
+	// go:embed test-contracts/*
 	testContracts          embed.FS
 	TestWriteBlockMetadata *artifact.Artifact
 	RootERC20              *artifact.Artifact
@@ -75,12 +77,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	RewardPool, err = artifact.DecodeArtifact([]byte(RewardPoolArtifact))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ValidatorSet, err = artifact.DecodeArtifact([]byte(ValidatorSetArtifact))
+	HydraChain, err = artifact.DecodeArtifact([]byte(HydraChainArtifact))
 	if err != nil {
 		log.Fatal(err)
 	}
