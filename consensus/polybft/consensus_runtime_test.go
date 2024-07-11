@@ -492,7 +492,7 @@ func Test_NewConsensusRuntime(t *testing.T) {
 		consensusConfig: &consensus.Config{},
 	}
 
-	require.NoError(t, config.State.StakeStore.insertFullValidatorSet(validatorSetState{
+	require.NoError(t, config.State.StakeStore.insertHydraChainState(HydraChainState{
 		BlockNumber: 1,
 	}, nil))
 
@@ -503,7 +503,7 @@ func Test_NewConsensusRuntime(t *testing.T) {
 	assert.Equal(t, runtime.config.DataDir, tmpDir)
 	assert.Equal(t, uint64(10), runtime.config.PolyBFTConfig.SprintSize)
 	assert.Equal(t, uint64(10), runtime.config.PolyBFTConfig.EpochSize)
-	assert.Equal(t, "0x0000000000000000000000000000000000000101", contracts.ValidatorSetContract.String())
+	assert.Equal(t, "0x0000000000000000000000000000000000000101", contracts.HydraChainContract.String())
 	assert.False(t, runtime.IsBridgeEnabled())
 	systemStateMock.AssertExpectations(t)
 	blockchainMock.AssertExpectations(t)

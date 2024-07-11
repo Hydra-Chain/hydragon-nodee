@@ -5,4 +5,5 @@
 [submodule "core-contracts"]
 	path = core-contracts
 	url = https://github.com/Hydra-Chain/hydragon-core-contracts.git
-	branch = 35-set-up-initializers-write-missing-natspec-docs-refactor-tests
+	shallow = true
+	branch = main

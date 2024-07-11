@@ -81,13 +81,13 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	withdrawFn := &contractsapi.WithdrawValidatorSetFn{To: (types.Address)(validatorAccount.Ecdsa.Address())}
+	withdrawFn := &contractsapi.WithdrawHydraStakingFn{To: (types.Address)(validatorAccount.Ecdsa.Address())}
 	encoded, err := withdrawFn.EncodeAbi()
 	if err != nil {
 		return err
 	}
 
-	receiver := (*ethgo.Address)(&contracts.ValidatorSetContract)
+	receiver := (*ethgo.Address)(&contracts.HydraStakingContract)
 	txn := rootHelper.CreateTransaction(validatorAccount.Ecdsa.Address(), receiver, encoded, nil, false)
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
@@ -119,7 +119,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	if !foundLog {
-		return fmt.Errorf("could not find an appropriate log in receipt that withdraw happened on ValidatorSet")
+		return fmt.Errorf("could not find an appropriate log in receipt that withdraw happened on HydraStaking")
 	}
 
 	outputter.WriteCommandResult(

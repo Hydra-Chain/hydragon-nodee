@@ -25,11 +25,11 @@ import (
 )
 
 var (
-	stakeManager         = contracts.ValidatorSetContract
-	stakeFn              = contractsapi.ValidatorSet.Abi.Methods["stake"]
-	newValidatorEventABI = contractsapi.ValidatorSet.Abi.Events["NewValidator"]
-	stakeEventABI        = contractsapi.ValidatorSet.Abi.Events["Staked"]
-	commissionUpdatedABI = contractsapi.ValidatorSet.Abi.Events["CommissionUpdated"]
+	hydraChain           = contracts.HydraChainContract
+	stakeManager         = contracts.HydraStakingContract
+	stakeFn              = contractsapi.HydraStaking.Abi.Methods["stake"]
+	newValidatorEventABI = contractsapi.HydraChain.Abi.Events["NewValidator"]
+	stakeEventABI        = contractsapi.HydraStaking.Abi.Events["Staked"]
 )
 
 var params registerParams
@@ -67,13 +67,6 @@ func setFlags(cmd *cobra.Command) {
 		stakeFlag,
 		"",
 		"stake represents amount which is going to be staked by the new validator account",
-	)
-
-	cmd.Flags().Uint64Var(
-		&params.commission,
-		commissionFlag,
-		0,
-		"the validator commission percentage to charge the delegators",
 	)
 
 	cmd.Flags().Int64Var(
@@ -134,7 +127,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	receipt, err := registerValidator(txRelayer, newValidatorAccount, blsSignature, &params.commission)
+	receipt, err := registerValidator(txRelayer, newValidatorAccount, blsSignature)
 	if err != nil {
 		return err
 	}
@@ -145,7 +138,6 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 	result := &registerResult{}
 	foundNewValidatorLog := false
-	foundSetCommissionLog := false
 
 	for _, log := range receipt.Logs {
 		if newValidatorEventABI.Match(log) {
@@ -159,24 +151,10 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 			result.amount = "0"
 			foundNewValidatorLog = true
 		}
-
-		if commissionUpdatedABI.Match(log) {
-			event, err := commissionUpdatedABI.ParseLog(log)
-			if err != nil {
-				return err
-			}
-
-			result.commission = event["newCommission"].(*big.Int).Uint64() //nolint:forcetypeassert
-			foundSetCommissionLog = true
-		}
 	}
 
 	if !foundNewValidatorLog {
 		return fmt.Errorf("could not find an appropriate log in the receipt that validates the registration has happened")
-	}
-
-	if !foundSetCommissionLog {
-		return fmt.Errorf("could not find an appropriate log in the receipt that validates the commission has successfully set")
 	}
 
 	if params.stake != "" {
@@ -251,16 +229,15 @@ func populateStakeResults(receipt *ethgo.Receipt, result *registerResult) {
 }
 
 func registerValidator(sender txrelayer.TxRelayer, account *wallet.Account,
-	signature *bls.Signature, commission *uint64) (*ethgo.Receipt, error) {
+	signature *bls.Signature) (*ethgo.Receipt, error) {
 	sigMarshal, err := signature.ToBigInt()
 	if err != nil {
 		return nil, fmt.Errorf("register validator failed: %w", err)
 	}
 
-	registerFn := &contractsapi.RegisterValidatorSetFn{
+	registerFn := &contractsapi.RegisterHydraChainFn{
 		Signature:  sigMarshal,
 		Pubkey:     account.Bls.PublicKey().ToBigInt(),
-		Commission: common.ParseUint256(commission),
 	}
 
 	input, err := registerFn.EncodeAbi()

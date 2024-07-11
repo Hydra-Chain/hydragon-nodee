@@ -236,7 +236,7 @@ func (c *consensusRuntime) initStakeManager(logger hcf.Logger, dbTx *bolt.Tx) er
 		logger.Named("stake-manager"),
 		c.state,
 		wallet.NewEcdsaSigner(c.config.Key),
-		contracts.ValidatorSetContract,
+		contracts.HydraChainContract,
 		int(c.config.PolyBFTConfig.MaxValidatorSetSize),
 		c.config.polybftBackend,
 		dbTx,
@@ -466,7 +466,7 @@ func (c *consensusRuntime) FSM() error {
 
 		ff.maxRewardToDistribute, err = c.calculateRewardValue(parent)
 
-		ff.newValidatorsDelta, err = c.stakeManager.UpdateValidatorSet(epoch.Number, epoch.Validators.Copy())
+		ff.newValidatorsDelta, err = c.stakeManager.UpdateHydraChainValidators(epoch.Number, epoch.Validators.Copy())
 		if err != nil {
 			return fmt.Errorf("cannot update validator set on epoch ending: %w", err)
 		}
@@ -566,8 +566,8 @@ func (c *consensusRuntime) restartEpoch(header *types.Header, dbTx *bolt.Tx) (*e
 func (c *consensusRuntime) calculateCommitEpochInput(
 	currentBlock *types.Header,
 	epoch *epochMetadata,
-) (*contractsapi.CommitEpochValidatorSetFn,
-	*contractsapi.DistributeRewardsForRewardPoolFn, error) {
+) (*contractsapi.CommitEpochHydraChainFn,
+	*contractsapi.DistributeRewardsForHydraStakingFn, error) {
 	uptimeCounter := map[types.Address]int64{}
 	blockHeader := currentBlock
 	epochID := epoch.Number
@@ -645,17 +645,18 @@ func (c *consensusRuntime) calculateCommitEpochInput(
 		}
 	}
 
-	commitEpoch := &contractsapi.CommitEpochValidatorSetFn{
+	commitEpoch := &contractsapi.CommitEpochHydraChainFn{
 		ID: new(big.Int).SetUint64(epochID),
 		Epoch: &contractsapi.Epoch{
 			StartBlock: new(big.Int).SetUint64(epoch.FirstBlockInEpoch),
 			EndBlock:   new(big.Int).SetUint64(currentBlock.Number + 1),
 			EpochRoot:  types.Hash{},
 		},
-		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)), // TODO: epochSize must be part of the contract config and not an argument
+		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
+		Uptime: uptime,
 	}
 
-	distributeRewards := &contractsapi.DistributeRewardsForRewardPoolFn{
+	distributeRewards := &contractsapi.DistributeRewardsForHydraStakingFn{
 		EpochID:   new(big.Int).SetUint64(epochID),
 		Uptime:    uptime,
 		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),

@@ -80,8 +80,8 @@ func ParseValidator(validatorType ValidatorType, validator string) (Validator, e
 
 // ParseValidators parses an array of validator represented in string
 func ParseValidators(validatorType ValidatorType, rawValidators []string) (Validators, error) {
-	set := NewValidatorSetFromType(validatorType)
-	if set == nil {
+	newValidators := NewValidatorSetFromType(validatorType)
+	if newValidators == nil {
 		return nil, fmt.Errorf("invalid validator type: %s", validatorType)
 	}
 
@@ -91,12 +91,12 @@ func ParseValidators(validatorType ValidatorType, rawValidators []string) (Valid
 			return nil, err
 		}
 
-		if err := set.Add(validator); err != nil {
+		if err := newValidators.Add(validator); err != nil {
 			return nil, err
 		}
 	}
 
-	return set, nil
+	return newValidators, nil
 }
 
 // ParseBLSValidator parses ECDSAValidator represented in string

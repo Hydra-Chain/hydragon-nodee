@@ -19,7 +19,7 @@ func TestEncoding_Method(t *testing.T) {
 
 	cases := []method{
 		// empty commit epoch
-		&CommitEpochValidatorSetFn{
+		&CommitEpochHydraChainFn{
 			ID: big.NewInt(1),
 			Epoch: &Epoch{
 				StartBlock: big.NewInt(1),
@@ -27,6 +27,7 @@ func TestEncoding_Method(t *testing.T) {
 				EpochRoot:  types.EmptyRootHash,
 			},
 			EpochSize: big.NewInt(1),
+			Uptime: make([]*Uptime, 5),
 		},
 	}
 

@@ -17,17 +17,17 @@ func decodeStateTransaction(txData []byte) (contractsapi.StateTransactionInput, 
 	sig := txData[:abiMethodIDLength]
 
 	var (
-		commitEpochFn       contractsapi.CommitEpochValidatorSetFn
-		distributeRewardsFn contractsapi.DistributeRewardsForRewardPoolFn
+		commitEpochFn       contractsapi.CommitEpochHydraChainFn
+		distributeRewardsFn contractsapi.DistributeRewardsForHydraStakingFn
 		obj                 contractsapi.StateTransactionInput
 	)
 
 	if bytes.Equal(sig, commitEpochFn.Sig()) {
 		// commit epoch
-		obj = &contractsapi.CommitEpochValidatorSetFn{}
+		obj = &contractsapi.CommitEpochHydraChainFn{}
 	} else if bytes.Equal(sig, distributeRewardsFn.Sig()) {
 		// distribute rewards
-		obj = &contractsapi.DistributeRewardsForRewardPoolFn{}
+		obj = &contractsapi.DistributeRewardsForHydraStakingFn{}
 	} else {
 		return nil, fmt.Errorf("unknown state transaction")
 	}

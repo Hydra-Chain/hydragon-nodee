@@ -62,7 +62,7 @@ func createSignature(t *testing.T, accounts []*wallet.Account, hash types.Hash, 
 }
 
 func createTestCommitEpochInput(t *testing.T, epochID uint64,
-	epochSize uint64) *contractsapi.CommitEpochValidatorSetFn {
+	validatorSet validator.AccountSet, epochSize uint64) *contractsapi.CommitEpochHydraChainFn {
 	t.Helper()
 
 	var startBlock uint64 = 0
@@ -70,7 +70,9 @@ func createTestCommitEpochInput(t *testing.T, epochID uint64,
 		startBlock = (epochID - 1) * epochSize
 	}
 
-	commitEpoch := &contractsapi.CommitEpochValidatorSetFn{
+	uptime := generateValidatorsUpTime(t, validatorSet, epochSize)
+
+	commitEpoch := &contractsapi.CommitEpochHydraChainFn{
 		ID: new(big.Int).SetUint64(epochID),
 		Epoch: &contractsapi.Epoch{
 			StartBlock: new(big.Int).SetUint64(startBlock + 1),
@@ -78,6 +80,7 @@ func createTestCommitEpochInput(t *testing.T, epochID uint64,
 			EpochRoot:  types.Hash{},
 		},
 		EpochSize: new(big.Int).SetUint64(epochSize),
+		Uptime:    uptime,
 	}
 
 	return commitEpoch
@@ -85,7 +88,7 @@ func createTestCommitEpochInput(t *testing.T, epochID uint64,
 
 func createTestRewardToDistributeValue(t *testing.T, transition *state.Transition) *big.Int {
 	stateProvider := NewStateProvider(transition)
-	systemState := NewSystemState(contracts.ValidatorSetContract, contracts.RewardPoolContract, contracts.StateReceiverContract, stateProvider)
+	systemState := NewSystemState(contracts.HydraChainContract, contracts.HydraStakingContract, contracts.HydraDelegationContract, contracts.VestingManagerFactoryContract, contracts.APRCalculatorContract, contracts.StateReceiverContract, stateProvider)
 
 	blockchainMock := new(blockchainMock)
 	blockchainMock.On("GetStateProviderForBlock", mock.Anything).Return(nil, nil).Once()
@@ -100,23 +103,12 @@ func createTestRewardToDistributeValue(t *testing.T, transition *state.Transitio
 }
 
 func createTestDistributeRewardsInput(t *testing.T, epochID uint64,
-	validatorSet validator.AccountSet, epochSize uint64) *contractsapi.DistributeRewardsForRewardPoolFn {
+	validatorSet validator.AccountSet, epochSize uint64) *contractsapi.DistributeRewardsForHydraStakingFn {
 	t.Helper()
 
-	if validatorSet == nil {
-		validatorSet = validator.NewTestValidators(t, 5).GetPublicIdentities()
-	}
+	uptime := generateValidatorsUpTime(t, validatorSet, epochSize)
 
-	uptime := make([]*contractsapi.Uptime, len(validatorSet))
-
-	for i, v := range validatorSet {
-		uptime[i] = &contractsapi.Uptime{
-			Validator:    v.Address,
-			SignedBlocks: new(big.Int).SetUint64(epochSize),
-		}
-	}
-
-	return &contractsapi.DistributeRewardsForRewardPoolFn{
+	return &contractsapi.DistributeRewardsForHydraStakingFn{
 		EpochID:   new(big.Int).SetUint64(epochID),
 		Uptime:    uptime,
 		EpochSize: new(big.Int).SetUint64(epochSize),
@@ -214,4 +206,21 @@ func createTestBridgeConfig() *BridgeConfig {
 		StakeManagerAddr:                  types.StringToAddress("14"),
 		JSONRPCEndpoint:                   "http://localhost:8545",
 	}
+}
+
+func generateValidatorsUpTime(t *testing.T, validatorSet validator.AccountSet, epochSize uint64) []*contractsapi.Uptime {
+	if validatorSet == nil {
+		validatorSet = validator.NewTestValidators(t, 5).GetPublicIdentities()
+	}
+
+	uptime := make([]*contractsapi.Uptime, len(validatorSet))
+
+	for i, v := range validatorSet {
+		uptime[i] = &contractsapi.Uptime{
+			Validator:    v.Address,
+			SignedBlocks: new(big.Int).SetUint64(epochSize),
+		}
+	}
+
+	return uptime
 }

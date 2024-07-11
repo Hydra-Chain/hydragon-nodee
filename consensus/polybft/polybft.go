@@ -174,13 +174,26 @@ func GenesisPostHookFactory(config *chain.Chain, engineName string) func(txn *st
 			return err
 		}
 
-		// initialize RewardPool SC
-		if err = initRewardPool(polyBFTConfig, transition); err != nil {
+		// initialize HydraChain SC
+		if err = initHydraChain(polyBFTConfig, transition); err != nil {
 			return err
 		}
 
-		// initialize ValidatorSet SC
-		if err = initValidatorSet(polyBFTConfig, transition); err != nil {
+		// initialize HydraStaking SC
+		if err = initHydraStaking(polyBFTConfig, transition); err != nil {
+			return err
+		}
+		// initialize HydraDelegation SC
+		if err = initHydraDelegation(polyBFTConfig, transition); err != nil {
+			return err
+		}
+		// initialize VestingManagerFactory SC
+		if err = initVestingManagerFactory(polyBFTConfig, transition); err != nil {
+			return err
+		}
+
+		// initialize APRCalculator SC
+		if err = initAPRCalculator(polyBFTConfig, transition); err != nil {
 			return err
 		}
 

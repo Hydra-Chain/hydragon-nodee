@@ -76,7 +76,7 @@ type fsm struct {
 
 	// commitEpochInput holds info about a single epoch
 	// It is populated only for epoch-ending blocks.
-	commitEpochInput *contractsapi.CommitEpochValidatorSetFn
+	commitEpochInput *contractsapi.CommitEpochHydraChainFn
 
 	// maxRewardToDistribute holds info about the max amount of HYDRA that may be needed for rewards distribution
 	// It is send to the RewardPool contract on distributeRewardsFor transaction
@@ -86,7 +86,7 @@ type fsm struct {
 	// distributeRewardsInput holds info about validators work in a single epoch
 	// mainly, how many blocks they signed during given epoch
 	// It is populated only for epoch-ending blocks.
-	distributeRewardsInput *contractsapi.DistributeRewardsForRewardPoolFn
+	distributeRewardsInput *contractsapi.DistributeRewardsForHydraStakingFn
 
 	// isEndOfEpoch indicates if epoch reached its end
 	isEndOfEpoch bool
@@ -261,7 +261,7 @@ func (f *fsm) createCommitEpochTx() (*types.Transaction, error) {
 		return nil, err
 	}
 
-	return createStateTransactionWithData(f.Height(), contracts.ValidatorSetContract, input, nil), nil
+	return createStateTransactionWithData(f.Height(), contracts.HydraChainContract, input, nil), nil
 }
 
 // createDistributeRewardsTx create a StateTransaction, which invokes RewardPool smart contract
@@ -272,7 +272,7 @@ func (f *fsm) createDistributeRewardsTx() (*types.Transaction, error) {
 		return nil, err
 	}
 
-	return createStateTransactionWithData(f.Height(), contracts.RewardPoolContract, input, f.maxRewardToDistribute), nil
+	return createStateTransactionWithData(f.Height(), contracts.HydraStakingContract, input, f.maxRewardToDistribute), nil
 }
 
 // ValidateCommit is used to validate that a given commit is valid
@@ -451,7 +451,7 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 		// if err = verifyBridgeCommitmentTx(f.Height(), tx.Hash, stateTxData, f.validators); err != nil {
 		// 	return err
 		// }
-		case *contractsapi.CommitEpochValidatorSetFn:
+		case *contractsapi.CommitEpochHydraChainFn:
 			if commitEpochTxExists {
 				// if we already validated commit epoch tx,
 				// that means someone added more than one commit epoch tx to block,
@@ -464,7 +464,7 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			if err := f.verifyCommitEpochTx(tx); err != nil {
 				return fmt.Errorf("error while verifying commit epoch transaction. error: %w", err)
 			}
-		case *contractsapi.DistributeRewardsForRewardPoolFn:
+		case *contractsapi.DistributeRewardsForHydraStakingFn:
 			if distributeRewardsTxExists {
 				// if we already validated distribute rewards tx,
 				// that means someone added more than one distribute rewards tx to block,

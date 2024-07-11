@@ -86,7 +86,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	unstakeFn := &contractsapi.UnstakeValidatorSetFn{
+	unstakeFn := &contractsapi.UnstakeHydraStakingFn{
 		Amount: params.amountValue,
 	}
 
@@ -98,7 +98,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	txn := &ethgo.Transaction{
 		From:  validatorAccount.Ecdsa.Address(),
 		Input: encoded,
-		To:    (*ethgo.Address)(&contracts.ValidatorSetContract),
+		To:    (*ethgo.Address)(&contracts.HydraStakingContract),
 	}
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)

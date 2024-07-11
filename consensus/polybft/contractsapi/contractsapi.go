@@ -9,22 +9,6 @@ import (
 	"github.com/umbracle/ethgo/abi"
 )
 
-type InitStruct struct {
-	EpochReward *big.Int `abi:"epochReward"`
-	MinStake    *big.Int `abi:"minStake"`
-	EpochSize   *big.Int `abi:"epochSize"`
-}
-
-var InitStructABIType = abi.MustNewType("tuple(uint256 epochReward,uint256 minStake,uint256 epochSize)")
-
-func (i *InitStruct) EncodeAbi() ([]byte, error) {
-	return InitStructABIType.Encode(i)
-}
-
-func (i *InitStruct) DecodeAbi(buf []byte) error {
-	return decodeStruct(InitStructABIType, buf, &i)
-}
-
 type ValidatorInit struct {
 	Addr      types.Address `abi:"addr"`
 	Pubkey    [4]*big.Int   `abi:"pubkey"`
@@ -42,26 +26,23 @@ func (v *ValidatorInit) DecodeAbi(buf []byte) error {
 	return decodeStruct(ValidatorInitABIType, buf, &v)
 }
 
-type InitializeValidatorSetFn struct {
-	Init              *InitStruct      `abi:"init"`
-	NewValidators     []*ValidatorInit `abi:"newValidators"`
-	NewBls            types.Address    `abi:"newBls"`
-	NewRewardPool     types.Address    `abi:"newRewardPool"`
-	Governance        types.Address    `abi:"governance"`
-	LiquidToken       types.Address    `abi:"liquidToken"`
-	InitialCommission *big.Int         `abi:"initialCommission"`
+type InitializeHydraChainFn struct {
+	NewValidators       []*ValidatorInit `abi:"newValidators"`
+	Governance          types.Address    `abi:"governance"`
+	StakingContractAddr types.Address    `abi:"stakingContractAddr"`
+	NewBls              types.Address    `abi:"newBls"`
 }
 
-func (i *InitializeValidatorSetFn) Sig() []byte {
-	return ValidatorSet.Abi.Methods["initialize"].ID()
+func (i *InitializeHydraChainFn) Sig() []byte {
+	return HydraChain.Abi.Methods["initialize"].ID()
 }
 
-func (i *InitializeValidatorSetFn) EncodeAbi() ([]byte, error) {
-	return ValidatorSet.Abi.Methods["initialize"].Encode(i)
+func (i *InitializeHydraChainFn) EncodeAbi() ([]byte, error) {
+	return HydraChain.Abi.Methods["initialize"].Encode(i)
 }
 
-func (i *InitializeValidatorSetFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(ValidatorSet.Abi.Methods["initialize"], buf, i)
+func (i *InitializeHydraChainFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraChain.Abi.Methods["initialize"], buf, i)
 }
 
 type Epoch struct {
@@ -80,295 +61,6 @@ func (e *Epoch) DecodeAbi(buf []byte) error {
 	return decodeStruct(EpochABIType, buf, &e)
 }
 
-type CommitEpochValidatorSetFn struct {
-	ID        *big.Int `abi:"id"`
-	Epoch     *Epoch   `abi:"epoch"`
-	EpochSize *big.Int `abi:"epochSize"`
-}
-
-func (c *CommitEpochValidatorSetFn) Sig() []byte {
-	return ValidatorSet.Abi.Methods["commitEpoch"].ID()
-}
-
-func (c *CommitEpochValidatorSetFn) EncodeAbi() ([]byte, error) {
-	return ValidatorSet.Abi.Methods["commitEpoch"].Encode(c)
-}
-
-func (c *CommitEpochValidatorSetFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(ValidatorSet.Abi.Methods["commitEpoch"], buf, c)
-}
-
-type AddToWhitelistValidatorSetFn struct {
-	WhitelistAddreses []ethgo.Address `abi:"whitelistAddreses"`
-}
-
-func (a *AddToWhitelistValidatorSetFn) Sig() []byte {
-	return ValidatorSet.Abi.Methods["addToWhitelist"].ID()
-}
-
-func (a *AddToWhitelistValidatorSetFn) EncodeAbi() ([]byte, error) {
-	return ValidatorSet.Abi.Methods["addToWhitelist"].Encode(a)
-}
-
-func (a *AddToWhitelistValidatorSetFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(ValidatorSet.Abi.Methods["addToWhitelist"], buf, a)
-}
-
-type RegisterValidatorSetFn struct {
-	Signature  [2]*big.Int `abi:"signature"`
-	Pubkey     [4]*big.Int `abi:"pubkey"`
-	Commission *big.Int    `abi:"commission"`
-}
-
-func (r *RegisterValidatorSetFn) Sig() []byte {
-	return ValidatorSet.Abi.Methods["register"].ID()
-}
-
-func (r *RegisterValidatorSetFn) EncodeAbi() ([]byte, error) {
-	return ValidatorSet.Abi.Methods["register"].Encode(r)
-}
-
-func (r *RegisterValidatorSetFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(ValidatorSet.Abi.Methods["register"], buf, r)
-}
-
-type WithdrawValidatorSetFn struct {
-	To types.Address `abi:"to"`
-}
-
-func (w *WithdrawValidatorSetFn) Sig() []byte {
-	return ValidatorSet.Abi.Methods["withdraw"].ID()
-}
-
-func (w *WithdrawValidatorSetFn) EncodeAbi() ([]byte, error) {
-	return ValidatorSet.Abi.Methods["withdraw"].Encode(w)
-}
-
-func (w *WithdrawValidatorSetFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(ValidatorSet.Abi.Methods["withdraw"], buf, w)
-}
-
-type NewValidatorEvent struct {
-	Validator types.Address `abi:"validator"`
-	BlsKey    [4]*big.Int   `abi:"blsKey"`
-}
-
-func (*NewValidatorEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["NewValidator"].ID()
-}
-
-func (n *NewValidatorEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["NewValidator"].Inputs.Encode(n)
-}
-
-func (n *NewValidatorEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["NewValidator"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(ValidatorSet.Abi.Events["NewValidator"], log, n)
-}
-
-func (n *NewValidatorEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["NewValidator"].Inputs.DecodeStruct(input, &n)
-}
-
-type StakedEvent struct {
-	Validator types.Address `abi:"validator"`
-	Amount    *big.Int      `abi:"amount"`
-}
-
-func (*StakedEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["Staked"].ID()
-}
-
-func (s *StakedEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["Staked"].Inputs.Encode(s)
-}
-
-func (s *StakedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["Staked"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(ValidatorSet.Abi.Events["Staked"], log, s)
-}
-
-func (s *StakedEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["Staked"].Inputs.DecodeStruct(input, &s)
-}
-
-type DelegatedEvent struct {
-	Validator types.Address `abi:"validator"`
-	Delegator types.Address `abi:"delegator"`
-	Amount    *big.Int      `abi:"amount"`
-}
-
-func (*DelegatedEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["Delegated"].ID()
-}
-
-func (d *DelegatedEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["Delegated"].Inputs.Encode(d)
-}
-
-func (d *DelegatedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["Delegated"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(ValidatorSet.Abi.Events["Delegated"], log, d)
-}
-
-func (d *DelegatedEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["Delegated"].Inputs.DecodeStruct(input, &d)
-}
-
-type UnstakedEvent struct {
-	Validator types.Address `abi:"validator"`
-	Amount    *big.Int      `abi:"amount"`
-}
-
-func (*UnstakedEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["Unstaked"].ID()
-}
-
-func (u *UnstakedEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["Unstaked"].Inputs.Encode(u)
-}
-
-func (u *UnstakedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["Unstaked"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(ValidatorSet.Abi.Events["Unstaked"], log, u)
-}
-
-func (u *UnstakedEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["Unstaked"].Inputs.DecodeStruct(input, &u)
-}
-
-type UndelegatedEvent struct {
-	Validator types.Address `abi:"validator"`
-	Delegator types.Address `abi:"delegator"`
-	Amount    *big.Int      `abi:"amount"`
-}
-
-func (*UndelegatedEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["Undelegated"].ID()
-}
-
-func (u *UndelegatedEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["Undelegated"].Inputs.Encode(u)
-}
-
-func (u *UndelegatedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["Undelegated"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(ValidatorSet.Abi.Events["Undelegated"], log, u)
-}
-
-func (u *UndelegatedEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["Undelegated"].Inputs.DecodeStruct(input, &u)
-}
-
-type AddedToWhitelistEvent struct {
-	Validator types.Address `abi:"validator"`
-}
-
-func (*AddedToWhitelistEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["AddedToWhitelist"].ID()
-}
-
-func (a *AddedToWhitelistEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["AddedToWhitelist"].Inputs.Encode(a)
-}
-
-func (a *AddedToWhitelistEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["AddedToWhitelist"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(ValidatorSet.Abi.Events["AddedToWhitelist"], log, a)
-}
-
-func (a *AddedToWhitelistEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["AddedToWhitelist"].Inputs.DecodeStruct(input, &a)
-}
-
-type StakeChangedEvent struct {
-	Validator types.Address `abi:"validator"`
-	NewStake  *big.Int      `abi:"newStake"`
-}
-
-func (*StakeChangedEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["StakeChanged"].ID()
-}
-
-func (s *StakeChangedEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["StakeChanged"].Inputs.Encode(s)
-}
-
-func (s *StakeChangedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["StakeChanged"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(ValidatorSet.Abi.Events["StakeChanged"], log, s)
-}
-
-func (s *StakeChangedEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["StakeChanged"].Inputs.DecodeStruct(input, &s)
-}
-
-type WithdrawalFinishedEvent struct {
-	Account types.Address `abi:"account"`
-	To      types.Address `abi:"to"`
-	Amount  *big.Int      `abi:"amount"`
-}
-
-func (*WithdrawalFinishedEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["WithdrawalFinished"].ID()
-}
-
-func (w *WithdrawalFinishedEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["WithdrawalFinished"].Inputs.Encode(w)
-}
-
-func (w *WithdrawalFinishedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["WithdrawalFinished"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(ValidatorSet.Abi.Events["WithdrawalFinished"], log, w)
-}
-
-func (w *WithdrawalFinishedEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["WithdrawalFinished"].Inputs.DecodeStruct(input, &w)
-}
-
-type InitializeRewardPoolFn struct {
-	NewValidatorSet  types.Address `abi:"newValidatorSet"`
-	NewRewardWallet  types.Address `abi:"newRewardWallet"`
-	NewMinDelegation *big.Int      `abi:"newMinDelegation"`
-	Manager          types.Address `abi:"manager"`
-}
-
-func (i *InitializeRewardPoolFn) Sig() []byte {
-	return RewardPool.Abi.Methods["initialize"].ID()
-}
-
-func (i *InitializeRewardPoolFn) EncodeAbi() ([]byte, error) {
-	return RewardPool.Abi.Methods["initialize"].Encode(i)
-}
-
-func (i *InitializeRewardPoolFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(RewardPool.Abi.Methods["initialize"], buf, i)
-}
-
 type Uptime struct {
 	Validator    types.Address `abi:"validator"`
 	SignedBlocks *big.Int      `abi:"signedBlocks"`
@@ -384,69 +76,701 @@ func (u *Uptime) DecodeAbi(buf []byte) error {
 	return decodeStruct(UptimeABIType, buf, &u)
 }
 
-type DistributeRewardsForRewardPoolFn struct {
+type CommitEpochHydraChainFn struct {
+	ID        *big.Int  `abi:"id"`
+	Epoch     *Epoch    `abi:"epoch"`
+	EpochSize *big.Int  `abi:"epochSize"`
+	Uptime    []*Uptime `abi:"uptime"`
+}
+
+func (c *CommitEpochHydraChainFn) Sig() []byte {
+	return HydraChain.Abi.Methods["commitEpoch"].ID()
+}
+
+func (c *CommitEpochHydraChainFn) EncodeAbi() ([]byte, error) {
+	return HydraChain.Abi.Methods["commitEpoch"].Encode(c)
+}
+
+func (c *CommitEpochHydraChainFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraChain.Abi.Methods["commitEpoch"], buf, c)
+}
+
+type AddToWhitelistHydraChainFn struct {
+	WhitelistAddreses []ethgo.Address `abi:"whitelistAddreses"`
+}
+
+func (a *AddToWhitelistHydraChainFn) Sig() []byte {
+	return HydraChain.Abi.Methods["addToWhitelist"].ID()
+}
+
+func (a *AddToWhitelistHydraChainFn) EncodeAbi() ([]byte, error) {
+	return HydraChain.Abi.Methods["addToWhitelist"].Encode(a)
+}
+
+func (a *AddToWhitelistHydraChainFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraChain.Abi.Methods["addToWhitelist"], buf, a)
+}
+
+type RegisterHydraChainFn struct {
+	Signature [2]*big.Int `abi:"signature"`
+	Pubkey    [4]*big.Int `abi:"pubkey"`
+}
+
+func (r *RegisterHydraChainFn) Sig() []byte {
+	return HydraChain.Abi.Methods["register"].ID()
+}
+
+func (r *RegisterHydraChainFn) EncodeAbi() ([]byte, error) {
+	return HydraChain.Abi.Methods["register"].Encode(r)
+}
+
+func (r *RegisterHydraChainFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraChain.Abi.Methods["register"], buf, r)
+}
+
+type NewValidatorEvent struct {
+	Validator types.Address `abi:"validator"`
+	BlsKey    [4]*big.Int   `abi:"blsKey"`
+}
+
+func (*NewValidatorEvent) Sig() ethgo.Hash {
+	return HydraChain.Abi.Events["NewValidator"].ID()
+}
+
+func (n *NewValidatorEvent) Encode() ([]byte, error) {
+	return HydraChain.Abi.Events["NewValidator"].Inputs.Encode(n)
+}
+
+func (n *NewValidatorEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraChain.Abi.Events["NewValidator"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraChain.Abi.Events["NewValidator"], log, n)
+}
+
+func (n *NewValidatorEvent) Decode(input []byte) error {
+	return HydraChain.Abi.Events["NewValidator"].Inputs.DecodeStruct(input, &n)
+}
+
+type AddedToWhitelistEvent struct {
+	Validator types.Address `abi:"validator"`
+}
+
+func (*AddedToWhitelistEvent) Sig() ethgo.Hash {
+	return HydraChain.Abi.Events["AddedToWhitelist"].ID()
+}
+
+func (a *AddedToWhitelistEvent) Encode() ([]byte, error) {
+	return HydraChain.Abi.Events["AddedToWhitelist"].Inputs.Encode(a)
+}
+
+func (a *AddedToWhitelistEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraChain.Abi.Events["AddedToWhitelist"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraChain.Abi.Events["AddedToWhitelist"], log, a)
+}
+
+func (a *AddedToWhitelistEvent) Decode(input []byte) error {
+	return HydraChain.Abi.Events["AddedToWhitelist"].Inputs.DecodeStruct(input, &a)
+}
+
+type RemovedFromWhitelistEvent struct {
+	Validator types.Address `abi:"validator"`
+}
+
+func (*RemovedFromWhitelistEvent) Sig() ethgo.Hash {
+	return HydraChain.Abi.Events["RemovedFromWhitelist"].ID()
+}
+
+func (r *RemovedFromWhitelistEvent) Encode() ([]byte, error) {
+	return HydraChain.Abi.Events["RemovedFromWhitelist"].Inputs.Encode(r)
+}
+
+func (r *RemovedFromWhitelistEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraChain.Abi.Events["RemovedFromWhitelist"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraChain.Abi.Events["RemovedFromWhitelist"], log, r)
+}
+
+func (r *RemovedFromWhitelistEvent) Decode(input []byte) error {
+	return HydraChain.Abi.Events["RemovedFromWhitelist"].Inputs.DecodeStruct(input, &r)
+}
+
+type ValidatorBannedEvent struct {
+	Validator types.Address `abi:"validator"`
+}
+
+func (*ValidatorBannedEvent) Sig() ethgo.Hash {
+	return HydraChain.Abi.Events["ValidatorBanned"].ID()
+}
+
+func (v *ValidatorBannedEvent) Encode() ([]byte, error) {
+	return HydraChain.Abi.Events["ValidatorBanned"].Inputs.Encode(v)
+}
+
+func (v *ValidatorBannedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraChain.Abi.Events["ValidatorBanned"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraChain.Abi.Events["ValidatorBanned"], log, v)
+}
+
+func (v *ValidatorBannedEvent) Decode(input []byte) error {
+	return HydraChain.Abi.Events["ValidatorBanned"].Inputs.DecodeStruct(input, &v)
+}
+
+type StakerInit struct {
+	Addr  types.Address `abi:"addr"`
+	Stake *big.Int      `abi:"stake"`
+}
+
+var StakerInitABIType = abi.MustNewType("tuple(address addr,uint256 stake)")
+
+func (s *StakerInit) EncodeAbi() ([]byte, error) {
+	return StakerInitABIType.Encode(s)
+}
+
+func (s *StakerInit) DecodeAbi(buf []byte) error {
+	return decodeStruct(StakerInitABIType, buf, &s)
+}
+
+type InitializeHydraStakingFn struct {
+	InitialStakers         []*StakerInit `abi:"initialStakers"`
+	NewMinStake            *big.Int      `abi:"newMinStake"`
+	NewLiquidToken         types.Address `abi:"newLiquidToken"`
+	HydraChainAddr         types.Address `abi:"hydraChainAddr"`
+	AprCalculatorAddr      types.Address `abi:"aprCalculatorAddr"`
+	Governance             types.Address `abi:"governance"`
+	DelegationContractAddr types.Address `abi:"delegationContractAddr"`
+}
+
+func (i *InitializeHydraStakingFn) Sig() []byte {
+	return HydraStaking.Abi.Methods["initialize"].ID()
+}
+
+func (i *InitializeHydraStakingFn) EncodeAbi() ([]byte, error) {
+	return HydraStaking.Abi.Methods["initialize"].Encode(i)
+}
+
+func (i *InitializeHydraStakingFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraStaking.Abi.Methods["initialize"], buf, i)
+}
+
+type StakeHydraStakingFn struct {
+}
+
+func (s *StakeHydraStakingFn) Sig() []byte {
+	return HydraStaking.Abi.Methods["stake"].ID()
+}
+
+func (s *StakeHydraStakingFn) EncodeAbi() ([]byte, error) {
+	return HydraStaking.Abi.Methods["stake"].Encode(s)
+}
+
+func (s *StakeHydraStakingFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraStaking.Abi.Methods["stake"], buf, s)
+}
+
+type UnstakeHydraStakingFn struct {
+	Amount *big.Int `abi:"amount"`
+}
+
+func (u *UnstakeHydraStakingFn) Sig() []byte {
+	return HydraStaking.Abi.Methods["unstake"].ID()
+}
+
+func (u *UnstakeHydraStakingFn) EncodeAbi() ([]byte, error) {
+	return HydraStaking.Abi.Methods["unstake"].Encode(u)
+}
+
+func (u *UnstakeHydraStakingFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraStaking.Abi.Methods["unstake"], buf, u)
+}
+
+type DistributeRewardsForHydraStakingFn struct {
 	EpochID   *big.Int  `abi:"epochId"`
 	Uptime    []*Uptime `abi:"uptime"`
 	EpochSize *big.Int  `abi:"epochSize"`
 }
 
-func (d *DistributeRewardsForRewardPoolFn) Sig() []byte {
-	return RewardPool.Abi.Methods["distributeRewardsFor"].ID()
+func (d *DistributeRewardsForHydraStakingFn) Sig() []byte {
+	return HydraStaking.Abi.Methods["distributeRewardsFor"].ID()
 }
 
-func (d *DistributeRewardsForRewardPoolFn) EncodeAbi() ([]byte, error) {
-	return RewardPool.Abi.Methods["distributeRewardsFor"].Encode(d)
+func (d *DistributeRewardsForHydraStakingFn) EncodeAbi() ([]byte, error) {
+	return HydraStaking.Abi.Methods["distributeRewardsFor"].Encode(d)
 }
 
-func (d *DistributeRewardsForRewardPoolFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(RewardPool.Abi.Methods["distributeRewardsFor"], buf, d)
+func (d *DistributeRewardsForHydraStakingFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraStaking.Abi.Methods["distributeRewardsFor"], buf, d)
 }
 
-type ClaimValidatorRewardRewardPoolFn struct {
+type ClaimStakingRewardsHydraStakingFn struct {
 }
 
-func (c *ClaimValidatorRewardRewardPoolFn) Sig() []byte {
-	return RewardPool.Abi.MethodsBySignature["claimValidatorReward()"].ID()
+func (c *ClaimStakingRewardsHydraStakingFn) Sig() []byte {
+	return HydraStaking.Abi.MethodsBySignature["claimStakingRewards()"].ID()
 }
 
-func (c *ClaimValidatorRewardRewardPoolFn) EncodeAbi() ([]byte, error) {
-	return RewardPool.Abi.MethodsBySignature["claimValidatorReward()"].Encode(c)
+func (c *ClaimStakingRewardsHydraStakingFn) EncodeAbi() ([]byte, error) {
+	return HydraStaking.Abi.MethodsBySignature["claimStakingRewards()"].Encode(c)
 }
 
-func (c *ClaimValidatorRewardRewardPoolFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(RewardPool.Abi.MethodsBySignature["claimValidatorReward()"], buf, c)
+func (c *ClaimStakingRewardsHydraStakingFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraStaking.Abi.MethodsBySignature["claimStakingRewards()"], buf, c)
 }
 
-type ValidatorRewardClaimedEvent struct {
-	Validator types.Address `abi:"validator"`
-	Amount    *big.Int      `abi:"amount"`
+type WithdrawHydraStakingFn struct {
+	To types.Address `abi:"to"`
 }
 
-func (*ValidatorRewardClaimedEvent) Sig() ethgo.Hash {
-	return RewardPool.Abi.Events["ValidatorRewardClaimed"].ID()
+func (w *WithdrawHydraStakingFn) Sig() []byte {
+	return HydraStaking.Abi.Methods["withdraw"].ID()
 }
 
-func (v *ValidatorRewardClaimedEvent) Encode() ([]byte, error) {
-	return RewardPool.Abi.Events["ValidatorRewardClaimed"].Inputs.Encode(v)
+func (w *WithdrawHydraStakingFn) EncodeAbi() ([]byte, error) {
+	return HydraStaking.Abi.Methods["withdraw"].Encode(w)
 }
 
-func (v *ValidatorRewardClaimedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !RewardPool.Abi.Events["ValidatorRewardClaimed"].Match(log) {
+func (w *WithdrawHydraStakingFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraStaking.Abi.Methods["withdraw"], buf, w)
+}
+
+type StakedEvent struct {
+	Account types.Address `abi:"account"`
+	Amount  *big.Int      `abi:"amount"`
+}
+
+func (*StakedEvent) Sig() ethgo.Hash {
+	return HydraStaking.Abi.Events["Staked"].ID()
+}
+
+func (s *StakedEvent) Encode() ([]byte, error) {
+	return HydraStaking.Abi.Events["Staked"].Inputs.Encode(s)
+}
+
+func (s *StakedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraStaking.Abi.Events["Staked"].Match(log) {
 		return false, nil
 	}
 
-	return true, decodeEvent(RewardPool.Abi.Events["ValidatorRewardClaimed"], log, v)
+	return true, decodeEvent(HydraStaking.Abi.Events["Staked"], log, s)
 }
 
-func (v *ValidatorRewardClaimedEvent) Decode(input []byte) error {
-	return RewardPool.Abi.Events["ValidatorRewardClaimed"].Inputs.DecodeStruct(input, &v)
+func (s *StakedEvent) Decode(input []byte) error {
+	return HydraStaking.Abi.Events["Staked"].Inputs.DecodeStruct(input, &s)
+}
+
+type UnstakedEvent struct {
+	Account types.Address `abi:"account"`
+	Amount  *big.Int      `abi:"amount"`
+}
+
+func (*UnstakedEvent) Sig() ethgo.Hash {
+	return HydraStaking.Abi.Events["Unstaked"].ID()
+}
+
+func (u *UnstakedEvent) Encode() ([]byte, error) {
+	return HydraStaking.Abi.Events["Unstaked"].Inputs.Encode(u)
+}
+
+func (u *UnstakedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraStaking.Abi.Events["Unstaked"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraStaking.Abi.Events["Unstaked"], log, u)
+}
+
+func (u *UnstakedEvent) Decode(input []byte) error {
+	return HydraStaking.Abi.Events["Unstaked"].Inputs.DecodeStruct(input, &u)
+}
+
+type BalanceChangedEvent struct {
+	Account    types.Address `abi:"account"`
+	NewBalance *big.Int      `abi:"newBalance"`
+}
+
+func (*BalanceChangedEvent) Sig() ethgo.Hash {
+	return HydraStaking.Abi.Events["BalanceChanged"].ID()
+}
+
+func (b *BalanceChangedEvent) Encode() ([]byte, error) {
+	return HydraStaking.Abi.Events["BalanceChanged"].Inputs.Encode(b)
+}
+
+func (b *BalanceChangedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraStaking.Abi.Events["BalanceChanged"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraStaking.Abi.Events["BalanceChanged"], log, b)
+}
+
+func (b *BalanceChangedEvent) Decode(input []byte) error {
+	return HydraStaking.Abi.Events["BalanceChanged"].Inputs.DecodeStruct(input, &b)
+}
+
+type StakingRewardDistributedEvent struct {
+	Account types.Address `abi:"account"`
+	Amount  *big.Int      `abi:"amount"`
+}
+
+func (*StakingRewardDistributedEvent) Sig() ethgo.Hash {
+	return HydraStaking.Abi.Events["StakingRewardDistributed"].ID()
+}
+
+func (s *StakingRewardDistributedEvent) Encode() ([]byte, error) {
+	return HydraStaking.Abi.Events["StakingRewardDistributed"].Inputs.Encode(s)
+}
+
+func (s *StakingRewardDistributedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraStaking.Abi.Events["StakingRewardDistributed"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraStaking.Abi.Events["StakingRewardDistributed"], log, s)
+}
+
+func (s *StakingRewardDistributedEvent) Decode(input []byte) error {
+	return HydraStaking.Abi.Events["StakingRewardDistributed"].Inputs.DecodeStruct(input, &s)
+}
+
+type StakingRewardsClaimedEvent struct {
+	Account types.Address `abi:"account"`
+	Amount  *big.Int      `abi:"amount"`
+}
+
+func (*StakingRewardsClaimedEvent) Sig() ethgo.Hash {
+	return HydraStaking.Abi.Events["StakingRewardsClaimed"].ID()
+}
+
+func (s *StakingRewardsClaimedEvent) Encode() ([]byte, error) {
+	return HydraStaking.Abi.Events["StakingRewardsClaimed"].Inputs.Encode(s)
+}
+
+func (s *StakingRewardsClaimedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraStaking.Abi.Events["StakingRewardsClaimed"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraStaking.Abi.Events["StakingRewardsClaimed"], log, s)
+}
+
+func (s *StakingRewardsClaimedEvent) Decode(input []byte) error {
+	return HydraStaking.Abi.Events["StakingRewardsClaimed"].Inputs.DecodeStruct(input, &s)
+}
+
+type WithdrawalFinishedEvent struct {
+	Account types.Address `abi:"account"`
+	To      types.Address `abi:"to"`
+	Amount  *big.Int      `abi:"amount"`
+}
+
+func (*WithdrawalFinishedEvent) Sig() ethgo.Hash {
+	return HydraStaking.Abi.Events["WithdrawalFinished"].ID()
+}
+
+func (w *WithdrawalFinishedEvent) Encode() ([]byte, error) {
+	return HydraStaking.Abi.Events["WithdrawalFinished"].Inputs.Encode(w)
+}
+
+func (w *WithdrawalFinishedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraStaking.Abi.Events["WithdrawalFinished"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraStaking.Abi.Events["WithdrawalFinished"], log, w)
+}
+
+func (w *WithdrawalFinishedEvent) Decode(input []byte) error {
+	return HydraStaking.Abi.Events["WithdrawalFinished"].Inputs.DecodeStruct(input, &w)
+}
+
+type InitializeHydraDelegationFn struct {
+	InitialStakers            []*StakerInit `abi:"initialStakers"`
+	InitialCommission         *big.Int      `abi:"initialCommission"`
+	LiquidToken               types.Address `abi:"liquidToken"`
+	Governance                types.Address `abi:"governance"`
+	AprCalculatorAddr         types.Address `abi:"aprCalculatorAddr"`
+	HydraStakingAddr          types.Address `abi:"hydraStakingAddr"`
+	EpochManagerAddr          types.Address `abi:"epochManagerAddr"`
+	VestingManagerFactoryAddr types.Address `abi:"vestingManagerFactoryAddr"`
+}
+
+func (i *InitializeHydraDelegationFn) Sig() []byte {
+	return HydraDelegation.Abi.Methods["initialize"].ID()
+}
+
+func (i *InitializeHydraDelegationFn) EncodeAbi() ([]byte, error) {
+	return HydraDelegation.Abi.Methods["initialize"].Encode(i)
+}
+
+func (i *InitializeHydraDelegationFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraDelegation.Abi.Methods["initialize"], buf, i)
+}
+
+type DelegateHydraDelegationFn struct {
+	Validator types.Address `abi:"validator"`
+}
+
+func (d *DelegateHydraDelegationFn) Sig() []byte {
+	return HydraDelegation.Abi.Methods["delegate"].ID()
+}
+
+func (d *DelegateHydraDelegationFn) EncodeAbi() ([]byte, error) {
+	return HydraDelegation.Abi.Methods["delegate"].Encode(d)
+}
+
+func (d *DelegateHydraDelegationFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraDelegation.Abi.Methods["delegate"], buf, d)
+}
+
+type UndelegateHydraDelegationFn struct {
+	Staker types.Address `abi:"staker"`
+	Amount *big.Int      `abi:"amount"`
+}
+
+func (u *UndelegateHydraDelegationFn) Sig() []byte {
+	return HydraDelegation.Abi.Methods["undelegate"].ID()
+}
+
+func (u *UndelegateHydraDelegationFn) EncodeAbi() ([]byte, error) {
+	return HydraDelegation.Abi.Methods["undelegate"].Encode(u)
+}
+
+func (u *UndelegateHydraDelegationFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraDelegation.Abi.Methods["undelegate"], buf, u)
+}
+
+type ClaimDelegatorRewardHydraDelegationFn struct {
+	Validator types.Address `abi:"validator"`
+}
+
+func (c *ClaimDelegatorRewardHydraDelegationFn) Sig() []byte {
+	return HydraDelegation.Abi.Methods["claimDelegatorReward"].ID()
+}
+
+func (c *ClaimDelegatorRewardHydraDelegationFn) EncodeAbi() ([]byte, error) {
+	return HydraDelegation.Abi.Methods["claimDelegatorReward"].Encode(c)
+}
+
+func (c *ClaimDelegatorRewardHydraDelegationFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraDelegation.Abi.Methods["claimDelegatorReward"], buf, c)
+}
+
+type CommissionUpdatedEvent struct {
+	Validator     types.Address `abi:"validator"`
+	NewCommission *big.Int      `abi:"newCommission"`
+}
+
+func (*CommissionUpdatedEvent) Sig() ethgo.Hash {
+	return HydraDelegation.Abi.Events["CommissionUpdated"].ID()
+}
+
+func (c *CommissionUpdatedEvent) Encode() ([]byte, error) {
+	return HydraDelegation.Abi.Events["CommissionUpdated"].Inputs.Encode(c)
+}
+
+func (c *CommissionUpdatedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraDelegation.Abi.Events["CommissionUpdated"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraDelegation.Abi.Events["CommissionUpdated"], log, c)
+}
+
+func (c *CommissionUpdatedEvent) Decode(input []byte) error {
+	return HydraDelegation.Abi.Events["CommissionUpdated"].Inputs.DecodeStruct(input, &c)
+}
+
+type DelegatedEvent struct {
+	Validator types.Address `abi:"validator"`
+	Delegator types.Address `abi:"delegator"`
+	Amount    *big.Int      `abi:"amount"`
+}
+
+func (*DelegatedEvent) Sig() ethgo.Hash {
+	return HydraDelegation.Abi.Events["Delegated"].ID()
+}
+
+func (d *DelegatedEvent) Encode() ([]byte, error) {
+	return HydraDelegation.Abi.Events["Delegated"].Inputs.Encode(d)
+}
+
+func (d *DelegatedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraDelegation.Abi.Events["Delegated"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraDelegation.Abi.Events["Delegated"], log, d)
+}
+
+func (d *DelegatedEvent) Decode(input []byte) error {
+	return HydraDelegation.Abi.Events["Delegated"].Inputs.DecodeStruct(input, &d)
+}
+
+type UndelegatedEvent struct {
+	Validator types.Address `abi:"validator"`
+	Delegator types.Address `abi:"delegator"`
+	Amount    *big.Int      `abi:"amount"`
+}
+
+func (*UndelegatedEvent) Sig() ethgo.Hash {
+	return HydraDelegation.Abi.Events["Undelegated"].ID()
+}
+
+func (u *UndelegatedEvent) Encode() ([]byte, error) {
+	return HydraDelegation.Abi.Events["Undelegated"].Inputs.Encode(u)
+}
+
+func (u *UndelegatedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraDelegation.Abi.Events["Undelegated"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraDelegation.Abi.Events["Undelegated"], log, u)
+}
+
+func (u *UndelegatedEvent) Decode(input []byte) error {
+	return HydraDelegation.Abi.Events["Undelegated"].Inputs.DecodeStruct(input, &u)
+}
+
+type DelegatorRewardDistributedEvent struct {
+	Staker types.Address `abi:"staker"`
+	Amount *big.Int      `abi:"amount"`
+}
+
+func (*DelegatorRewardDistributedEvent) Sig() ethgo.Hash {
+	return HydraDelegation.Abi.Events["DelegatorRewardDistributed"].ID()
+}
+
+func (d *DelegatorRewardDistributedEvent) Encode() ([]byte, error) {
+	return HydraDelegation.Abi.Events["DelegatorRewardDistributed"].Inputs.Encode(d)
+}
+
+func (d *DelegatorRewardDistributedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraDelegation.Abi.Events["DelegatorRewardDistributed"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraDelegation.Abi.Events["DelegatorRewardDistributed"], log, d)
+}
+
+func (d *DelegatorRewardDistributedEvent) Decode(input []byte) error {
+	return HydraDelegation.Abi.Events["DelegatorRewardDistributed"].Inputs.DecodeStruct(input, &d)
+}
+
+type DelegatorRewardClaimedEvent struct {
+	Staker    types.Address `abi:"staker"`
+	Delegator types.Address `abi:"delegator"`
+	Amount    *big.Int      `abi:"amount"`
+}
+
+func (*DelegatorRewardClaimedEvent) Sig() ethgo.Hash {
+	return HydraDelegation.Abi.Events["DelegatorRewardClaimed"].ID()
+}
+
+func (d *DelegatorRewardClaimedEvent) Encode() ([]byte, error) {
+	return HydraDelegation.Abi.Events["DelegatorRewardClaimed"].Inputs.Encode(d)
+}
+
+func (d *DelegatorRewardClaimedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraDelegation.Abi.Events["DelegatorRewardClaimed"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraDelegation.Abi.Events["DelegatorRewardClaimed"], log, d)
+}
+
+func (d *DelegatorRewardClaimedEvent) Decode(input []byte) error {
+	return HydraDelegation.Abi.Events["DelegatorRewardClaimed"].Inputs.DecodeStruct(input, &d)
+}
+
+type InitializeVestingManagerFactoryFn struct {
+	HydraDelegationAddr types.Address `abi:"hydraDelegationAddr"`
+}
+
+func (i *InitializeVestingManagerFactoryFn) Sig() []byte {
+	return VestingManagerFactory.Abi.Methods["initialize"].ID()
+}
+
+func (i *InitializeVestingManagerFactoryFn) EncodeAbi() ([]byte, error) {
+	return VestingManagerFactory.Abi.Methods["initialize"].Encode(i)
+}
+
+func (i *InitializeVestingManagerFactoryFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(VestingManagerFactory.Abi.Methods["initialize"], buf, i)
+}
+
+type NewVestingManagerVestingManagerFactoryFn struct {
+}
+
+func (n *NewVestingManagerVestingManagerFactoryFn) Sig() []byte {
+	return VestingManagerFactory.Abi.Methods["newVestingManager"].ID()
+}
+
+func (n *NewVestingManagerVestingManagerFactoryFn) EncodeAbi() ([]byte, error) {
+	return VestingManagerFactory.Abi.Methods["newVestingManager"].Encode(n)
+}
+
+func (n *NewVestingManagerVestingManagerFactoryFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(VestingManagerFactory.Abi.Methods["newVestingManager"], buf, n)
+}
+
+type NewVestingManagerEvent struct {
+	Owner    types.Address `abi:"owner"`
+	NewClone types.Address `abi:"newClone"`
+}
+
+func (*NewVestingManagerEvent) Sig() ethgo.Hash {
+	return VestingManagerFactory.Abi.Events["NewVestingManager"].ID()
+}
+
+func (n *NewVestingManagerEvent) Encode() ([]byte, error) {
+	return VestingManagerFactory.Abi.Events["NewVestingManager"].Inputs.Encode(n)
+}
+
+func (n *NewVestingManagerEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !VestingManagerFactory.Abi.Events["NewVestingManager"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(VestingManagerFactory.Abi.Events["NewVestingManager"], log, n)
+}
+
+func (n *NewVestingManagerEvent) Decode(input []byte) error {
+	return VestingManagerFactory.Abi.Events["NewVestingManager"].Inputs.DecodeStruct(input, &n)
+}
+
+type InitializeAPRCalculatorFn struct {
+	Manager types.Address `abi:"manager"`
+}
+
+func (i *InitializeAPRCalculatorFn) Sig() []byte {
+	return APRCalculator.Abi.Methods["initialize"].ID()
+}
+
+func (i *InitializeAPRCalculatorFn) EncodeAbi() ([]byte, error) {
+	return APRCalculator.Abi.Methods["initialize"].Encode(i)
+}
+
+func (i *InitializeAPRCalculatorFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(APRCalculator.Abi.Methods["initialize"], buf, i)
 }
 
 type InitializeLiquidityTokenFn struct {
-	Name_            string        `abi:"name_"`
-	Symbol_          string        `abi:"symbol_"`
-	Governer         types.Address `abi:"governer"`
-	SupplyController types.Address `abi:"supplyController"`
+	Name_               string        `abi:"name_"`
+	Symbol_             string        `abi:"symbol_"`
+	Governer            types.Address `abi:"governer"`
+	HydraStakingAddr    types.Address `abi:"hydraStakingAddr"`
+	HydraDelegationAddr types.Address `abi:"hydraDelegationAddr"`
 }
 
 func (i *InitializeLiquidityTokenFn) Sig() []byte {

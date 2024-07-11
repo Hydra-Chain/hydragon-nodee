@@ -32,7 +32,7 @@ var (
 type StakeManager interface {
 	EventSubscriber
 	PostBlock(req *PostBlockRequest) error
-	UpdateValidatorSet(epoch uint64, currentValidatorSet validator.AccountSet) (*validator.ValidatorSetDelta, error)
+	UpdateHydraChainValidators(epoch uint64, currentHydraChainValidators validator.AccountSet) (*validator.ValidatorSetDelta, error)
 }
 
 var _ StakeManager = (*dummyStakeManager)(nil)
@@ -42,8 +42,8 @@ var _ StakeManager = (*dummyStakeManager)(nil)
 type dummyStakeManager struct{}
 
 func (d *dummyStakeManager) PostBlock(req *PostBlockRequest) error { return nil }
-func (d *dummyStakeManager) UpdateValidatorSet(epoch uint64,
-	currentValidatorSet validator.AccountSet) (*validator.ValidatorSetDelta, error) {
+func (d *dummyStakeManager) UpdateHydraChainValidators(epoch uint64,
+	currentHydraChainValidators validator.AccountSet) (*validator.ValidatorSetDelta, error) {
 	return &validator.ValidatorSetDelta{}, nil
 }
 
@@ -60,17 +60,13 @@ var _ StakeManager = (*stakeManager)(nil)
 // stakeManager saves StakeChanged events that happened in each block
 // and calculates updated validator set based on changed stake
 type stakeManager struct {
-	logger hclog.Logger
-	state  *State
-	// Hydra modify: Root chain is unused so remove rootchain relayer
-	// rootChainRelayer        txrelayer.TxRelayer
-	key ethgo.Key
-	// Hydra modify: Root chain is unused so remove supernetManagerContract
-	// supernetManagerContract types.Address
-	validatorSetContract types.Address
+	logger               hclog.Logger
+	state                *State
+	key                  ethgo.Key
+	hydraStakingContract types.Address
 	maxValidatorSetSize  int
 	polybftBackend       polybftBackend
-	// Hydra modify: Gives access to ValidatorSet contract state at specific block
+	// Hydra modify: Gives access to HydraChain contract state at specific block
 	blockchain blockchainBackend
 }
 
@@ -79,7 +75,7 @@ func newStakeManager(
 	logger hclog.Logger,
 	state *State,
 	key ethgo.Key,
-	validatorSetAddr types.Address,
+	hydraStakingAddr types.Address,
 	maxValidatorSetSize int,
 	polybftBackend polybftBackend,
 	dbTx *bolt.Tx,
@@ -89,7 +85,7 @@ func newStakeManager(
 		logger:               logger,
 		state:                state,
 		key:                  key,
-		validatorSetContract: validatorSetAddr,
+		hydraStakingContract: hydraStakingAddr,
 		maxValidatorSetSize:  maxValidatorSetSize,
 		polybftBackend:       polybftBackend,
 		blockchain:           blockchain,
@@ -106,7 +102,7 @@ func newStakeManager(
 // It will read any StakeChanged event that happened in block and update full validator set in db
 // Note that EventSubscriber - AddLog will get all the stakeChanged events that happened in block
 func (s *stakeManager) PostBlock(req *PostBlockRequest) error {
-	fullValidatorSet, err := s.getOrInitValidatorSet(req.DBTx)
+	hydraChainState, err := s.getOrInitHydraChainState(req.DBTx)
 	if err != nil {
 		return err
 	}
@@ -116,28 +112,28 @@ func (s *stakeManager) PostBlock(req *PostBlockRequest) error {
 
 	s.logger.Debug("Stake manager on post block",
 		"block", blockNumber,
-		"last saved", fullValidatorSet.BlockNumber,
-		"last updated", fullValidatorSet.UpdatedAtBlockNumber)
+		"last saved", hydraChainState.BlockNumber,
+		"last updated", hydraChainState.UpdatedAtBlockNumber)
 
 	// we should save new state even if number of events is zero
 	// because otherwise next time we will process more blocks
-	fullValidatorSet.EpochID = req.Epoch
-	fullValidatorSet.BlockNumber = blockNumber
+	hydraChainState.EpochID = req.Epoch
+	hydraChainState.BlockNumber = blockNumber
 
-	return s.state.StakeStore.insertFullValidatorSet(fullValidatorSet, req.DBTx)
+	return s.state.StakeStore.insertHydraChainState(hydraChainState, req.DBTx)
 }
 
 func (s *stakeManager) init(dbTx *bolt.Tx) error {
 	currentHeader := s.blockchain.CurrentHeader()
 	currentBlockNumber := currentHeader.Number
 
-	validatorSet, err := s.getOrInitValidatorSet(dbTx)
+	hydraChainState, err := s.getOrInitHydraChainState(dbTx)
 	if err != nil {
 		return err
 	}
 
 	// early return if current block is already processed
-	if validatorSet.BlockNumber == currentBlockNumber {
+	if hydraChainState.BlockNumber == currentBlockNumber {
 		return nil
 	}
 
@@ -149,75 +145,75 @@ func (s *stakeManager) init(dbTx *bolt.Tx) error {
 
 	s.logger.Debug("Stake manager on post block",
 		"block", currentBlockNumber,
-		"last saved", validatorSet.BlockNumber,
-		"last updated", validatorSet.UpdatedAtBlockNumber)
+		"last saved", hydraChainState.BlockNumber,
+		"last updated", hydraChainState.UpdatedAtBlockNumber)
 
-	// we will use eventsGetter to update the fullValidatorSet if
+	// we will use eventsGetter to update the hydraChainState if
 	// for any reason, we don't have the correct state
-	eventsGetter := &eventsGetter[*contractsapi.StakeChangedEvent]{
+	eventsGetter := &eventsGetter[*contractsapi.BalanceChangedEvent]{
 		receiptsGetter: receiptsGetter{
 			blockchain: s.blockchain,
 		},
 		isValidLogFn: func(l *types.Log) bool {
-			return l.Address == s.validatorSetContract
+			return l.Address == s.hydraStakingContract
 		},
-		parseEventFn: func(h *types.Header, l *ethgo.Log) (*contractsapi.StakeChangedEvent, bool, error) {
-			var stakeChangedEvent contractsapi.StakeChangedEvent
-			doesMatch, err := stakeChangedEvent.ParseLog(l)
+		parseEventFn: func(h *types.Header, l *ethgo.Log) (*contractsapi.BalanceChangedEvent, bool, error) {
+			var balanceChangedEvent contractsapi.BalanceChangedEvent
+			doesMatch, err := balanceChangedEvent.ParseLog(l)
 
-			return &stakeChangedEvent, doesMatch, err
+			return &balanceChangedEvent, doesMatch, err
 		},
 	}
 
-	stakeChangedEvents, err := eventsGetter.getEventsFromBlocksRange(validatorSet.BlockNumber+1, currentBlockNumber)
+	stakeChangedEvents, err := eventsGetter.getEventsFromBlocksRange(hydraChainState.BlockNumber+1, currentBlockNumber)
 	if err != nil {
 		return err
 	}
 
-	if err := s.updateWithReceipts(&validatorSet, stakeChangedEvents, currentHeader); err != nil {
+	if err := s.updateWithReceipts(&hydraChainState, stakeChangedEvents, currentHeader); err != nil {
 		return err
 	}
 
 	// we should save new state even if number of events is zero
 	// because otherwise next time we will process more blocks
-	validatorSet.EpochID = epochID
-	validatorSet.BlockNumber = currentBlockNumber
+	hydraChainState.EpochID = epochID
+	hydraChainState.BlockNumber = currentBlockNumber
 
-	return s.state.StakeStore.insertFullValidatorSet(validatorSet, dbTx)
+	return s.state.StakeStore.insertHydraChainState(hydraChainState, dbTx)
 }
 
-func (s *stakeManager) getOrInitValidatorSet(dbTx *bolt.Tx) (validatorSetState, error) {
-	validatorSet, err := s.state.StakeStore.getFullValidatorSet(dbTx)
+func (s *stakeManager) getOrInitHydraChainState(dbTx *bolt.Tx) (HydraChainState, error) {
+	hydraChainState, err := s.state.StakeStore.getHydraChainState(dbTx)
 	if err != nil {
-		if !errors.Is(err, errNoFullValidatorSet) {
-			return validatorSetState{}, err
+		if !errors.Is(err, errNoHydraChainState) {
+			return HydraChainState{}, err
 		}
 
 		validators, err := s.polybftBackend.GetValidatorsWithTx(0, nil, dbTx)
 		if err != nil {
-			return validatorSetState{}, err
+			return HydraChainState{}, err
 		}
 
-		validatorSet = validatorSetState{
+		hydraChainState = HydraChainState{
 			BlockNumber:          0,
 			EpochID:              0,
 			UpdatedAtBlockNumber: 0,
 			Validators:           newValidatorStakeMap(validators),
 		}
 
-		if err = s.state.StakeStore.insertFullValidatorSet(validatorSet, dbTx); err != nil {
-			return validatorSetState{}, err
+		if err = s.state.StakeStore.insertHydraChainState(hydraChainState, dbTx); err != nil {
+			return HydraChainState{}, err
 		}
 	}
 
-	return validatorSet, nil
+	return hydraChainState, nil
 }
 
 func (s *stakeManager) updateWithReceipts(
-	fullValidatorSet *validatorSetState,
-	stakeChangedEvents []*contractsapi.StakeChangedEvent,
+	hydraChainState *HydraChainState,
+	balanceChangedEvents []*contractsapi.BalanceChangedEvent,
 	blockHeader *types.Header) error {
-	if len(stakeChangedEvents) == 0 {
+	if len(balanceChangedEvents) == 0 {
 		return nil
 	}
 
@@ -227,20 +223,20 @@ func (s *stakeManager) updateWithReceipts(
 	}
 
 	exponent, err := systemState.GetVotingPowerExponent()
-	for _, event := range stakeChangedEvents {
+	for _, event := range balanceChangedEvents {
 		s.logger.Debug(
-			"StakeChanged event",
-			"validator:", event.Validator,
-			"new stake balance:", event.NewStake,
+			"BalanceChanged event",
+			"validator:", event.Account,
+			"new stake balance:", event.NewBalance,
 			"exponent:", exponent,
 		)
 
 		// update the stake
-		fullValidatorSet.Validators.setStake(event.Validator, event.NewStake, exponent)
+		hydraChainState.Validators.setStake(event.Account, event.NewBalance, exponent)
 	}
 
 	blockNumber := blockHeader.Number
-	for addr, data := range fullValidatorSet.Validators {
+	for addr, data := range hydraChainState.Validators {
 		if data.BlsKey == nil {
 			blsKey, err := s.getBlsKey(data.Address)
 			if err != nil {
@@ -255,26 +251,26 @@ func (s *stakeManager) updateWithReceipts(
 	}
 
 	// mark on which block validator set has been updated
-	fullValidatorSet.UpdatedAtBlockNumber = blockNumber
+	hydraChainState.UpdatedAtBlockNumber = blockNumber
 
-	s.logger.Debug("Full validator set after", "block", blockNumber, "data", fullValidatorSet.Validators)
+	s.logger.Debug("HydraChain state after", "block", blockNumber, "data", hydraChainState.Validators)
 
 	return nil
 }
 
-// UpdateValidatorSet returns an updated validator set
-// based on stake change (transfer) events from ValidatorSet contract
-func (s *stakeManager) UpdateValidatorSet(
+// UpdateHydraChainValidators returns an updated list of validators
+// based on balance change (transfer) events from HydraChain contract
+func (s *stakeManager) UpdateHydraChainValidators(
 	epoch uint64, oldValidatorSet validator.AccountSet) (*validator.ValidatorSetDelta, error) {
-	s.logger.Info("Calculating validators set update...", "epoch", epoch)
+	s.logger.Info("Calculating validator list update...", "epoch", epoch)
 
-	fullValidatorSet, err := s.state.StakeStore.getFullValidatorSet(nil)
+	hydraChain, err := s.state.StakeStore.getHydraChainState(nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get full validators set. Epoch: %d. Error: %w", epoch, err)
 	}
 
 	// stake map that holds stakes for all validators
-	stakeMap := fullValidatorSet.Validators
+	stakeMap := hydraChain.Validators
 
 	// slice of all validator set
 	newValidatorSet := stakeMap.getSorted(s.maxValidatorSetSize)
@@ -292,7 +288,7 @@ func (s *stakeManager) UpdateValidatorSet(
 
 	for i, validator := range oldValidatorSet {
 		oldActiveMap[validator.Address] = validator
-		// remove existing validators from validator set if they did not make it to the set
+		// remove existing validators from the validator list if they did not make it to the set
 		if _, exists := addressesSet[validator.Address]; !exists {
 			removedBitmap.Set(uint64(i))
 		}
@@ -317,7 +313,7 @@ func (s *stakeManager) UpdateValidatorSet(
 		}
 	}
 
-	s.logger.Info("Calculating validators set update finished.", "epoch", epoch)
+	s.logger.Info("Calculating validator list update finished.", "epoch", epoch)
 
 	delta := &validator.ValidatorSetDelta{
 		Added:   addedValidators,
@@ -337,7 +333,7 @@ func (s *stakeManager) UpdateValidatorSet(
 	return delta, nil
 }
 
-// Hydra modification: getBlsKey returns bls key for validator from the childValidatorSet contract
+// Hydra modification: getBlsKey returns bls key for validator from the HydraChain contract
 // getBlsKey returns bls key for validator from the supernet contract
 func (s *stakeManager) getBlsKey(address types.Address) (*bls.PublicKey, error) {
 	header := s.blockchain.CurrentHeader()
@@ -371,19 +367,19 @@ func (s *stakeManager) getSystemStateForBlock(block *types.Header) (SystemState,
 // and the value is a slice of signatures of events we want to get.
 // This function is the implementation of EventSubscriber interface
 func (s *stakeManager) GetLogFilters() map[types.Address][]types.Hash {
-	var stakeChangedEvent contractsapi.StakeChangedEvent
+	var balanceChangedEvent contractsapi.BalanceChangedEvent
 
 	return map[types.Address][]types.Hash{
-		s.validatorSetContract: {types.Hash(stakeChangedEvent.Sig())},
+		s.hydraStakingContract: {types.Hash(balanceChangedEvent.Sig())},
 	}
 }
 
 // ProcessLog is the implementation of EventSubscriber interface,
 // used to handle a log defined in GetLogFilters, provided by event provider
 func (s *stakeManager) ProcessLog(header *types.Header, log *ethgo.Log, dbTx *bolt.Tx) error {
-	var stakeChangedEvent contractsapi.StakeChangedEvent
+	var balanceChangedEvent contractsapi.BalanceChangedEvent
 
-	doesMatch, err := stakeChangedEvent.ParseLog(log)
+	doesMatch, err := balanceChangedEvent.ParseLog(log)
 	if err != nil {
 		return err
 	}
@@ -392,32 +388,32 @@ func (s *stakeManager) ProcessLog(header *types.Header, log *ethgo.Log, dbTx *bo
 		return nil
 	}
 
-	fullValidatorSet, err := s.getOrInitValidatorSet(dbTx)
+	hydraChainState, err := s.getOrInitHydraChainState(dbTx)
 	if err != nil {
 		return err
 	}
 
-	if err := s.updateWithReceipts(&fullValidatorSet,
-		[]*contractsapi.StakeChangedEvent{&stakeChangedEvent}, header); err != nil {
+	if err := s.updateWithReceipts(&hydraChainState,
+		[]*contractsapi.BalanceChangedEvent{&balanceChangedEvent}, header); err != nil {
 		return err
 	}
 
-	return s.state.StakeStore.insertFullValidatorSet(fullValidatorSet, dbTx)
+	return s.state.StakeStore.insertHydraChainState(hydraChainState, dbTx)
 }
 
-type validatorSetState struct {
+type HydraChainState struct {
 	BlockNumber          uint64            `json:"block"`
 	EpochID              uint64            `json:"epoch"`
 	UpdatedAtBlockNumber uint64            `json:"updated_at_block"`
 	Validators           validatorStakeMap `json:"validators"`
 }
 
-func (vs validatorSetState) Marshal() ([]byte, error) {
-	return json.Marshal(vs)
+func (hc HydraChainState) Marshal() ([]byte, error) {
+	return json.Marshal(hc)
 }
 
-func (vs *validatorSetState) Unmarshal(b []byte) error {
-	return json.Unmarshal(b, vs)
+func (hc *HydraChainState) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, hc)
 }
 
 // validatorStakeMap holds ValidatorMetadata for each validator address

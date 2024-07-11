@@ -336,12 +336,20 @@ func (p *genesisParams) deployContracts(
 			address:  contracts.BLSContractV1,
 		},
 		{
-			artifact: contractsapi.ValidatorSet,
-			address:  contracts.ValidatorSetContractV1,
+			artifact: contractsapi.HydraChain,
+			address:  contracts.HydraChainContractV1,
 		},
 		{
-			artifact: contractsapi.RewardPool,
-			address:  contracts.RewardPoolContractV1,
+			artifact: contractsapi.HydraStaking,
+			address:  contracts.HydraStakingContractV1,
+		},
+		{
+			artifact: contractsapi.HydraDelegation,
+			address:  contracts.HydraDelegationContractV1,
+		},
+		{
+			artifact: contractsapi.APRCalculator,
+			address:  contracts.APRCalculatorContractV1,
 		},
 		{
 			artifact: contractsapi.LiquidityToken,
@@ -401,8 +409,8 @@ func (p *genesisParams) deployContracts(
 		}
 	}
 
-	// ValidatorSet must have funds pre-allocated, because of withdrawal workflow
-	allocations[contracts.ValidatorSetContract].Balance = totalStake
+	// HydraStaking must have funds pre-allocated, because of withdrawal workflow
+	allocations[contracts.HydraStakingContract].Balance = totalStake
 
 	if rewardTokenByteCode != nil {
 		// if reward token is provided in genesis then, add it to allocations

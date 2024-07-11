@@ -42,39 +42,81 @@ func main() {
 		events              []string
 	}{
 		{
-			"ValidatorSet",
-			gensc.ValidatorSet,
+			"HydraChain",
+			gensc.HydraChain,
 			false,
 			[]string{
 				"initialize",
 				"commitEpoch",
 				"addToWhitelist",
 				"register",
+			},	
+			[]string{
+				"NewValidator",
+				"AddedToWhitelist",
+				"RemovedFromWhitelist",
+				"ValidatorBanned",
+			},
+		},
+		{
+			"HydraStaking",
+			gensc.HydraStaking,
+			false,
+			[]string{
+				"initialize",
+				"stake",
+				"unstake",
+				"distributeRewardsFor",
+				"claimStakingRewards()",
 				"withdraw",
 			},
 			[]string{
-				"NewValidator",
 				"Staked",
-				"Delegated",
 				"Unstaked",
-				"Undelegated",
-				"AddedToWhitelist",
-				"StakeChanged",
+				"BalanceChanged",
+				"StakingRewardDistributed",
+				"StakingRewardsClaimed",
 				"WithdrawalFinished",
 			},
 		},
 		{
-			"RewardPool",
-			gensc.RewardPool,
+			"HydraDelegation",
+			gensc.HydraDelegation,
 			false,
 			[]string{
 				"initialize",
-				"distributeRewardsFor",
-				"claimValidatorReward()",
+				"delegate",
+				"undelegate",
+				"claimDelegatorReward",
 			},
 			[]string{
-				"ValidatorRewardClaimed",
+				"CommissionUpdated",
+				"Delegated",
+				"Undelegated",
+				"DelegatorRewardDistributed",
+				"DelegatorRewardClaimed",
 			},
+		},
+		{
+			"VestingManagerFactory",
+			gensc.VestingManagerFactory,
+			false,
+			[]string{
+				"initialize",
+				"newVestingManager",
+			},
+			[]string{
+				"NewVestingManager",
+			},
+		},
+		{
+			"APRCalculator",
+			gensc.APRCalculator,
+			false,
+			[]string{
+				"initialize",
+			},
+			[]string{},
 		},
 		{
 			"LiquidityToken",

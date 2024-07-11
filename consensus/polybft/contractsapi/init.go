@@ -51,6 +51,7 @@ var (
 	HydraChain                      *artifact.Artifact
 	HydraStaking                    *artifact.Artifact
 	HydraDelegation                 *artifact.Artifact
+	VestingManagerFactory           *artifact.Artifact
 	APRCalculator                   *artifact.Artifact
 	RootERC721                      *artifact.Artifact
 	RootERC1155                     *artifact.Artifact
@@ -78,6 +79,26 @@ func init() {
 	}
 
 	HydraChain, err = artifact.DecodeArtifact([]byte(HydraChainArtifact))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	HydraStaking, err = artifact.DecodeArtifact([]byte(HydraStakingArtifact))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	HydraDelegation, err = artifact.DecodeArtifact([]byte(HydraDelegationArtifact))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	VestingManagerFactory, err = artifact.DecodeArtifact([]byte(VestingManagerFactoryArtifact))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	APRCalculator, err = artifact.DecodeArtifact([]byte(APRCalculatorArtifact))
 	if err != nil {
 		log.Fatal(err)
 	}

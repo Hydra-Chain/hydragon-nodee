@@ -33,10 +33,14 @@ var (
 	HydraDelegationContract = types.StringToAddress("0x108")
 	// HydraDelegationContractV1 is an address of the HydraDelegation's implementation contract deployed on the chain
 	HydraDelegationContractV1 = types.StringToAddress("0x1081")
+	// VestingManagerFactoryContract is an address of the VestingManagerFactory's proxy contract on the chain
+	VestingManagerFactoryContract = types.StringToAddress("0x109")
+	// VestingManagerFactoryContractV1 is an address of the VestingManagerFactoryContract's implementation contract deployed on the chain
+	VestingManagerFactoryContractV1 = types.StringToAddress("0x1091")
 	// APRCalculatorContract is an address of the APRCalculator's proxy contract on the chain
-	APRCalculatorContract = types.StringToAddress("0x109")
+	APRCalculatorContract = types.StringToAddress("0x110")
 	// APRCalculatorContractV1 is an address of the APRCalculator's implementation contract deployed on the chain
-	APRCalculatorContractV1 = types.StringToAddress("0x1091")
+	APRCalculatorContractV1 = types.StringToAddress("1101")
 	// StateReceiverContract is an address of bridge proxy contract on the child chain
 	StateReceiverContract = types.StringToAddress("0x1001")
 	// StateReceiverContractV1 is an address of bridge implementation contract on the child chain
@@ -116,6 +120,7 @@ func GetProxyImplementationMapping() map[types.Address]types.Address {
 		HydraChainContract: HydraChainContractV1,
 		HydraStakingContract: HydraStakingContractV1,
 		HydraDelegationContract: HydraDelegationContractV1,
+		VestingManagerFactoryContract: VestingManagerFactoryContractV1,
 		APRCalculatorContract: APRCalculatorContractV1,
 		FeeHandlerContract: FeeHandlerContractV1,
 	}

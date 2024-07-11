@@ -108,8 +108,8 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 			bcMock.On("GetSystemState", mock.Anything, mock.Anything).Return(systemStateMockVar).Once()
 		}
 
-		// insert initial full validator set
-		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
+		// insert initial hydra chain
+		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
 			Validators: newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
 		}, nil))
 
@@ -126,7 +126,7 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 		require.NoError(t, err)
 
 		header := &types.Header{Number: data.BlockID}
-		require.NoError(t, stakeManager.ProcessLog(header, convertLog(createTestLogForStakeChangedEvent(
+		require.NoError(t, stakeManager.ProcessLog(header, convertLog(createTestLogForBalanceChangedEvent(
 			t,
 			validatorSetAddr,
 			validators.GetValidator(initialSetAliases[data.ValidatorID]).Address(),
@@ -152,7 +152,7 @@ func FuzzTestStakeManagerUpdateValidatorSet(f *testing.F) {
 	bcMock := new(blockchainMock)
 	bcMock.On("CurrentHeader").Return(&types.Header{Number: 0})
 
-	err := state.StakeStore.insertFullValidatorSet(validatorSetState{
+	err := state.StakeStore.insertHydraChainState(HydraChainState{
 		Validators: newValidatorStakeMap(validators.GetPublicIdentities())}, nil)
 	require.NoError(f, err)
 
@@ -209,18 +209,18 @@ func FuzzTestStakeManagerUpdateValidatorSet(f *testing.F) {
 			t.Skip()
 		}
 
-		err := state.StakeStore.insertFullValidatorSet(validatorSetState{
+		err := state.StakeStore.insertHydraChainState(HydraChainState{
 			Validators: newValidatorStakeMap(validators.GetPublicIdentities())}, nil)
 		require.NoError(t, err)
 
-		_, err = stakeManager.UpdateValidatorSet(data.EpochID, validators.GetPublicIdentities(aliases[data.Index:]...))
+		_, err = stakeManager.UpdateHydraChainValidators(data.EpochID, validators.GetPublicIdentities(aliases[data.Index:]...))
 		require.NoError(t, err)
 
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorToUpdate := fullValidatorSet[data.Index]
 		validatorToUpdate.VotingPower = big.NewInt(data.VotingPower)
 
-		_, err = stakeManager.UpdateValidatorSet(data.EpochID, validators.GetPublicIdentities())
+		_, err = stakeManager.UpdateHydraChainValidators(data.EpochID, validators.GetPublicIdentities())
 		require.NoError(t, err)
 	})
 }

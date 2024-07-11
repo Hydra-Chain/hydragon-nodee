@@ -243,7 +243,7 @@ func (p *genesisParams) initRawParams() error {
 		return err
 	}
 
-	if err := p.initValidatorSet(); err != nil {
+	if err := p.setInitialValidators(); err != nil {
 		return err
 	}
 
@@ -253,8 +253,8 @@ func (p *genesisParams) initRawParams() error {
 	return nil
 }
 
-// setValidatorSetFromCli sets validator set from cli command
-func (p *genesisParams) setValidatorSetFromCli() error {
+// setInitialValidatorsFromCli sets validator set from cli command
+func (p *genesisParams) setInitialValidatorsFromCli() error {
 	if len(p.validators) == 0 {
 		return nil
 	}
@@ -271,8 +271,8 @@ func (p *genesisParams) setValidatorSetFromCli() error {
 	return nil
 }
 
-// setValidatorSetFromPrefixPath sets validator set from prefix path
-func (p *genesisParams) setValidatorSetFromPrefixPath() error {
+// setInitialValidatorsFromPrefixPath sets validator set from prefix path
+func (p *genesisParams) setInitialValidatorsFromPrefixPath() error {
 	if !p.areValidatorsSetByPrefix() {
 		return nil
 	}
@@ -303,16 +303,16 @@ func (p *genesisParams) initIBFTValidatorType() error {
 	return nil
 }
 
-func (p *genesisParams) initValidatorSet() error {
+func (p *genesisParams) setInitialValidators() error {
 	p.ibftValidators = validators.NewValidatorSetFromType(p.ibftValidatorType)
 
-	// Set validator set
+	// Set the initial validators
 	// Priority goes to cli command over prefix path
-	if err := p.setValidatorSetFromPrefixPath(); err != nil {
+	if err := p.setInitialValidatorsFromPrefixPath(); err != nil {
 		return err
 	}
 
-	if err := p.setValidatorSetFromCli(); err != nil {
+	if err := p.setInitialValidatorsFromCli(); err != nil {
 		return err
 	}
 

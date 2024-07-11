@@ -145,7 +145,7 @@ func (r *rewardsCalculator) getVestingBonus(vestingWeeks uint64) (*big.Int, erro
 	return bonus, nil
 }
 
-func (r *rewardsCalculator) getMaxRSIBonus(block *types.Header, systemState SystemState) (*big.Int, error) {
+func (r *rewardsCalculator) getMaxRSIBonus(_ *types.Header, systemState SystemState) (*big.Int, error) {
 	rsi, err := systemState.GetMaxRSI()
 	if err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func (r *rewardsCalculator) getMaxRSIBonus(block *types.Header, systemState Syst
 	return rsi, nil
 }
 
-func (r *rewardsCalculator) getMacroFactor(block *types.Header, systemState SystemState) (*big.Int, error) {
+func (r *rewardsCalculator) getMacroFactor(_ *types.Header, systemState SystemState) (*big.Int, error) {
 	reward, err := systemState.GetMacroFactor()
 	if err != nil {
 		return nil, err

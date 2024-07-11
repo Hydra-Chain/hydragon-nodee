@@ -317,7 +317,7 @@ func TestExecutor_apply_SystemAddrBalanceInject(t *testing.T) {
 
 	tr.gasPool = uint64(10000000)
 	sysCaller := contracts.SystemCaller
-	to := &contracts.ValidatorSetContract
+	to := &contracts.HydraStakingContract
 
 	createSystemTx := func(value *big.Int, txType types.TxType, nonce uint64) *types.Transaction {
 		return &types.Transaction{
@@ -377,7 +377,7 @@ func TestExecutor_apply_SystemAddrBalanceInject(t *testing.T) {
 func TestExecutor_Apply(t *testing.T) {
 	value, txType := big.NewInt(10), types.StateTx
 	sysCaller := contracts.SystemCaller
-	toRevert := &contracts.ValidatorSetContract
+	toRevert := &contracts.HydraStakingContract
 	to := types.BytesToAddress([]byte{0x1})
 
 	input, err := hex.DecodeString("1d967a60")
