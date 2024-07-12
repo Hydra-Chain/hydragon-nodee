@@ -17,17 +17,28 @@ type method interface {
 func TestEncoding_Method(t *testing.T) {
 	t.Parallel()
 
+	epochSize := int64(10)
+
+	uptime := make([]*Uptime, 5)
+
+	for i := 0; i < 5; i++ {
+		uptime[i] = &Uptime{
+			Validator:    types.Address{},
+			SignedBlocks: new(big.Int).SetUint64(uint64(epochSize)),
+		}
+	}
+
 	cases := []method{
 		// empty commit epoch
 		&CommitEpochHydraChainFn{
 			ID: big.NewInt(1),
 			Epoch: &Epoch{
 				StartBlock: big.NewInt(1),
-				EndBlock:   big.NewInt(1),
-				EpochRoot:  types.EmptyRootHash,
+				EndBlock:   big.NewInt(epochSize),
+				EpochRoot:  types.Hash{},
 			},
-			EpochSize: big.NewInt(1),
-			Uptime: make([]*Uptime, 5),
+			EpochSize: big.NewInt(epochSize),
+			Uptime:    uptime,
 		},
 	}
 

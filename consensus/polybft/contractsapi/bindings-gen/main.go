@@ -50,7 +50,7 @@ func main() {
 				"commitEpoch",
 				"addToWhitelist",
 				"register",
-			},	
+			},
 			[]string{
 				"NewValidator",
 				"AddedToWhitelist",
@@ -94,7 +94,7 @@ func main() {
 				"Delegated",
 				"Undelegated",
 				"DelegatorRewardDistributed",
-				"DelegatorRewardClaimed",
+				"DelegatorRewardsClaimed",
 			},
 		},
 		{

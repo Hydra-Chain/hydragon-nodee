@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	initialMinStake, _  = new(big.Int).SetString("15000000000000000000000", 10)
-	minDelegation int64 = 1e18
+	initialMinStake, _       = new(big.Int).SetString("15000000000000000000000", 10)
+	minDelegation      int64 = 1e18
 
 	contractCallGasLimit uint64 = 100_000_000
 )
@@ -34,10 +34,11 @@ func initHydraChain(polyBFTConfig PolyBFTConfig, transition *state.Transition) e
 	}
 
 	initFn := &contractsapi.InitializeHydraChainFn{
-		NewValidators:         initialValidators,
-		Governance:            polyBFTConfig.Governance,
-		StakingContractAddr:   contracts.HydraChainContract,
-		NewBls:                contracts.BLSContract,
+		NewValidators:          initialValidators,
+		Governance:             polyBFTConfig.Governance,
+		StakingContractAddr:    contracts.HydraStakingContract,
+		DelegationContractAddr: contracts.HydraDelegationContract,
+		NewBls:                 contracts.BLSContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -52,17 +53,17 @@ func initHydraChain(polyBFTConfig PolyBFTConfig, transition *state.Transition) e
 // initHydraStaking initializes HydraStaking SC
 func initHydraStaking(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initialStakers, err := validator.GetInitialStakers(polyBFTConfig.InitialValidatorSet)
-	if (err != nil) {
+	if err != nil {
 		return err
 	}
 
 	initFn := &contractsapi.InitializeHydraStakingFn{
-		InitialStakers: initialStakers,
-		NewMinStake: initialMinStake,
-		NewLiquidToken: contracts.LiquidityTokenContract,
-		HydraChainAddr: contracts.HydraChainContract,
-		AprCalculatorAddr: contracts.APRCalculatorContract,
-		Governance: polyBFTConfig.Governance,
+		InitialStakers:         initialStakers,
+		NewMinStake:            initialMinStake,
+		NewLiquidToken:         contracts.LiquidityTokenContract,
+		HydraChainAddr:         contracts.HydraChainContract,
+		AprCalculatorAddr:      contracts.APRCalculatorContract,
+		Governance:             polyBFTConfig.Governance,
 		DelegationContractAddr: contracts.HydraDelegationContract,
 	}
 
@@ -78,17 +79,18 @@ func initHydraStaking(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 // initHydraDelegation initializes HydraDelegation SC
 func initHydraDelegation(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initialStakers, err := validator.GetInitialStakers(polyBFTConfig.InitialValidatorSet)
-	if (err != nil) {
+	if err != nil {
 		return err
 	}
 
 	initFn := &contractsapi.InitializeHydraDelegationFn{
-		InitialStakers: initialStakers,
-		LiquidToken: contracts.LiquidityTokenContract,
-		Governance: polyBFTConfig.Governance,
-		AprCalculatorAddr: contracts.APRCalculatorContract,
-		HydraStakingAddr: contracts.HydraStakingContract,
-		EpochManagerAddr: contracts.HydraChainContract,
+		InitialStakers:            initialStakers,
+		Governance:                polyBFTConfig.Governance,
+		InitialCommission:         big.NewInt(10),
+		LiquidToken:               contracts.LiquidityTokenContract,
+		AprCalculatorAddr:         contracts.APRCalculatorContract,
+		HydraStakingAddr:          contracts.HydraStakingContract,
+		HydraChainAddr:            contracts.HydraChainContract,
 		VestingManagerFactoryAddr: contracts.VestingManagerFactoryContract,
 	}
 
@@ -104,7 +106,7 @@ func initHydraDelegation(polyBFTConfig PolyBFTConfig, transition *state.Transiti
 // initVestingManagerFactory initializes VestingManagerFactory SC
 func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeVestingManagerFactoryFn{
-		HydraDelegationAddr:  contracts.HydraDelegationContract,
+		HydraDelegationAddr: contracts.HydraDelegationContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -119,7 +121,7 @@ func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Tr
 // initAPRCalculator initializes APRCalculator SC
 func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeAPRCalculatorFn{
-		Manager:  polyBFTConfig.Governance,
+		Manager: polyBFTConfig.Governance,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -146,10 +148,10 @@ func initFeeHandler(polybftConfig PolyBFTConfig, transition *state.Transition) e
 
 func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := contractsapi.InitializeLiquidityTokenFn{
-		Name_:            "Liquid Hydra",
-		Symbol_:          "LYDRA",
-		Governer:         polyBFTConfig.Governance,
-		HydraStakingAddr: contracts.HydraStakingContract,
+		Name_:               "Liquid Hydra",
+		Symbol_:             "LYDRA",
+		Governer:            polyBFTConfig.Governance,
+		HydraStakingAddr:    contracts.HydraStakingContract,
 		HydraDelegationAddr: contracts.HydraDelegationContract,
 	}
 

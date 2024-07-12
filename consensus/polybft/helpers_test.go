@@ -209,6 +209,8 @@ func createTestBridgeConfig() *BridgeConfig {
 }
 
 func generateValidatorsUpTime(t *testing.T, validatorSet validator.AccountSet, epochSize uint64) []*contractsapi.Uptime {
+	t.Helper()
+
 	if validatorSet == nil {
 		validatorSet = validator.NewTestValidators(t, 5).GetPublicIdentities()
 	}

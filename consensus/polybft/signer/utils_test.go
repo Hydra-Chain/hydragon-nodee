@@ -21,7 +21,7 @@ func Test_MakeKOSKSignature(t *testing.T) {
 
 	address := types.BytesToAddress((pk.PublicKey().Marshal())[:types.AddressLength])
 
-	signature, err := MakeKOSKSignature(pk, address, 10, DomainValidatorSet)
+	signature, err := MakeKOSKSignature(pk, address, 10, DomainHydraChain)
 	require.NoError(t, err)
 
 	signatureBytes, err := signature.Marshal()
@@ -29,7 +29,7 @@ func Test_MakeKOSKSignature(t *testing.T) {
 
 	assert.Equal(t, expected, hex.EncodeToString(signatureBytes))
 
-	signature, err = MakeKOSKSignature(pk, address, 100, DomainValidatorSet)
+	signature, err = MakeKOSKSignature(pk, address, 100, DomainHydraChain)
 	require.NoError(t, err)
 
 	signatureBytes, err = signature.Marshal()

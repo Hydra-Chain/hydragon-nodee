@@ -1,12 +1,14 @@
 package polybft
 
 import (
+	"fmt"
 	"math/big"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/umbracle/ethgo/abi"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
@@ -52,6 +54,7 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		validatorSets[i] = validator.NewTestValidatorsWithAliases(t, aliases, vps)
 	}
 
+	fmt.Println("---- hit vito")
 	// iterate through the validator set and do the test for each of them
 	for _, currentValidators := range validatorSets {
 		accSet := currentValidators.GetPublicIdentities()
@@ -86,7 +89,7 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 				Balance: oneCoin,
 			}
 
-			signature, err := signer.MakeKOSKSignature(accSetPrivateKeys[i].Bls, val.Address, 0, signer.DomainValidatorSet)
+			signature, err := signer.MakeKOSKSignature(accSetPrivateKeys[i].Bls, val.Address, 0, signer.DomainHydraChain)
 			require.NoError(t, err)
 
 			signatureBytes, err := signature.Marshal()
@@ -129,6 +132,10 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		err := initLiquidityToken(polyBFTConfig, transition)
 		require.NoError(t, err)
 
+		// init HydraChain
+		err = initHydraChain(polyBFTConfig, transition)
+		require.NoError(t, err)
+
 		// init HydraStaking
 		err = initHydraStaking(polyBFTConfig, transition)
 		require.NoError(t, err)
@@ -137,14 +144,38 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		err = initHydraDelegation(polyBFTConfig, transition)
 		require.NoError(t, err)
 
+		fmt.Println("---- hit vito 1")
 		// delegate amounts to validators
 		for valAddress, delegators := range valid2deleg {
 			for _, delegator := range delegators {
+				// 		delegateToAddress := types.StringToAddress(params.delegateAddress)
+				// encoded, err = contractsapi.HydraDelegation.Abi.Methods["delegate"].Encode(
+				// 	[]interface{}{ethgo.Address(delegateToAddress), false})
+
 				encoded, err := contractsapi.HydraDelegation.Abi.Methods["delegate"].Encode(
 					[]interface{}{valAddress, false})
 				require.NoError(t, err)
+				fmt.Println("---- vito, encoded: ", encoded)
 
-				result := transition.Call2(types.Address(delegator.Address()), contracts.HydraChainContract, encoded, delegateAmount, 1000000000000)
+				fmt.Println("---- hit vito, addr ...", contracts.HydraDelegationContract)
+				fmt.Println(" delegate balance: ", transition.GetBalance(types.Address(delegator.Address())))
+				fmt.Println(" delegateAmount: ", delegateAmount)
+				result := transition.Call2(types.Address(delegator.Address()), contracts.HydraDelegationContract, encoded, delegateAmount, 1000000000000)
+				// fmt.Println("---- hit vito, res ...", result)
+				if result.Failed() {
+					if result.Reverted() {
+						if revertReason, err := abi.UnpackRevertError(result.ReturnValue); err == nil {
+							fmt.Println("--- vito, we have found revert reason error: ", revertReason)
+						} else {
+							fmt.Println("--- vito, we have found revert result.ReturnValue: ", result.ReturnValue)
+							fmt.Println("--- vito, we have found revert reason error, but failed to unpack: ", err)
+						}
+					} else {
+						fmt.Println("--- vito, we have found revert error: ", result.Err)
+						fmt.Println("--- vito, we have found revert encoded err: ", hex.EncodeToString(result.ReturnValue))
+					}
+				}
+				fmt.Println("--- vito, result: ", result)
 				require.False(t, result.Failed())
 			}
 		}

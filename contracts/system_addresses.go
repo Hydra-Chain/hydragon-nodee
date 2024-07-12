@@ -116,12 +116,12 @@ var (
 // GetProxyImplementationMapping retrieves the addresses of proxy contracts that should be deployed unconditionally
 func GetProxyImplementationMapping() map[types.Address]types.Address {
 	return map[types.Address]types.Address{
-		BLSContract: BLSContractV1,
-		HydraChainContract: HydraChainContractV1,
-		HydraStakingContract: HydraStakingContractV1,
-		HydraDelegationContract: HydraDelegationContractV1,
+		BLSContract:                   BLSContractV1,
+		HydraChainContract:            HydraChainContractV1,
+		HydraStakingContract:          HydraStakingContractV1,
+		HydraDelegationContract:       HydraDelegationContractV1,
 		VestingManagerFactoryContract: VestingManagerFactoryContractV1,
-		APRCalculatorContract: APRCalculatorContractV1,
-		FeeHandlerContract: FeeHandlerContractV1,
+		APRCalculatorContract:         APRCalculatorContractV1,
+		FeeHandlerContract:            FeeHandlerContractV1,
 	}
 }

@@ -348,6 +348,10 @@ func (p *genesisParams) deployContracts(
 			address:  contracts.HydraDelegationContractV1,
 		},
 		{
+			artifact: contractsapi.VestingManagerFactory,
+			address:  contracts.VestingManagerFactoryContractV1,
+		},
+		{
 			artifact: contractsapi.APRCalculator,
 			address:  contracts.APRCalculatorContractV1,
 		},

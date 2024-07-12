@@ -16,15 +16,15 @@ var (
 )
 
 const (
-	DomainValidatorSetString      = "DOMAIN_VALIDATOR_SET"
+	DomainHydraChainString        = "DOMAIN_HYDRA_CHAIN"
 	DomainCheckpointManagerString = "DOMAIN_CHECKPOINT_MANAGER"
 	DomainCommonSigningString     = "DOMAIN_COMMON_SIGNING"
 	DomainStateReceiverString     = "DOMAIN_STATE_RECEIVER"
 )
 
 var (
-	// domain used to map hash to G1 used by (child) validator set
-	DomainValidatorSet = crypto.Keccak256([]byte(DomainValidatorSetString))
+	// domain used to map hash to G1 used by hydra chain
+	DomainHydraChain = crypto.Keccak256([]byte(DomainHydraChainString))
 
 	// domain used to map hash to G1 used by child checkpoint manager
 	DomainCheckpointManager = crypto.Keccak256([]byte(DomainCheckpointManagerString))

@@ -23,7 +23,7 @@ func TestStateTransaction_Signature(t *testing.T) {
 	}{
 		{
 			contractsapi.HydraChain.Abi.GetMethod("commitEpoch"),
-			"dab567de",
+			"22d08931",
 		},
 	}
 	for _, c := range cases {

@@ -286,7 +286,7 @@ func InitValidatorBLSSignature(
 		account.Bls,
 		types.Address(account.Ecdsa.Address()),
 		chainID,
-		bls.DomainValidatorSet,
+		bls.DomainHydraChain,
 	)
 	if err != nil {
 		return nil, err

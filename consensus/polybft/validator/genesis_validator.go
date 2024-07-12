@@ -99,12 +99,12 @@ func (v GenesisValidator) ToValidatorInitAPIBinding() (*contractsapi.ValidatorIn
 // ToStakerInitAPIBinding converts GenesisValidator to instance of contractsapi.StakerInit
 func (v GenesisValidator) ToStakerInitAPIBinding() (*contractsapi.StakerInit, error) {
 	return &contractsapi.StakerInit{
-		Addr:      v.Address,
-		Stake:     new(big.Int).Set(v.Stake),
+		Addr:  v.Address,
+		Stake: new(big.Int).Set(v.Stake),
 	}, nil
 }
 
-// GetInitialStakers converts the initial validators to array of contracts.StakerInit 
+// GetInitialStakers converts the initial validators to array of contracts.StakerInit
 func GetInitialStakers(initialValidators []*GenesisValidator) ([]*contractsapi.StakerInit, error) {
 	initialStakers := make([]*contractsapi.StakerInit, len(initialValidators))
 

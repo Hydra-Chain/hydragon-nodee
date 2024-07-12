@@ -27,10 +27,11 @@ func (v *ValidatorInit) DecodeAbi(buf []byte) error {
 }
 
 type InitializeHydraChainFn struct {
-	NewValidators       []*ValidatorInit `abi:"newValidators"`
-	Governance          types.Address    `abi:"governance"`
-	StakingContractAddr types.Address    `abi:"stakingContractAddr"`
-	NewBls              types.Address    `abi:"newBls"`
+	NewValidators          []*ValidatorInit `abi:"newValidators"`
+	Governance             types.Address    `abi:"governance"`
+	StakingContractAddr    types.Address    `abi:"stakingContractAddr"`
+	DelegationContractAddr types.Address    `abi:"delegationContractAddr"`
+	NewBls                 types.Address    `abi:"newBls"`
 }
 
 func (i *InitializeHydraChainFn) Sig() []byte {
@@ -242,11 +243,11 @@ func (s *StakerInit) DecodeAbi(buf []byte) error {
 
 type InitializeHydraStakingFn struct {
 	InitialStakers         []*StakerInit `abi:"initialStakers"`
+	Governance             types.Address `abi:"governance"`
 	NewMinStake            *big.Int      `abi:"newMinStake"`
 	NewLiquidToken         types.Address `abi:"newLiquidToken"`
 	HydraChainAddr         types.Address `abi:"hydraChainAddr"`
 	AprCalculatorAddr      types.Address `abi:"aprCalculatorAddr"`
-	Governance             types.Address `abi:"governance"`
 	DelegationContractAddr types.Address `abi:"delegationContractAddr"`
 }
 
@@ -495,12 +496,12 @@ func (w *WithdrawalFinishedEvent) Decode(input []byte) error {
 
 type InitializeHydraDelegationFn struct {
 	InitialStakers            []*StakerInit `abi:"initialStakers"`
+	Governance                types.Address `abi:"governance"`
 	InitialCommission         *big.Int      `abi:"initialCommission"`
 	LiquidToken               types.Address `abi:"liquidToken"`
-	Governance                types.Address `abi:"governance"`
 	AprCalculatorAddr         types.Address `abi:"aprCalculatorAddr"`
 	HydraStakingAddr          types.Address `abi:"hydraStakingAddr"`
-	EpochManagerAddr          types.Address `abi:"epochManagerAddr"`
+	HydraChainAddr            types.Address `abi:"hydraChainAddr"`
 	VestingManagerFactoryAddr types.Address `abi:"vestingManagerFactoryAddr"`
 }
 
@@ -667,30 +668,30 @@ func (d *DelegatorRewardDistributedEvent) Decode(input []byte) error {
 	return HydraDelegation.Abi.Events["DelegatorRewardDistributed"].Inputs.DecodeStruct(input, &d)
 }
 
-type DelegatorRewardClaimedEvent struct {
+type DelegatorRewardsClaimedEvent struct {
 	Staker    types.Address `abi:"staker"`
 	Delegator types.Address `abi:"delegator"`
 	Amount    *big.Int      `abi:"amount"`
 }
 
-func (*DelegatorRewardClaimedEvent) Sig() ethgo.Hash {
-	return HydraDelegation.Abi.Events["DelegatorRewardClaimed"].ID()
+func (*DelegatorRewardsClaimedEvent) Sig() ethgo.Hash {
+	return HydraDelegation.Abi.Events["DelegatorRewardsClaimed"].ID()
 }
 
-func (d *DelegatorRewardClaimedEvent) Encode() ([]byte, error) {
-	return HydraDelegation.Abi.Events["DelegatorRewardClaimed"].Inputs.Encode(d)
+func (d *DelegatorRewardsClaimedEvent) Encode() ([]byte, error) {
+	return HydraDelegation.Abi.Events["DelegatorRewardsClaimed"].Inputs.Encode(d)
 }
 
-func (d *DelegatorRewardClaimedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !HydraDelegation.Abi.Events["DelegatorRewardClaimed"].Match(log) {
+func (d *DelegatorRewardsClaimedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraDelegation.Abi.Events["DelegatorRewardsClaimed"].Match(log) {
 		return false, nil
 	}
 
-	return true, decodeEvent(HydraDelegation.Abi.Events["DelegatorRewardClaimed"], log, d)
+	return true, decodeEvent(HydraDelegation.Abi.Events["DelegatorRewardsClaimed"], log, d)
 }
 
-func (d *DelegatorRewardClaimedEvent) Decode(input []byte) error {
-	return HydraDelegation.Abi.Events["DelegatorRewardClaimed"].Inputs.DecodeStruct(input, &d)
+func (d *DelegatorRewardsClaimedEvent) Decode(input []byte) error {
+	return HydraDelegation.Abi.Events["DelegatorRewardsClaimed"].Inputs.DecodeStruct(input, &d)
 }
 
 type InitializeVestingManagerFactoryFn struct {
