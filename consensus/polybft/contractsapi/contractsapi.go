@@ -518,7 +518,7 @@ func (i *InitializeHydraDelegationFn) DecodeAbi(buf []byte) error {
 }
 
 type DelegateHydraDelegationFn struct {
-	Validator types.Address `abi:"validator"`
+	Staker types.Address `abi:"staker"`
 }
 
 func (d *DelegateHydraDelegationFn) Sig() []byte {
@@ -551,7 +551,7 @@ func (u *UndelegateHydraDelegationFn) DecodeAbi(buf []byte) error {
 }
 
 type ClaimDelegatorRewardHydraDelegationFn struct {
-	Validator types.Address `abi:"validator"`
+	Staker types.Address `abi:"staker"`
 }
 
 func (c *ClaimDelegatorRewardHydraDelegationFn) Sig() []byte {
@@ -567,7 +567,7 @@ func (c *ClaimDelegatorRewardHydraDelegationFn) DecodeAbi(buf []byte) error {
 }
 
 type CommissionUpdatedEvent struct {
-	Validator     types.Address `abi:"validator"`
+	Staker        types.Address `abi:"staker"`
 	NewCommission *big.Int      `abi:"newCommission"`
 }
 
@@ -592,7 +592,7 @@ func (c *CommissionUpdatedEvent) Decode(input []byte) error {
 }
 
 type DelegatedEvent struct {
-	Validator types.Address `abi:"validator"`
+	Staker    types.Address `abi:"staker"`
 	Delegator types.Address `abi:"delegator"`
 	Amount    *big.Int      `abi:"amount"`
 }
@@ -618,7 +618,7 @@ func (d *DelegatedEvent) Decode(input []byte) error {
 }
 
 type UndelegatedEvent struct {
-	Validator types.Address `abi:"validator"`
+	Staker    types.Address `abi:"staker"`
 	Delegator types.Address `abi:"delegator"`
 	Amount    *big.Int      `abi:"amount"`
 }

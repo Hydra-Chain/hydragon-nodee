@@ -183,10 +183,12 @@ func GenesisPostHookFactory(config *chain.Chain, engineName string) func(txn *st
 		if err = initHydraStaking(polyBFTConfig, transition); err != nil {
 			return err
 		}
+
 		// initialize HydraDelegation SC
 		if err = initHydraDelegation(polyBFTConfig, transition); err != nil {
 			return err
 		}
+
 		// initialize VestingManagerFactory SC
 		if err = initVestingManagerFactory(polyBFTConfig, transition); err != nil {
 			return err
