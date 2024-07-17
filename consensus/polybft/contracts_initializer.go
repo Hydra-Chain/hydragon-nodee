@@ -342,14 +342,6 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 // 		"RewardToken.mint", transition)
 // }
 
-// approveRewardPoolAsSpender approves reward pool contract as reward token spender
-// since reward pool distributes rewards.
-// func approveRewardPoolAsSpender(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
-// 	approveFn := &contractsapi.ApproveRootERC20Fn{
-// 		Spender: contracts.RewardPoolContract,
-// 		Amount:  polyBFTConfig.RewardConfig.WalletAmount,
-// 	}
-
 // 	input, err := approveFn.EncodeAbi()
 // 	if err != nil {
 // 		return fmt.Errorf("RewardToken.approve params encoding failed: %w", err)

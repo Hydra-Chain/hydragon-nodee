@@ -204,11 +204,6 @@ func GenesisPostHookFactory(config *chain.Chain, engineName string) func(txn *st
 			return err
 		}
 
-		// // approve reward pool
-		// if err = approveRewardPoolAsSpender(polyBFTConfig, transition); err != nil {
-		// 	return err
-		// }
-
 		// // mint reward tokens to reward wallet
 		// if err = mintRewardTokensToWallet(polyBFTConfig, transition); err != nil {
 		// 	return err
