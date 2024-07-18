@@ -1,0 +1,167 @@
+version: "3.9"
+
+services:
+  ## INITIALIZE GENESIS AND SECRETS, ETC.
+  init:
+    image: rsantev/devnet-cluster:performance
+    container_name: hydra-bootstrapper-performance
+    command: ["init"]
+    volumes:
+      - data:/data
+    networks:
+      - hydra-docker-performance
+
+  ## RUN NODES
+  node-1:
+    image: rsantev/devnet-cluster:performance
+    container_name: hydra-validator-6
+    command:
+      [
+        "server",
+        "--data-dir",
+        "/data/data-1",
+        "--chain",
+        "/data/genesis.json",
+        "--grpc-address",
+        "0.0.0.0:9632",
+        "--libp2p",
+        "0.0.0.0:1478",
+        "--jsonrpc",
+        "0.0.0.0:8545",
+        "--prometheus",
+        "0.0.0.0:5001",
+      ]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    ports:
+      - 60000:9632
+      - 60001:1478
+      - 60002:8545
+      - 60003:5001
+    volumes:
+      - data:/data
+    networks:
+      - hydra-docker-performance
+    restart: on-failure
+
+  node-2:
+    image: rsantev/devnet-cluster:performance
+    container_name: hydra-validator-7
+    command:
+      [
+        "server",
+        "--data-dir",
+        "/data/data-2",
+        "--chain",
+        "/data/genesis.json",
+        "--grpc-address",
+        "0.0.0.0:9632",
+        "--libp2p",
+        "0.0.0.0:1478",
+        "--jsonrpc",
+        "0.0.0.0:8545",
+        "--prometheus",
+        "0.0.0.0:5001",
+      ]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    volumes:
+      - data:/data
+    networks:
+      - hydra-docker-performance
+    restart: on-failure
+
+  node-3:
+    image: rsantev/devnet-cluster:performance
+    container_name: hydra-validator-8
+    command:
+      [
+        "server",
+        "--data-dir",
+        "/data/data-3",
+        "--chain",
+        "/data/genesis.json",
+        "--grpc-address",
+        "0.0.0.0:9632",
+        "--libp2p",
+        "0.0.0.0:1478",
+        "--jsonrpc",
+        "0.0.0.0:8545",
+        "--prometheus",
+        "0.0.0.0:5001",
+      ]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    volumes:
+      - data:/data
+    networks:
+      - hydra-docker-performance
+    restart: on-failure
+
+  node-4:
+    image: rsantev/devnet-cluster:performance
+    container_name: hydra-validator-9
+    command:
+      [
+        "server",
+        "--data-dir",
+        "/data/data-4",
+        "--chain",
+        "/data/genesis.json",
+        "--grpc-address",
+        "0.0.0.0:9632",
+        "--libp2p",
+        "0.0.0.0:1478",
+        "--jsonrpc",
+        "0.0.0.0:8545",
+        "--prometheus",
+        "0.0.0.0:5001",
+      ]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    volumes:
+      - data:/data
+    networks:
+      - hydra-docker-performance
+    restart: on-failure
+
+  node-5:
+    image: rsantev/devnet-cluster:performance
+    container_name: hydra-validator-10
+    command:
+      [
+        "server",
+        "--data-dir",
+        "/data/data-5",
+        "--chain",
+        "/data/genesis.json",
+        "--grpc-address",
+        "0.0.0.0:9632",
+        "--libp2p",
+        "0.0.0.0:1478",
+        "--jsonrpc",
+        "0.0.0.0:8545",
+        "--prometheus",
+        "0.0.0.0:5001",
+      ]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    volumes:
+      - data:/data
+    networks:
+      - hydra-docker-performance
+    restart: on-failure
+
+networks:
+  hydra-docker-performance:
+    driver: bridge
+    name: hydra-docker-performance
+
+volumes:
+  data:
+  genesis:
