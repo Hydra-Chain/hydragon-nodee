@@ -426,8 +426,8 @@ type validatorSetState struct {
 	Validators           validatorStakeMap `json:"validators"`
 }
 
-func (hc validatorSetState) Marshal() ([]byte, error) {
-	return json.Marshal(hc)
+func (vs validatorSetState) Marshal() ([]byte, error) {
+	return json.Marshal(vs)
 }
 
 func (hc *validatorSetState) Unmarshal(b []byte) error {

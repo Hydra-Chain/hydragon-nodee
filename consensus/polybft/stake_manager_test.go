@@ -280,7 +280,6 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 	bcMock := new(blockchainMock)
 	bcMock.On("CurrentHeader").Return(&types.Header{Number: 0}, true).Once()
 
-	// vito check rename this to - insertFullValidatorSet
 	require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 		Validators: newValidatorStakeMap(validators.ToValidatorSet().Accounts()),
 	}, nil))
