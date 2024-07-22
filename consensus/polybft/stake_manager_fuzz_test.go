@@ -109,7 +109,7 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 		}
 
 		// insert initial hydra chain
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
 		}, nil))
 
@@ -152,7 +152,7 @@ func FuzzTestStakeManagerUpdateValidatorSet(f *testing.F) {
 	bcMock := new(blockchainMock)
 	bcMock.On("CurrentHeader").Return(&types.Header{Number: 0})
 
-	err := state.StakeStore.insertHydraChainState(HydraChainState{
+	err := state.StakeStore.insertFullValidatorSet(validatorSetState{
 		Validators: newValidatorStakeMap(validators.GetPublicIdentities())}, nil)
 	require.NoError(f, err)
 
@@ -209,18 +209,18 @@ func FuzzTestStakeManagerUpdateValidatorSet(f *testing.F) {
 			t.Skip()
 		}
 
-		err := state.StakeStore.insertHydraChainState(HydraChainState{
+		err := state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(validators.GetPublicIdentities())}, nil)
 		require.NoError(t, err)
 
-		_, err = stakeManager.UpdateHydraChainValidators(data.EpochID, validators.GetPublicIdentities(aliases[data.Index:]...))
+		_, err = stakeManager.UpdateValidatorSet(data.EpochID, validators.GetPublicIdentities(aliases[data.Index:]...))
 		require.NoError(t, err)
 
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorToUpdate := fullValidatorSet[data.Index]
 		validatorToUpdate.VotingPower = big.NewInt(data.VotingPower)
 
-		_, err = stakeManager.UpdateHydraChainValidators(data.EpochID, validators.GetPublicIdentities())
+		_, err = stakeManager.UpdateValidatorSet(data.EpochID, validators.GetPublicIdentities())
 		require.NoError(t, err)
 	})
 }

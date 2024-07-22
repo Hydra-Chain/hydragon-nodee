@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	// bucket to store hydra chain state
-	hydraChainStateBucket = []byte("hydraChainStateBucket")
-	// key of the hydra chain state in bucket
-	hydraChainStateKey = []byte("hydraChainState")
-	// error returned if hydra chain state does not exists in db
-	errNoHydraChainState = errors.New("hydra chain state not in db")
+	// bucket to store full validator set
+	validatorSetBucket = []byte("fullValidatorSetBucket")
+	// key of the full validator set in bucket
+	fullValidatorSetKey = []byte("fullValidatorSet")
+	// error returned if full validator set does not exists in db
+	errNoFullValidatorSet = errors.New("full validator set not in db")
 )
 
 type StakeStore struct {
@@ -22,24 +22,24 @@ type StakeStore struct {
 
 // initialize creates necessary buckets in DB if they don't already exist
 func (s *StakeStore) initialize(tx *bolt.Tx) error {
-	if _, err := tx.CreateBucketIfNotExists(hydraChainStateBucket); err != nil {
+	if _, err := tx.CreateBucketIfNotExists(validatorSetBucket); err != nil {
 		return fmt.Errorf("failed to create bucket=%s: %w", string(epochsBucket), err)
 	}
 
 	return nil
 }
 
-// insertHydraChainState inserts the hydra chain state its bucket (or updates it if exists)
-// If the passed tx is already open (not nil), it will use it to insert the hydra chain state
-// If the passed tx is not open (it is nil), it will open a new transaction on db and insert hydra chain state
-func (s *StakeStore) insertHydraChainState(hydraChainState HydraChainState, dbTx *bolt.Tx) error {
+// insertFullValidatorSet inserts full validator set to its bucket (or updates it if exists)
+// If the passed tx is already open (not nil), it will use it to insert full validator set
+// If the passed tx is not open (it is nil), it will open a new transaction on db and insert full validator set
+func (s *StakeStore) insertFullValidatorSet(fullValidatorSet validatorSetState, dbTx *bolt.Tx) error {
 	insertFn := func(tx *bolt.Tx) error {
-		raw, err := hydraChainState.Marshal()
+		raw, err := fullValidatorSet.Marshal()
 		if err != nil {
 			return err
 		}
 
-		return tx.Bucket(hydraChainStateBucket).Put(hydraChainStateKey, raw)
+		return tx.Bucket(validatorSetBucket).Put(fullValidatorSetKey, raw)
 	}
 
 	if dbTx == nil {
@@ -51,22 +51,22 @@ func (s *StakeStore) insertHydraChainState(hydraChainState HydraChainState, dbTx
 	return insertFn(dbTx)
 }
 
-// getHydraChainState returns the hydra chain state that contains the full list of validators, if exists
-// If the passed tx is already open (not nil), it will use it to get all the validators within the hydra chain state
-// If the passed tx is not open (it is nil), it will open a new transaction on db and get all the validators within the hydra chain state
-func (s *StakeStore) getHydraChainState(dbTx *bolt.Tx) (HydraChainState, error) {
+// getFullValidatorSet returns full validator set from its bucket if exists
+// If the passed tx is already open (not nil), it will use it to get full validator set
+// If the passed tx is not open (it is nil), it will open a new transaction on db and get full validator set
+func (s *StakeStore) getFullValidatorSet(dbTx *bolt.Tx) (validatorSetState, error) {
 	var (
-		hydraChainState HydraChainState
-		err             error
+		fullValidatorSet validatorSetState
+		err              error
 	)
 
 	getFn := func(tx *bolt.Tx) error {
-		raw := tx.Bucket(hydraChainStateBucket).Get(hydraChainStateKey)
+		raw := tx.Bucket(validatorSetBucket).Get(fullValidatorSetKey)
 		if raw == nil {
-			return errNoHydraChainState
+			return errNoFullValidatorSet
 		}
 
-		return hydraChainState.Unmarshal(raw)
+		return fullValidatorSet.Unmarshal(raw)
 	}
 
 	if dbTx == nil {
@@ -77,5 +77,5 @@ func (s *StakeStore) getHydraChainState(dbTx *bolt.Tx) (HydraChainState, error) 
 		err = getFn(dbTx)
 	}
 
-	return hydraChainState, err
+	return fullValidatorSet, err
 }

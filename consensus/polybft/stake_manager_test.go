@@ -56,7 +56,7 @@ func TestStakeManager_PostBlock(t *testing.T) {
 		validators := validator.NewTestValidatorsWithAliases(t, allAliases)
 
 		// insert initial hydra chain
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators:  newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
 			BlockNumber: block - 1,
 		}, nil))
@@ -90,11 +90,11 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		require.NoError(t, stakeManager.PostBlock(req))
 
-		hydraChainState, err := state.StakeStore.getHydraChainState(nil)
+		fullValidatorSet, err := state.StakeStore.getFullValidatorSet(nil)
 		require.NoError(t, err)
 		var firstValidatorMeta *validator.ValidatorMetadata
 		firstValidatorMeta = nil
-		for _, validator := range hydraChainState.Validators {
+		for _, validator := range fullValidatorSet.Validators {
 			if validator.Address.String() == validators.GetValidator(initialSetAliases[firstValidator]).Address().String() {
 				firstValidatorMeta = validator
 			}
@@ -119,7 +119,7 @@ func TestStakeManager_PostBlock(t *testing.T) {
 		state := newTestState(t)
 
 		// insert initial full validator set
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators:  newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
 			BlockNumber: block - 1,
 		}, nil))
@@ -151,11 +151,11 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		require.NoError(t, stakeManager.PostBlock(req))
 
-		hydraChainState, err := state.StakeStore.getHydraChainState(nil)
+		fullValidatorSet, err := state.StakeStore.getFullValidatorSet(nil)
 		require.NoError(t, err)
 		var firstValidator *validator.ValidatorMetadata
 		firstValidator = nil
-		for _, validator := range hydraChainState.Validators {
+		for _, validator := range fullValidatorSet.Validators {
 			if validator.Address.String() == validators.GetValidator(initialSetAliases[secondValidator]).Address().String() {
 				firstValidator = validator
 			}
@@ -177,7 +177,7 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		state := newTestState(t)
 		// insert initial full validator set
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators:  newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
 			BlockNumber: block - 1,
 		}, nil))
@@ -212,18 +212,18 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		require.NoError(t, stakeManager.PostBlock(req))
 
-		hydraChainState, err := state.StakeStore.getHydraChainState(nil)
+		fullValidatorSet, err := state.StakeStore.getFullValidatorSet(nil)
 		require.NoError(t, err)
-		require.Len(t, hydraChainState.Validators, len(allAliases))
+		require.Len(t, fullValidatorSet.Validators, len(allAliases))
 
 		validatorsCount := validators.ToValidatorSet().Len()
-		for _, v := range hydraChainState.Validators.getSorted(validatorsCount) {
+		for _, v := range fullValidatorSet.Validators.getSorted(validatorsCount) {
 			require.Equal(t, validator.CalculateVPower(stakeAmount, vPowerExp.Numerator, vPowerExp.Denominator), v.VotingPower)
 		}
 	})
 }
 
-func TestStakeManager_UpdateHydraChainValidators(t *testing.T) {
+func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 	var (
 		aliases = []string{"A", "B", "C", "D", "E"}
 		stakes  = []uint64{10, 10, 10, 10, 10}
@@ -236,7 +236,8 @@ func TestStakeManager_UpdateHydraChainValidators(t *testing.T) {
 	bcMock := new(blockchainMock)
 	bcMock.On("CurrentHeader").Return(&types.Header{Number: 0}, true).Once()
 
-	require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+	// vito check rename this to - insertFullValidatorSet
+	require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 		Validators: newValidatorStakeMap(validators.ToValidatorSet().Accounts()),
 	}, nil))
 
@@ -252,16 +253,16 @@ func TestStakeManager_UpdateHydraChainValidators(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	t.Run("UpdateHydraChainValidators - only update", func(t *testing.T) {
+	t.Run("UpdateValidatorSet - only update", func(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorToUpdate := fullValidatorSet[0]
 		validatorToUpdate.VotingPower = big.NewInt(11)
 
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
 		}, nil))
 
-		updateDelta, err := stakeManager.UpdateHydraChainValidators(epoch, validators.GetPublicIdentities())
+		updateDelta, err := stakeManager.UpdateValidatorSet(epoch, validators.GetPublicIdentities())
 		require.NoError(t, err)
 		require.Len(t, updateDelta.Added, 0)
 		require.Len(t, updateDelta.Updated, 1)
@@ -270,28 +271,28 @@ func TestStakeManager_UpdateHydraChainValidators(t *testing.T) {
 		require.Equal(t, updateDelta.Updated[0].VotingPower.Uint64(), validatorToUpdate.VotingPower.Uint64())
 	})
 
-	t.Run("UpdateHydraChainValidators - one unstake", func(t *testing.T) {
+	t.Run("UpdateValidatorSet - one unstake", func(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities(aliases[1:]...)
 
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
 		}, nil))
 
-		updateDelta, err := stakeManager.UpdateHydraChainValidators(epoch+1, validators.GetPublicIdentities())
+		updateDelta, err := stakeManager.UpdateValidatorSet(epoch+1, validators.GetPublicIdentities())
 		require.NoError(t, err)
 		require.Len(t, updateDelta.Added, 0)
 		require.Len(t, updateDelta.Updated, 0)
 		require.Len(t, updateDelta.Removed, 1)
 	})
 
-	t.Run("UpdateHydraChainValidators - one new validator", func(t *testing.T) {
+	t.Run("UpdateValidatorSet - one new validator", func(t *testing.T) {
 		addedValidator := validators.GetValidator("A")
 
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(validators.GetPublicIdentities()),
 		}, nil))
 
-		updateDelta, err := stakeManager.UpdateHydraChainValidators(epoch+2,
+		updateDelta, err := stakeManager.UpdateValidatorSet(epoch+2,
 			validators.GetPublicIdentities(aliases[1:]...))
 		require.NoError(t, err)
 		require.Len(t, updateDelta.Added, 1)
@@ -300,15 +301,15 @@ func TestStakeManager_UpdateHydraChainValidators(t *testing.T) {
 		require.Equal(t, addedValidator.Address(), updateDelta.Added[0].Address)
 		require.Equal(t, addedValidator.VotingPower, updateDelta.Added[0].VotingPower.Uint64())
 	})
-	t.Run("UpdateHydraChainValidators - remove some stake", func(t *testing.T) {
+	t.Run("UpdateValidatorSet - remove some stake", func(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorToUpdate := fullValidatorSet[2]
 		validatorToUpdate.VotingPower = big.NewInt(5)
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
 		}, nil))
 
-		updateDelta, err := stakeManager.UpdateHydraChainValidators(epoch+3, validators.GetPublicIdentities())
+		updateDelta, err := stakeManager.UpdateValidatorSet(epoch+3, validators.GetPublicIdentities())
 		require.NoError(t, err)
 		require.Len(t, updateDelta.Added, 0)
 		require.Len(t, updateDelta.Updated, 1)
@@ -316,36 +317,36 @@ func TestStakeManager_UpdateHydraChainValidators(t *testing.T) {
 		require.Equal(t, updateDelta.Updated[0].Address, validatorToUpdate.Address)
 		require.Equal(t, updateDelta.Updated[0].VotingPower.Uint64(), validatorToUpdate.VotingPower.Uint64())
 	})
-	t.Run("UpdateHydraChainValidators - remove entire stake", func(t *testing.T) {
+	t.Run("UpdateValidatorSet - remove entire stake", func(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorToUpdate := fullValidatorSet[3]
 		validatorToUpdate.VotingPower = bigZero
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
 		}, nil))
 
-		updateDelta, err := stakeManager.UpdateHydraChainValidators(epoch+4, validators.GetPublicIdentities())
+		updateDelta, err := stakeManager.UpdateValidatorSet(epoch+4, validators.GetPublicIdentities())
 		require.NoError(t, err)
 		require.Len(t, updateDelta.Added, 0)
 		require.Len(t, updateDelta.Updated, 0)
 		require.Len(t, updateDelta.Removed, 1)
 	})
-	t.Run("UpdateHydraChainValidators - voting power negative", func(t *testing.T) {
+	t.Run("UpdateValidatorSet - voting power negative", func(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorsToUpdate := fullValidatorSet[4]
 		validatorsToUpdate.VotingPower = bigZero
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
 		}, nil))
 
-		updateDelta, err := stakeManager.UpdateHydraChainValidators(epoch+5, validators.GetPublicIdentities())
+		updateDelta, err := stakeManager.UpdateValidatorSet(epoch+5, validators.GetPublicIdentities())
 		require.NoError(t, err)
 		require.Len(t, updateDelta.Added, 0)
 		require.Len(t, updateDelta.Updated, 0)
 		require.Len(t, updateDelta.Removed, 1)
 	})
 
-	t.Run("UpdateHydraChainValidators - max validator set size reached", func(t *testing.T) {
+	t.Run("UpdateValidatorSet - max validator set size reached", func(t *testing.T) {
 		// because we now have 5 validators, and the new validator has more stake
 		stakeManager.maxValidatorSetSize = 4
 
@@ -353,11 +354,11 @@ func TestStakeManager_UpdateHydraChainValidators(t *testing.T) {
 		validatorToAdd := fullValidatorSet[0]
 		validatorToAdd.VotingPower = big.NewInt(11)
 
-		require.NoError(t, state.StakeStore.insertHydraChainState(HydraChainState{
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
 		}, nil))
 
-		updateDelta, err := stakeManager.UpdateHydraChainValidators(epoch+6,
+		updateDelta, err := stakeManager.UpdateValidatorSet(epoch+6,
 			validators.GetPublicIdentities(aliases[1:]...))
 
 		require.NoError(t, err)
@@ -495,14 +496,14 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 	bcMock.AssertExpectations(t)
 	sysStateMock.AssertExpectations(t)
 
-	hydraChain, err := state.StakeStore.getHydraChainState(nil)
+	fullValidatorSet, err := state.StakeStore.getFullValidatorSet(nil)
 	require.NoError(t, err)
 
-	require.Equal(t, uint64(4), hydraChain.BlockNumber)
-	require.Equal(t, uint64(4), hydraChain.UpdatedAtBlockNumber)
-	require.Equal(t, epochID, hydraChain.EpochID)
+	require.Equal(t, uint64(4), fullValidatorSet.BlockNumber)
+	require.Equal(t, uint64(4), fullValidatorSet.UpdatedAtBlockNumber)
+	require.Equal(t, epochID, fullValidatorSet.EpochID)
 
-	for _, x := range hydraChain.Validators {
+	for _, x := range fullValidatorSet.Validators {
 		if x.Address == addresses[len(addresses)-1] {
 			require.Equal(t, validator.CalculateVPower(stakeAmountThree, vPowerExp.Numerator, vPowerExp.Denominator), x.VotingPower)
 		} else if x.Address == addresses[len(addresses)-2] {

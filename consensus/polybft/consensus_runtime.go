@@ -466,7 +466,7 @@ func (c *consensusRuntime) FSM() error {
 
 		ff.maxRewardToDistribute, err = c.calculateRewardValue(parent)
 
-		ff.newValidatorsDelta, err = c.stakeManager.UpdateHydraChainValidators(epoch.Number, epoch.Validators.Copy())
+		ff.newValidatorsDelta, err = c.stakeManager.UpdateValidatorSet(epoch.Number, epoch.Validators.Copy())
 		if err != nil {
 			return fmt.Errorf("cannot update validator set on epoch ending: %w", err)
 		}
@@ -653,7 +653,7 @@ func (c *consensusRuntime) calculateCommitEpochInput(
 			EpochRoot:  types.Hash{},
 		},
 		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
-		Uptime: uptime,
+		Uptime:    uptime,
 	}
 
 	distributeRewards := &contractsapi.DistributeRewardsForHydraStakingFn{

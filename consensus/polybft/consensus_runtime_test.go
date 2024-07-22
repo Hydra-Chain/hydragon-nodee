@@ -492,7 +492,7 @@ func Test_NewConsensusRuntime(t *testing.T) {
 		consensusConfig: &consensus.Config{},
 	}
 
-	require.NoError(t, config.State.StakeStore.insertHydraChainState(HydraChainState{
+	require.NoError(t, config.State.StakeStore.insertFullValidatorSet(validatorSetState{
 		BlockNumber: 1,
 	}, nil))
 
