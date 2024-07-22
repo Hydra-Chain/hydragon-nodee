@@ -102,10 +102,18 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 		bcMock := new(blockchainMock)
 		for i := 0; i < int(data.BlockID); i++ {
 			bcMock.On("CurrentHeader").Return(&types.Header{Number: 0})
-			bcMock.On("GetHeaderByNumber", mock.Anything).Return(&types.Header{Hash: types.Hash{6, 4}}, true).Once()
-			bcMock.On("GetReceiptsByHash", mock.Anything).Return([]*types.Receipt{{}}, error(nil)).Once()
-			bcMock.On("GetStateProviderForBlock", mock.Anything).Return(new(stateProviderMock), nil).Once()
-			bcMock.On("GetSystemState", mock.Anything, mock.Anything).Return(systemStateMockVar).Once()
+			bcMock.On("GetHeaderByNumber", mock.Anything).
+				Return(&types.Header{Hash: types.Hash{6, 4}}, true).
+				Once()
+			bcMock.On("GetReceiptsByHash", mock.Anything).
+				Return([]*types.Receipt{{}}, error(nil)).
+				Once()
+			bcMock.On("GetStateProviderForBlock", mock.Anything).
+				Return(new(stateProviderMock), nil).
+				Once()
+			bcMock.On("GetSystemState", mock.Anything, mock.Anything).
+				Return(systemStateMockVar).
+				Once()
 		}
 
 		// insert initial hydra chain
@@ -126,16 +134,21 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 		require.NoError(t, err)
 
 		header := &types.Header{Number: data.BlockID}
-		require.NoError(t, stakeManager.ProcessLog(header, convertLog(createTestLogForBalanceChangedEvent(
+		require.NoError(
 			t,
-			validatorSetAddr,
-			validators.GetValidator(initialSetAliases[data.ValidatorID]).Address(),
-			data.StakeValue,
-		)), nil))
+			stakeManager.ProcessLog(header, convertLog(createTestLogForBalanceChangedEvent(
+				t,
+				validatorSetAddr,
+				validators.GetValidator(initialSetAliases[data.ValidatorID]).Address(),
+				data.StakeValue,
+			)), nil),
+		)
 
 		require.NoError(t, stakeManager.PostBlock(&PostBlockRequest{
-			FullBlock: &types.FullBlock{Block: &types.Block{Header: &types.Header{Number: data.BlockID}}},
-			Epoch:     data.EpochID,
+			FullBlock: &types.FullBlock{
+				Block: &types.Block{Header: &types.Header{Number: data.BlockID}},
+			},
+			Epoch: data.EpochID,
 		}))
 	})
 }
@@ -213,7 +226,10 @@ func FuzzTestStakeManagerUpdateValidatorSet(f *testing.F) {
 			Validators: newValidatorStakeMap(validators.GetPublicIdentities())}, nil)
 		require.NoError(t, err)
 
-		_, err = stakeManager.UpdateValidatorSet(data.EpochID, validators.GetPublicIdentities(aliases[data.Index:]...))
+		_, err = stakeManager.UpdateValidatorSet(
+			data.EpochID,
+			validators.GetPublicIdentities(aliases[data.Index:]...),
+		)
 		require.NoError(t, err)
 
 		fullValidatorSet := validators.GetPublicIdentities().Copy()

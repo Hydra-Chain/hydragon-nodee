@@ -24,7 +24,9 @@ import (
 
 var (
 	bigZero          = big.NewInt(0)
-	validatorTypeABI = abi.MustNewType("tuple(uint256[4] blsKey, uint256 stake, bool isWhitelisted, bool isActive)")
+	validatorTypeABI = abi.MustNewType(
+		"tuple(uint256[4] blsKey, uint256 stake, bool isWhitelisted, bool isActive)",
+	)
 )
 
 // StakeManager interface provides functions for handling stake change of validators
@@ -32,7 +34,10 @@ var (
 type StakeManager interface {
 	EventSubscriber
 	PostBlock(req *PostBlockRequest) error
-	UpdateValidatorSet(epoch uint64, currentValidatorSet validator.AccountSet) (*validator.ValidatorSetDelta, error)
+	UpdateValidatorSet(
+		epoch uint64,
+		currentValidators validator.AccountSet,
+	) (*validator.ValidatorSetDelta, error)
 }
 
 var _ StakeManager = (*dummyStakeManager)(nil)
@@ -43,7 +48,7 @@ type dummyStakeManager struct{}
 
 func (d *dummyStakeManager) PostBlock(req *PostBlockRequest) error { return nil }
 func (d *dummyStakeManager) UpdateValidatorSet(epoch uint64,
-	currentValidatorSet validator.AccountSet) (*validator.ValidatorSetDelta, error) {
+	currentValidators validator.AccountSet) (*validator.ValidatorSetDelta, error) {
 	return &validator.ValidatorSetDelta{}, nil
 }
 
@@ -165,7 +170,10 @@ func (s *stakeManager) init(dbTx *bolt.Tx) error {
 		},
 	}
 
-	stakeChangedEvents, err := eventsGetter.getEventsFromBlocksRange(fullValidatorSet.BlockNumber+1, currentBlockNumber)
+	stakeChangedEvents, err := eventsGetter.getEventsFromBlocksRange(
+		fullValidatorSet.BlockNumber+1,
+		currentBlockNumber,
+	)
 	if err != nil {
 		return err
 	}
@@ -253,7 +261,13 @@ func (s *stakeManager) updateWithReceipts(
 	// mark on which block validator set has been updated
 	fullValidatorSet.UpdatedAtBlockNumber = blockNumber
 
-	s.logger.Debug("HydraChain state after", "block", blockNumber, "data", fullValidatorSet.Validators)
+	s.logger.Debug(
+		"HydraChain state after",
+		"block",
+		blockNumber,
+		"data",
+		fullValidatorSet.Validators,
+	)
 
 	return nil
 }
@@ -261,12 +275,16 @@ func (s *stakeManager) updateWithReceipts(
 // UpdateValidatorSet returns an updated list of validators
 // based on balance change (transfer) events from HydraChain contract
 func (s *stakeManager) UpdateValidatorSet(
-	epoch uint64, oldValidatorSet validator.AccountSet) (*validator.ValidatorSetDelta, error) {
+	epoch uint64, oldValidators validator.AccountSet) (*validator.ValidatorSetDelta, error) {
 	s.logger.Info("Calculating validators set update...", "epoch", epoch)
 
 	fullValidatorSet, err := s.state.StakeStore.getFullValidatorSet(nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get full validators set. Epoch: %d. Error: %w", epoch, err)
+		return nil, fmt.Errorf(
+			"failed to get full validators set. Epoch: %d. Error: %w",
+			epoch,
+			err,
+		)
 	}
 
 	// stake map that holds stakes for all validators
@@ -286,9 +304,9 @@ func (s *stakeManager) UpdateValidatorSet(
 	addedValidators := validator.AccountSet{}
 	oldActiveMap := make(map[types.Address]*validator.ValidatorMetadata)
 
-	for i, validator := range oldValidatorSet {
+	for i, validator := range oldValidators {
 		oldActiveMap[validator.Address] = validator
-		// remove existing validators from validator set if they did not make it to the set
+		// remove existing validators from the validators list if they did not make it to the list
 		if _, exists := addressesSet[validator.Address]; !exists {
 			removedBitmap.Set(uint64(i))
 		}
@@ -322,7 +340,7 @@ func (s *stakeManager) UpdateValidatorSet(
 	}
 
 	if s.logger.IsDebug() {
-		newValidatorSet, err := oldValidatorSet.Copy().ApplyDelta(delta)
+		newValidatorSet, err := oldValidators.Copy().ApplyDelta(delta)
 		if err != nil {
 			return nil, err
 		}
@@ -433,7 +451,11 @@ func newValidatorStakeMap(validatorSet validator.AccountSet) validatorStakeMap {
 // Hydra modification: Calculate voting power with our own formula
 // Set is active flag based on voting power and not on staked amount
 // setStake sets given amount of stake to a validator defined by address
-func (sc *validatorStakeMap) setStake(address types.Address, stakedBalance *big.Int, exponent *BigNumDecimal) {
+func (sc *validatorStakeMap) setStake(
+	address types.Address,
+	stakedBalance *big.Int,
+	exponent *BigNumDecimal,
+) {
 	votingPower := sc.calcVotingPower(stakedBalance, exponent)
 	isActive := votingPower.Cmp(bigZero) > 0
 	if metadata, exists := (*sc)[address]; exists {
@@ -502,7 +524,10 @@ func (sc *validatorStakeMap) calcVotingPower(stakedBalance *big.Int, exp *BigNum
 	}
 
 	stakedH := big.NewInt(0).Div(stakedBalance, big.NewInt(1e18))
-	vpower := math.Pow(float64(stakedH.Uint64()), float64(exp.Numerator.Uint64())/float64(exp.Denominator.Uint64()))
+	vpower := math.Pow(
+		float64(stakedH.Uint64()),
+		float64(exp.Numerator.Uint64())/float64(exp.Denominator.Uint64()),
+	)
 	res := big.NewInt(int64(vpower))
 
 	return res

@@ -40,7 +40,12 @@ func createRandomTestKeys(t *testing.T, numberOfKeys int) []*wallet.Key {
 	return result
 }
 
-func createSignature(t *testing.T, accounts []*wallet.Account, hash types.Hash, domain []byte) *Signature {
+func createSignature(
+	t *testing.T,
+	accounts []*wallet.Account,
+	hash types.Hash,
+	domain []byte,
+) *Signature {
 	t.Helper()
 
 	var signatures bls.Signatures
@@ -88,7 +93,15 @@ func createTestCommitEpochInput(t *testing.T, epochID uint64,
 
 func createTestRewardToDistributeValue(t *testing.T, transition *state.Transition) *big.Int {
 	stateProvider := NewStateProvider(transition)
-	systemState := NewSystemState(contracts.HydraChainContract, contracts.HydraStakingContract, contracts.HydraDelegationContract, contracts.VestingManagerFactoryContract, contracts.APRCalculatorContract, contracts.StateReceiverContract, stateProvider)
+	systemState := NewSystemState(
+		contracts.HydraChainContract,
+		contracts.HydraStakingContract,
+		contracts.HydraDelegationContract,
+		contracts.VestingManagerFactoryContract,
+		contracts.APRCalculatorContract,
+		contracts.StateReceiverContract,
+		stateProvider,
+	)
 
 	blockchainMock := new(blockchainMock)
 	blockchainMock.On("GetStateProviderForBlock", mock.Anything).Return(nil, nil).Once()
@@ -102,8 +115,12 @@ func createTestRewardToDistributeValue(t *testing.T, transition *state.Transitio
 	return maxReward
 }
 
-func createTestDistributeRewardsInput(t *testing.T, epochID uint64,
-	validatorSet validator.AccountSet, epochSize uint64) *contractsapi.DistributeRewardsForHydraStakingFn {
+func createTestDistributeRewardsInput(
+	t *testing.T,
+	epochID uint64,
+	validatorSet validator.AccountSet,
+	epochSize uint64,
+) *contractsapi.DistributeRewardsForHydraStakingFn {
 	t.Helper()
 
 	uptime := generateValidatorsUpTime(t, validatorSet, epochSize)
@@ -115,7 +132,11 @@ func createTestDistributeRewardsInput(t *testing.T, epochID uint64,
 	}
 }
 
-func generateStateSyncEvents(t *testing.T, eventsCount int, startIdx uint64) []*contractsapi.StateSyncedEvent {
+func generateStateSyncEvents(
+	t *testing.T,
+	eventsCount int,
+	startIdx uint64,
+) []*contractsapi.StateSyncedEvent {
 	t.Helper()
 
 	stateSyncEvents := make([]*contractsapi.StateSyncedEvent, eventsCount)
@@ -208,7 +229,11 @@ func createTestBridgeConfig() *BridgeConfig {
 	}
 }
 
-func generateValidatorsUpTime(t *testing.T, validatorSet validator.AccountSet, epochSize uint64) []*contractsapi.Uptime {
+func generateValidatorsUpTime(
+	t *testing.T,
+	validatorSet validator.AccountSet,
+	epochSize uint64,
+) []*contractsapi.Uptime {
 	t.Helper()
 
 	if validatorSet == nil {

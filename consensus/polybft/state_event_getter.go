@@ -160,7 +160,10 @@ type eventsGetter[T contractsapi.EventAbi] struct {
 // and saves them using the provided saveEventsFn
 func (e *eventsGetter[T]) getFromBlocks(lastProcessedBlock uint64,
 	currentBlock *types.FullBlock) ([]T, error) {
-	allEvents, err := e.getEventsFromBlocksRange(lastProcessedBlock+1, currentBlock.Block.Number()-1)
+	allEvents, err := e.getEventsFromBlocksRange(
+		lastProcessedBlock+1,
+		currentBlock.Block.Number()-1,
+	)
 	if err != nil {
 		return nil, err
 	}

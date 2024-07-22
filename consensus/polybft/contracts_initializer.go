@@ -114,8 +114,13 @@ func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Tr
 		return fmt.Errorf("VestingManagerFactory.initialize params encoding failed: %w", err)
 	}
 
-	return callContract(contracts.SystemCaller,
-		contracts.VestingManagerFactoryContract, input, "VestingManagerFactory.initialize", transition)
+	return callContract(
+		contracts.SystemCaller,
+		contracts.VestingManagerFactoryContract,
+		input,
+		"VestingManagerFactory.initialize",
+		transition,
+	)
 }
 
 // initAPRCalculator initializes APRCalculator SC
@@ -143,7 +148,13 @@ func initFeeHandler(polybftConfig PolyBFTConfig, transition *state.Transition) e
 		return fmt.Errorf("FeeHandler.initialize params encoding failed: %w", err)
 	}
 
-	return callContract(contracts.SystemCaller, contracts.FeeHandlerContract, input, "FeeHandler.initialize", transition)
+	return callContract(
+		contracts.SystemCaller,
+		contracts.FeeHandlerContract,
+		input,
+		"FeeHandler.initialize",
+		transition,
+	)
 }
 
 func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
@@ -160,7 +171,13 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 		return fmt.Errorf("LiquidityToken.initialize params encoding failed: %w", err)
 	}
 
-	return callContract(contracts.SystemCaller, contracts.LiquidityTokenContract, input, "LiquidityToken.initialize", transition)
+	return callContract(
+		contracts.SystemCaller,
+		contracts.LiquidityTokenContract,
+		input,
+		"LiquidityToken.initialize",
+		transition,
+	)
 }
 
 // // getInitERC20PredicateInput builds initialization input parameters for child chain ERC20Predicate SC
@@ -352,7 +369,12 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 // }
 
 // callContract calls given smart contract function, encoded in input parameter
-func callContract(from, to types.Address, input []byte, contractName string, transition *state.Transition) error {
+func callContract(
+	from, to types.Address,
+	input []byte,
+	contractName string,
+	transition *state.Transition,
+) error {
 	result := transition.Call2(from, to, input, big.NewInt(0), contractCallGasLimit)
 	if result.Failed() {
 		if result.Reverted() {
