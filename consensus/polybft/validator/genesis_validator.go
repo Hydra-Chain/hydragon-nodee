@@ -92,6 +92,7 @@ func (v GenesisValidator) ToValidatorInitAPIBinding() (*contractsapi.ValidatorIn
 		Addr:      v.Address,
 		Pubkey:    pubKey.ToBigInt(),
 		Signature: signBigInts,
+		Stake:     new(big.Int).Set(v.Stake),
 	}, nil
 }
 
