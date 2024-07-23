@@ -51,7 +51,7 @@ git checkout prod
 4. Build the node
 
 ```
-CGO_ENABLED=0 go build -o hydra -a -installsuffix cgo  main.go
+CGO_ENABLED=0 go build -o hydra -a -installsuffix cgo main.go
 ```
 
 **CGO_ENABLED=0**: This environment variable disables CGO, which is a feature in Go that allows for the creation of Go packages that call C code. Setting CGO_ENABLED=0 makes the build static, meaning it does not depend on C libraries at runtime, enhancing portability across different environments without needing those C libraries installed.
@@ -71,7 +71,7 @@ To build Go applications for different platforms directly from your command line
 Example:
 
 ```
-CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o hydra -a -installsuffix cgo  main.go
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o hydra -a -installsuffix cgo main.go
 ```
 
 4. Add the generated binary to your system's PATH environment variable to allow its execution from any directory.
@@ -163,7 +163,7 @@ Send it to Hydra's team, so they can whitelist your address to be able to partic
 After Hydra's team confirms you are whitelisted you have to register your account as a validator and stake a given amount.
 
 ```
-hydra hydragon register-validator --data-dir ./node-secrets --stake 99000000000000000000 --commission 10 --chain-id 8844 --jsonrpc http://localhost:8545
+hydra hydragon register-validator --data-dir ./node-secrets --stake 99000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.

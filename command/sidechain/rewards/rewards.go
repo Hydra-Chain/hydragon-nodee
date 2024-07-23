@@ -82,7 +82,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	claimRewardsFn := contractsapi.ClaimValidatorRewardRewardPoolFn{}
+	claimRewardsFn := contractsapi.ClaimStakingRewardsHydraStakingFn{}
 	encoded, err := claimRewardsFn.EncodeAbi()
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	txn := &ethgo.Transaction{
 		From:  validatorAddr,
 		Input: encoded,
-		To:    (*ethgo.Address)(&contracts.RewardPoolContract),
+		To:    (*ethgo.Address)(&contracts.HydraStakingContract),
 	}
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
@@ -104,7 +104,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	var (
-		claimRewardsEvent contractsapi.ValidatorRewardClaimedEvent
+		claimRewardsEvent contractsapi.StakingRewardsClaimedEvent
 		foundLog          bool
 	)
 

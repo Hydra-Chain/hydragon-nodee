@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	whitelistFn       = contractsapi.ValidatorSet.Abi.Methods["addToWhitelist"]
-	whitelistEventABI = contractsapi.ValidatorSet.Abi.Events["AddedToWhitelist"]
+	whitelistFn       = contractsapi.HydraChain.Abi.Methods["addToWhitelist"]
+	whitelistEventABI = contractsapi.HydraChain.Abi.Events["AddedToWhitelist"]
 )
 
 var params whitelistParams
@@ -98,7 +98,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	txn := &ethgo.Transaction{
 		From:     governanceAccount.Ecdsa.Address(),
 		Input:    encoded,
-		To:       (*ethgo.Address)(&contracts.ValidatorSetContract),
+		To:       (*ethgo.Address)(&contracts.HydraChainContract),
 		GasPrice: sidechainHelper.DefaultGasPrice,
 	}
 

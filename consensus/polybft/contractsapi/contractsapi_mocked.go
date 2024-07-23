@@ -1516,15 +1516,15 @@ type UnstakeValidatorSetFn struct {
 }
 
 func (u *UnstakeValidatorSetFn) Sig() []byte {
-	return ValidatorSet.Abi.Methods["unstake"].ID()
+	return HydraStaking.Abi.Methods["unstake"].ID()
 }
 
 func (u *UnstakeValidatorSetFn) EncodeAbi() ([]byte, error) {
-	return ValidatorSet.Abi.Methods["unstake"].Encode(u)
+	return HydraStaking.Abi.Methods["unstake"].Encode(u)
 }
 
 func (u *UnstakeValidatorSetFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(ValidatorSet.Abi.Methods["unstake"], buf, u)
+	return decodeMethod(HydraStaking.Abi.Methods["unstake"], buf, u)
 }
 
 type TransferEvent struct {
@@ -1534,23 +1534,23 @@ type TransferEvent struct {
 }
 
 func (*TransferEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["Transfer"].ID()
+	return HydraStaking.Abi.Events["Transfer"].ID()
 }
 
 func (t *TransferEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["Transfer"].Inputs.Encode(t)
+	return HydraStaking.Abi.Events["Transfer"].Inputs.Encode(t)
 }
 
 func (t *TransferEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["Transfer"].Match(log) {
+	if !HydraStaking.Abi.Events["Transfer"].Match(log) {
 		return false, nil
 	}
 
-	return true, decodeEvent(ValidatorSet.Abi.Events["Transfer"], log, t)
+	return true, decodeEvent(HydraStaking.Abi.Events["Transfer"], log, t)
 }
 
 func (t *TransferEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["Transfer"].Inputs.DecodeStruct(input, &t)
+	return HydraStaking.Abi.Events["Transfer"].Inputs.DecodeStruct(input, &t)
 }
 
 type WithdrawalRegisteredEvent struct {
@@ -1559,23 +1559,23 @@ type WithdrawalRegisteredEvent struct {
 }
 
 func (*WithdrawalRegisteredEvent) Sig() ethgo.Hash {
-	return ValidatorSet.Abi.Events["WithdrawalRegistered"].ID()
+	return HydraStaking.Abi.Events["WithdrawalRegistered"].ID()
 }
 
 func (w *WithdrawalRegisteredEvent) Encode() ([]byte, error) {
-	return ValidatorSet.Abi.Events["WithdrawalRegistered"].Inputs.Encode(w)
+	return HydraStaking.Abi.Events["WithdrawalRegistered"].Inputs.Encode(w)
 }
 
 func (w *WithdrawalRegisteredEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !ValidatorSet.Abi.Events["WithdrawalRegistered"].Match(log) {
+	if !HydraStaking.Abi.Events["WithdrawalRegistered"].Match(log) {
 		return false, nil
 	}
 
-	return true, decodeEvent(ValidatorSet.Abi.Events["WithdrawalRegistered"], log, w)
+	return true, decodeEvent(HydraStaking.Abi.Events["WithdrawalRegistered"], log, w)
 }
 
 func (w *WithdrawalRegisteredEvent) Decode(input []byte) error {
-	return ValidatorSet.Abi.Events["WithdrawalRegistered"].Inputs.DecodeStruct(input, &w)
+	return HydraStaking.Abi.Events["WithdrawalRegistered"].Inputs.DecodeStruct(input, &w)
 }
 
 type InitializeEIP1559BurnFn struct {

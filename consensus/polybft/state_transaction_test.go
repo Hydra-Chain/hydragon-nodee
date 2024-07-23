@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,8 +22,8 @@ func TestStateTransaction_Signature(t *testing.T) {
 		sig string
 	}{
 		{
-			contractsapi.ValidatorSet.Abi.GetMethod("commitEpoch"),
-			"dab567de",
+			contractsapi.HydraChain.Abi.GetMethod("commitEpoch"),
+			"22d08931",
 		},
 	}
 	for _, c := range cases {
@@ -34,15 +35,23 @@ func TestStateTransaction_Signature(t *testing.T) {
 func TestStateTransaction_Encoding(t *testing.T) {
 	t.Parallel()
 
+	validators := validator.NewTestValidators(t, 5)
+	validatorSet := validators.GetPublicIdentities()
+
+	epochSize := int64(10)
+
+	uptime := generateValidatorsUpTime(t, validatorSet, uint64(epochSize))
+
 	cases := []contractsapi.StateTransactionInput{
-		&contractsapi.CommitEpochValidatorSetFn{
+		&contractsapi.CommitEpochHydraChainFn{
 			ID: big.NewInt(1),
 			Epoch: &contractsapi.Epoch{
 				StartBlock: big.NewInt(1),
-				EndBlock:   big.NewInt(10),
+				EndBlock:   big.NewInt(epochSize),
 				EpochRoot:  types.Hash{},
 			},
-			EpochSize: big.NewInt(10),
+			EpochSize: big.NewInt(epochSize),
+			Uptime:    uptime,
 		},
 	}
 

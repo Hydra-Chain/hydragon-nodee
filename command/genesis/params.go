@@ -306,7 +306,7 @@ func (p *genesisParams) initIBFTValidatorType() error {
 func (p *genesisParams) initValidatorSet() error {
 	p.ibftValidators = validators.NewValidatorSetFromType(p.ibftValidatorType)
 
-	// Set validator set
+	// Set the initial validators
 	// Priority goes to cli command over prefix path
 	if err := p.setValidatorSetFromPrefixPath(); err != nil {
 		return err

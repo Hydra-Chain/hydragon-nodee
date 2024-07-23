@@ -164,7 +164,7 @@ func (v *TestValidator) ParamsValidator() *GenesisValidator {
 		v.Account.Bls,
 		types.Address(v.Account.Ecdsa.Address()),
 		1,
-		signer.DomainValidatorSet,
+		signer.DomainHydraChain,
 	)
 	if err != nil {
 		panic(fmt.Sprintf("BUG: failed to sign validator params: %v", err))

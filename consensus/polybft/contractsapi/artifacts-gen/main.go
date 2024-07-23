@@ -37,12 +37,24 @@ func main() {
 			"BLS",
 		},
 		{
-			"ValidatorSet/ValidatorSet.sol",
-			"ValidatorSet",
+			"HydraChain/HydraChain.sol",
+			"HydraChain",
 		},
 		{
-			"RewardPool/RewardPool.sol",
-			"RewardPool",
+			"HydraStaking/HydraStaking.sol",
+			"HydraStaking",
+		},
+		{
+			"HydraDelegation/HydraDelegation.sol",
+			"HydraDelegation",
+		},
+		{
+			"VestingManager/VestingManagerFactory.sol",
+			"VestingManagerFactory",
+		},
+		{
+			"APRCalculator/APRCalculator.sol",
+			"APRCalculator",
 		},
 		{
 			"LiquidityToken/LiquidityToken.sol",

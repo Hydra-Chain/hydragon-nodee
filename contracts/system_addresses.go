@@ -3,10 +3,10 @@ package contracts
 import "github.com/0xPolygon/polygon-edge/types"
 
 var (
-	// ValidatorSetContract is an address of validator set proxy contract deployed to child chain
-	ValidatorSetContract = types.StringToAddress("0x101")
-	// ValidatorSetContractV1 is an address of validator set implementation contract deployed to child chain
-	ValidatorSetContractV1 = types.StringToAddress("0x1011")
+	// HydraChainContract is an address of HydraChain's proxy contract deployed on the chain
+	HydraChainContract = types.StringToAddress("0x101")
+	// HydraChainContractV1 is an address of HydraChain's implementation contract deployed on the chain
+	HydraChainContractV1 = types.StringToAddress("0x1011")
 	// BLSContract is an address of BLS proxy contract on the child chain
 	BLSContract = types.StringToAddress("0x102")
 	// BLSContractV1 is an address of BLS contract on the child chain
@@ -19,12 +19,28 @@ var (
 	RewardTokenContract = types.StringToAddress("0x104")
 	// RewardTokenContractV1 is an address of reward token on child chain
 	RewardTokenContractV1 = types.StringToAddress("0x1041")
-	// RewardPoolContract is an address of RewardPoolContract proxy contract on the child chain
-	RewardPoolContract = types.StringToAddress("0x105")
-	// RewardPoolContractV1 is an address of RewardPoolContract contract on the child chain
-	RewardPoolContractV1 = types.StringToAddress("0x1051")
+	// HydraStakingContract is an address of the HydraStaking's proxy contract on the chain
+	HydraStakingContract = types.StringToAddress("0x105")
+	// HydraStakingContractV1 is an address of the HydraStaking's implementation contract deployed on the chain
+	HydraStakingContractV1 = types.StringToAddress("0x1051")
 	// DefaultBurnContract is an address of eip1559 default proxy contract
 	DefaultBurnContract = types.StringToAddress("0x106")
+	// FeeHandlerContract is an address of the fee handler proxy contract
+	FeeHandlerContract = types.StringToAddress("0x107")
+	// FeeHandlerContract is an address of fee handler implementation contract
+	FeeHandlerContractV1 = types.StringToAddress("0x1071")
+	// HydraDelegationContract is an address of the HydraDelegation's proxy contract on the chain
+	HydraDelegationContract = types.StringToAddress("0x108")
+	// HydraDelegationContractV1 is an address of the HydraDelegation's implementation contract deployed on the chain
+	HydraDelegationContractV1 = types.StringToAddress("0x1081")
+	// VestingManagerFactoryContract is an address of the VestingManagerFactory's proxy contract on the chain
+	VestingManagerFactoryContract = types.StringToAddress("0x109")
+	// VestingManagerFactoryContractV1 is an address of the VestingManagerFactoryContract's implementation contract deployed on the chain
+	VestingManagerFactoryContractV1 = types.StringToAddress("0x1091")
+	// APRCalculatorContract is an address of the APRCalculator's proxy contract on the chain
+	APRCalculatorContract = types.StringToAddress("0x110")
+	// APRCalculatorContractV1 is an address of the APRCalculator's implementation contract deployed on the chain
+	APRCalculatorContractV1 = types.StringToAddress("1101")
 	// StateReceiverContract is an address of bridge proxy contract on the child chain
 	StateReceiverContract = types.StringToAddress("0x1001")
 	// StateReceiverContractV1 is an address of bridge implementation contract on the child chain
@@ -39,11 +55,6 @@ var (
 	L2StateSenderContract = types.StringToAddress("0x1002")
 	// L2StateSenderContractV1 is an address of bridge contract to the rootchain
 	L2StateSenderContractV1 = types.StringToAddress("0x10021")
-	// FeeHandlerContract is an address of the fee handler proxy contract
-	FeeHandlerContract = types.StringToAddress("0x107")
-	// FeeHandlerContract is an address of fee handler implementation contract
-	FeeHandlerContractV1 = types.StringToAddress("0x1071")
-
 	// ChildERC20Contract is an address of bridgable ERC20 token contract on the child chain
 	ChildERC20Contract = types.StringToAddress("0x1003")
 	// ChildERC20PredicateContract is an address of child ERC20 proxy predicate contract on the child chain
@@ -105,19 +116,12 @@ var (
 // GetProxyImplementationMapping retrieves the addresses of proxy contracts that should be deployed unconditionally
 func GetProxyImplementationMapping() map[types.Address]types.Address {
 	return map[types.Address]types.Address{
-		// StateReceiverContract: StateReceiverContractV1,
-		BLSContract: BLSContractV1,
-		// MerkleContract: MerkleContractV1,
-		// L2StateSenderContract: L2StateSenderContractV1,
-		ValidatorSetContract: ValidatorSetContractV1,
-		RewardPoolContract:   RewardPoolContractV1,
-		FeeHandlerContract:   FeeHandlerContractV1,
-		// NativeERC20TokenContract: NativeERC20TokenContractV1,
-		// ChildERC20PredicateContract:          ChildERC20PredicateContractV1,
-		// ChildERC721PredicateContract:         ChildERC721PredicateContractV1,
-		// ChildERC1155PredicateContract:        ChildERC1155PredicateContractV1,
-		// RootMintableERC20PredicateContract:   RootMintableERC20PredicateContractV1,
-		// RootMintableERC721PredicateContract:  RootMintableERC721PredicateContractV1,
-		// RootMintableERC1155PredicateContract: RootMintableERC1155PredicateContractV1,
+		BLSContract:                   BLSContractV1,
+		HydraChainContract:            HydraChainContractV1,
+		HydraStakingContract:          HydraStakingContractV1,
+		HydraDelegationContract:       HydraDelegationContractV1,
+		VestingManagerFactoryContract: VestingManagerFactoryContractV1,
+		APRCalculatorContract:         APRCalculatorContractV1,
+		FeeHandlerContract:            FeeHandlerContractV1,
 	}
 }

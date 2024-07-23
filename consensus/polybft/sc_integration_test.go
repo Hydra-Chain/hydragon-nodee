@@ -56,15 +56,27 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 	for _, currentValidators := range validatorSets {
 		accSet := currentValidators.GetPublicIdentities()
 		accSetPrivateKeys := currentValidators.GetPrivateIdentities()
-		valid2deleg := make(map[types.Address][]*wallet.Key, accSet.Len()) // delegators assigned to validators
+		valid2deleg := make(
+			map[types.Address][]*wallet.Key,
+			accSet.Len(),
+		) // delegators assigned to validators
 
 		// add contracts to genesis data
 		alloc := map[types.Address]*chain.GenesisAccount{
-			contracts.ValidatorSetContract: {
-				Code: contractsapi.ValidatorSet.DeployedBytecode,
+			contracts.HydraChainContract: {
+				Code: contractsapi.HydraChain.DeployedBytecode,
 			},
-			contracts.RewardPoolContract: {
-				Code: contractsapi.RewardPool.DeployedBytecode,
+			contracts.HydraStakingContract: {
+				Code: contractsapi.HydraStaking.DeployedBytecode,
+			},
+			contracts.HydraDelegationContract: {
+				Code: contractsapi.HydraDelegation.DeployedBytecode,
+			},
+			contracts.VestingManagerFactoryContract: {
+				Code: contractsapi.VestingManagerFactory.DeployedBytecode,
+			},
+			contracts.APRCalculatorContract: {
+				Code: contractsapi.APRCalculator.DeployedBytecode,
 			},
 			contracts.BLSContract: {
 				Code: contractsapi.BLS.DeployedBytecode,
@@ -83,7 +95,12 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 				Balance: oneCoin,
 			}
 
-			signature, err := signer.MakeKOSKSignature(accSetPrivateKeys[i].Bls, val.Address, 0, signer.DomainValidatorSet)
+			signature, err := signer.MakeKOSKSignature(
+				accSetPrivateKeys[i].Bls,
+				val.Address,
+				0,
+				signer.DomainHydraChain,
+			)
 			require.NoError(t, err)
 
 			signatureBytes, err := signature.Marshal()
@@ -126,34 +143,63 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		err := initLiquidityToken(polyBFTConfig, transition)
 		require.NoError(t, err)
 
-		// init RewardPool
-		err = initRewardPool(polyBFTConfig, transition)
+		// init HydraChain
+		err = initHydraChain(polyBFTConfig, transition)
 		require.NoError(t, err)
 
-		// init ValidatorSet
-		err = initValidatorSet(polyBFTConfig, transition)
+		// init HydraStaking
+		err = initHydraStaking(polyBFTConfig, transition)
+		require.NoError(t, err)
+
+		// init HydraDelegation
+		err = initHydraDelegation(polyBFTConfig, transition)
+		require.NoError(t, err)
+
+		// init VestingManagerFactory
+		err = initVestingManagerFactory(polyBFTConfig, transition)
+		require.NoError(t, err)
+
+		// init APRCalculator
+		err = initAPRCalculator(polyBFTConfig, transition)
 		require.NoError(t, err)
 
 		// delegate amounts to validators
 		for valAddress, delegators := range valid2deleg {
 			for _, delegator := range delegators {
-				encoded, err := contractsapi.ValidatorSet.Abi.Methods["delegate"].Encode(
+				encoded, err := contractsapi.HydraDelegation.Abi.Methods["delegate"].Encode(
 					[]interface{}{valAddress, false})
 				require.NoError(t, err)
 
-				result := transition.Call2(types.Address(delegator.Address()), contracts.ValidatorSetContract, encoded, delegateAmount, 1000000000000)
+				result := transition.Call2(
+					types.Address(delegator.Address()),
+					contracts.HydraDelegationContract,
+					encoded,
+					delegateAmount,
+					1000000000000,
+				)
 				require.False(t, result.Failed())
 			}
 		}
 
-		commitEpochInput := createTestCommitEpochInput(t, 1, polyBFTConfig.EpochSize)
+		commitEpochInput := createTestCommitEpochInput(t, 1, accSet, polyBFTConfig.EpochSize)
 		input, err := commitEpochInput.EncodeAbi()
 		require.NoError(t, err)
 
 		// call commit epoch
-		result := transition.Call2(contracts.SystemCaller, contracts.ValidatorSetContract, input, big.NewInt(0), 10000000000)
+		result := transition.Call2(
+			contracts.SystemCaller,
+			contracts.HydraChainContract,
+			input,
+			big.NewInt(0),
+			10000000000,
+		)
 		require.NoError(t, result.Err)
-		t.Logf("Number of validators %d on commit epoch when we add %d of delegators, Gas used %+v\n", accSet.Len(), accSet.Len()*delegatorsPerValidator, result.GasUsed)
+		t.Logf(
+			"Number of validators %d on commit epoch when we add %d of delegators, Gas used %+v\n",
+			accSet.Len(),
+			accSet.Len()*delegatorsPerValidator,
+			result.GasUsed,
+		)
 
 		// create input for distribute rewards
 		maxRewardToDistribute := createTestRewardToDistributeValue(t, transition)
@@ -166,18 +212,40 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
 
 		// call reward distributor
-		result = transition.Call2(contracts.SystemCaller, contracts.RewardPoolContract, distributeRewardsInput, maxRewardToDistribute, 10000000000)
+		result = transition.Call2(
+			contracts.SystemCaller,
+			contracts.HydraStakingContract,
+			distributeRewardsInput,
+			maxRewardToDistribute,
+			10000000000,
+		)
 		require.NoError(t, result.Err)
-		t.Logf("Number of validators %d on reward distribution when we add %d of delegators, Gas used %+v\n", accSet.Len(), accSet.Len()*delegatorsPerValidator, result.GasUsed)
+		t.Logf(
+			"Number of validators %d on reward distribution when we add %d of delegators, Gas used %+v\n",
+			accSet.Len(),
+			accSet.Len()*delegatorsPerValidator,
+			result.GasUsed,
+		)
 
-		commitEpochInput = createTestCommitEpochInput(t, 2, polyBFTConfig.EpochSize)
+		commitEpochInput = createTestCommitEpochInput(t, 2, accSet, polyBFTConfig.EpochSize)
 		input, err = commitEpochInput.EncodeAbi()
 		require.NoError(t, err)
 
 		// call commit epoch
-		result = transition.Call2(contracts.SystemCaller, contracts.ValidatorSetContract, input, big.NewInt(0), 10000000000)
+		result = transition.Call2(
+			contracts.SystemCaller,
+			contracts.HydraChainContract,
+			input,
+			big.NewInt(0),
+			10000000000,
+		)
 		require.NoError(t, result.Err)
-		t.Logf("Number of validators %d, Number of delegator %d, Gas used %+v\n", accSet.Len(), accSet.Len()*delegatorsPerValidator, result.GasUsed)
+		t.Logf(
+			"Number of validators %d, Number of delegator %d, Gas used %+v\n",
+			accSet.Len(),
+			accSet.Len()*delegatorsPerValidator,
+			result.GasUsed,
+		)
 
 		distributeRewards = createTestDistributeRewardsInput(t, 2, accSet, polyBFTConfig.EpochSize)
 		distributeRewardsInput, err = distributeRewards.EncodeAbi()
@@ -186,9 +254,20 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
 
 		// call reward distributor
-		result = transition.Call2(contracts.SystemCaller, contracts.RewardPoolContract, distributeRewardsInput, maxRewardToDistribute, 10000000000)
+		result = transition.Call2(
+			contracts.SystemCaller,
+			contracts.HydraStakingContract,
+			distributeRewardsInput,
+			maxRewardToDistribute,
+			10000000000,
+		)
 		require.NoError(t, result.Err)
-		t.Logf("Number of validators %d on reward distribution when we add %d of delegators, Gas used %+v\n", accSet.Len(), accSet.Len()*delegatorsPerValidator, result.GasUsed)
+		t.Logf(
+			"Number of validators %d on reward distribution when we add %d of delegators, Gas used %+v\n",
+			accSet.Len(),
+			accSet.Len()*delegatorsPerValidator,
+			result.GasUsed,
+		)
 	}
 }
 
@@ -235,11 +314,20 @@ func TestIntegration_DistributeFee(t *testing.T) {
 	require.NoError(t, err)
 
 	// Balance of FeeHandler must increase with 50% of the reward
-	require.Equal(t, transition.GetBalance(contracts.FeeHandlerContract), new(big.Int).Div(txFees, big.NewInt(2)))
+	require.Equal(
+		t,
+		transition.GetBalance(contracts.FeeHandlerContract),
+		new(big.Int).Div(txFees, big.NewInt(2)),
+	)
 }
 
-func deployAndInitContract(t *testing.T, transition *state.Transition, bytecode []byte, sender types.Address,
-	initCallback func() ([]byte, error)) types.Address {
+func deployAndInitContract(
+	t *testing.T,
+	transition *state.Transition,
+	bytecode []byte,
+	sender types.Address,
+	initCallback func() ([]byte, error),
+) types.Address {
 	t.Helper()
 
 	deployResult := transition.Create2(sender, bytecode, big.NewInt(0), 1e9)

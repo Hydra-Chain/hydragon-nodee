@@ -21,8 +21,8 @@ import (
 
 var (
 	params           stakeParams
-	stakeEventABI    = contractsapi.ValidatorSet.Abi.Events["Staked"]
-	delegateEventABI = contractsapi.ValidatorSet.Abi.Events["Delegated"]
+	stakeEventABI    = contractsapi.HydraStaking.Abi.Events["Staked"]
+	delegateEventABI = contractsapi.HydraDelegation.Abi.Events["Delegated"]
 )
 
 func GetCommand() *cobra.Command {
@@ -108,18 +108,23 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	var encoded []byte
+	var contractAddr *ethgo.Address
 	if params.self {
-		encoded, err = contractsapi.ValidatorSet.Abi.Methods["stake"].Encode([]interface{}{})
+		encoded, err = contractsapi.HydraStaking.Abi.Methods["stake"].Encode([]interface{}{})
 		if err != nil {
 			return err
 		}
+
+		contractAddr = (*ethgo.Address)(&contracts.HydraStakingContract)
 	} else {
 		delegateToAddress := types.StringToAddress(params.delegateAddress)
-		encoded, err = contractsapi.ValidatorSet.Abi.Methods["delegate"].Encode(
+		encoded, err = contractsapi.HydraDelegation.Abi.Methods["delegate"].Encode(
 			[]interface{}{ethgo.Address(delegateToAddress), false})
 		if err != nil {
 			return err
 		}
+
+		contractAddr = (*ethgo.Address)(&contracts.HydraDelegationContract)
 	}
 
 	parsedValue, err := common.ParseUint256orHex(&params.amount)
@@ -130,7 +135,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	txn := &ethgo.Transaction{
 		From:     validatorAccount.Ecdsa.Address(),
 		Input:    encoded,
-		To:       (*ethgo.Address)(&contracts.ValidatorSetContract),
+		To:       contractAddr,
 		Value:    parsedValue,
 		GasPrice: sidechainHelper.DefaultGasPrice,
 	}

@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/state"
 	"github.com/0xPolygon/polygon-edge/types"
@@ -13,14 +14,14 @@ import (
 )
 
 var (
-	initialMinStake, _  = new(big.Int).SetString("15000000000000000000000", 10)
-	minDelegation int64 = 1e18
+	initialMinStake, _       = new(big.Int).SetString("15000000000000000000000", 10)
+	minDelegation      int64 = 1e18
 
 	contractCallGasLimit uint64 = 100_000_000
 )
 
-// initValidatorSet initializes ValidatorSet SC
-func initValidatorSet(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
+// initHydraChain initializes HydraChain SC
+func initHydraChain(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initialValidators := make([]*contractsapi.ValidatorInit, len(polyBFTConfig.InitialValidatorSet))
 
 	for i, validator := range polyBFTConfig.InitialValidatorSet {
@@ -32,46 +33,109 @@ func initValidatorSet(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 		initialValidators[i] = validatorData
 	}
 
-	initFn := &contractsapi.InitializeValidatorSetFn{
-		Init: &contractsapi.InitStruct{
-			EpochReward:   new(big.Int).SetUint64(polyBFTConfig.EpochReward),
-			MinStake: initialMinStake,
-			EpochSize:     new(big.Int).SetUint64(polyBFTConfig.EpochSize),
-		},
-		NewValidators: initialValidators,
-		NewBls:        contracts.BLSContract,
-		NewRewardPool: contracts.RewardPoolContract,
-		Governance:    polyBFTConfig.Governance,
-		LiquidToken:   contracts.LiquidityTokenContract,
-		InitialCommission: big.NewInt(0),
+	initFn := &contractsapi.InitializeHydraChainFn{
+		NewValidators:          initialValidators,
+		Governance:             polyBFTConfig.Governance,
+		StakingContractAddr:    contracts.HydraStakingContract,
+		DelegationContractAddr: contracts.HydraDelegationContract,
+		NewBls:                 contracts.BLSContract,
 	}
 
 	input, err := initFn.EncodeAbi()
 	if err != nil {
-		return fmt.Errorf("ValidatorSet.initialize params encoding failed: %w", err)
+		return fmt.Errorf("HydraChain.initialize params encoding failed: %w", err)
 	}
 
 	return callContract(contracts.SystemCaller,
-		contracts.ValidatorSetContract, input, "ValidatorSet.initialize", transition)
+		contracts.HydraChainContract, input, "HydraChain.initialize", transition)
 }
 
-// initRewardPool initializes RewardPool SC
-func initRewardPool(polybftConfig PolyBFTConfig, transition *state.Transition) error {
-	initFn := &contractsapi.InitializeRewardPoolFn{
-		NewValidatorSet:  contracts.ValidatorSetContract,
-		NewRewardWallet:  types.Address{0x22}, // TODO: Remove reward wallet or fully implement it in the contracts
-		NewMinDelegation: big.NewInt(minDelegation),
-		// TODO: AprManager is temporary solution to enable update in the parameters. Remove it when "Dynamic APR variables" epic is finished
-		Manager: polybftConfig.Governance,
+// initHydraStaking initializes HydraStaking SC
+func initHydraStaking(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
+	initialStakers, err := validator.GetInitialStakers(polyBFTConfig.InitialValidatorSet)
+	if err != nil {
+		return err
+	}
+
+	initFn := &contractsapi.InitializeHydraStakingFn{
+		InitialStakers:         initialStakers,
+		NewMinStake:            initialMinStake,
+		NewLiquidToken:         contracts.LiquidityTokenContract,
+		HydraChainAddr:         contracts.HydraChainContract,
+		AprCalculatorAddr:      contracts.APRCalculatorContract,
+		Governance:             polyBFTConfig.Governance,
+		DelegationContractAddr: contracts.HydraDelegationContract,
 	}
 
 	input, err := initFn.EncodeAbi()
 	if err != nil {
-		return fmt.Errorf("RewardPool.initialize params encoding failed: %w", err)
+		return fmt.Errorf("HydraStaking.initialize params encoding failed: %w", err)
 	}
 
 	return callContract(contracts.SystemCaller,
-		contracts.RewardPoolContract, input, "RewardPool.initialize", transition)
+		contracts.HydraStakingContract, input, "HydraStaking.initialize", transition)
+}
+
+// initHydraDelegation initializes HydraDelegation SC
+func initHydraDelegation(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
+	initialStakers, err := validator.GetInitialStakers(polyBFTConfig.InitialValidatorSet)
+	if err != nil {
+		return err
+	}
+
+	initFn := &contractsapi.InitializeHydraDelegationFn{
+		InitialStakers:            initialStakers,
+		Governance:                polyBFTConfig.Governance,
+		InitialCommission:         big.NewInt(10),
+		LiquidToken:               contracts.LiquidityTokenContract,
+		AprCalculatorAddr:         contracts.APRCalculatorContract,
+		HydraStakingAddr:          contracts.HydraStakingContract,
+		HydraChainAddr:            contracts.HydraChainContract,
+		VestingManagerFactoryAddr: contracts.VestingManagerFactoryContract,
+	}
+
+	input, err := initFn.EncodeAbi()
+	if err != nil {
+		return fmt.Errorf("HydraDelegation.initialize params encoding failed: %w", err)
+	}
+
+	return callContract(contracts.SystemCaller,
+		contracts.HydraDelegationContract, input, "HydraDelegation.initialize", transition)
+}
+
+// initVestingManagerFactory initializes VestingManagerFactory SC
+func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
+	initFn := &contractsapi.InitializeVestingManagerFactoryFn{
+		HydraDelegationAddr: contracts.HydraDelegationContract,
+	}
+
+	input, err := initFn.EncodeAbi()
+	if err != nil {
+		return fmt.Errorf("VestingManagerFactory.initialize params encoding failed: %w", err)
+	}
+
+	return callContract(
+		contracts.SystemCaller,
+		contracts.VestingManagerFactoryContract,
+		input,
+		"VestingManagerFactory.initialize",
+		transition,
+	)
+}
+
+// initAPRCalculator initializes APRCalculator SC
+func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
+	initFn := &contractsapi.InitializeAPRCalculatorFn{
+		Manager: polyBFTConfig.Governance,
+	}
+
+	input, err := initFn.EncodeAbi()
+	if err != nil {
+		return fmt.Errorf("APRCalculator.initialize params encoding failed: %w", err)
+	}
+
+	return callContract(contracts.SystemCaller,
+		contracts.APRCalculatorContract, input, "APRCalculator.initialize", transition)
 }
 
 func initFeeHandler(polybftConfig PolyBFTConfig, transition *state.Transition) error {
@@ -84,15 +148,22 @@ func initFeeHandler(polybftConfig PolyBFTConfig, transition *state.Transition) e
 		return fmt.Errorf("FeeHandler.initialize params encoding failed: %w", err)
 	}
 
-	return callContract(contracts.SystemCaller, contracts.FeeHandlerContract, input, "FeeHandler.initialize", transition)
+	return callContract(
+		contracts.SystemCaller,
+		contracts.FeeHandlerContract,
+		input,
+		"FeeHandler.initialize",
+		transition,
+	)
 }
 
 func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := contractsapi.InitializeLiquidityTokenFn{
-		Name_:            "Liquid Hydra",
-		Symbol_:          "LYDRA",
-		Governer:         polyBFTConfig.Governance,
-		SupplyController: contracts.ValidatorSetContract,
+		Name_:               "Liquid Hydra",
+		Symbol_:             "LYDRA",
+		Governer:            polyBFTConfig.Governance,
+		HydraStakingAddr:    contracts.HydraStakingContract,
+		HydraDelegationAddr: contracts.HydraDelegationContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -100,26 +171,14 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 		return fmt.Errorf("LiquidityToken.initialize params encoding failed: %w", err)
 	}
 
-	return callContract(contracts.SystemCaller, contracts.LiquidityTokenContract, input, "LiquidityToken.initialize", transition)
+	return callContract(
+		contracts.SystemCaller,
+		contracts.LiquidityTokenContract,
+		input,
+		"LiquidityToken.initialize",
+		transition,
+	)
 }
-
-// // initRewardPool initializes RewardPool SC
-// func initRewardPool(polybftConfig PolyBFTConfig, transition *state.Transition) error {
-// 	initFn := &contractsapi.InitializeRewardPoolFn{
-// 		NewRewardToken:  polybftConfig.RewardConfig.TokenAddress,
-// 		NewRewardWallet: polybftConfig.RewardConfig.WalletAddress,
-// 		NewValidatorSet: contracts.ValidatorSetContract,
-// 		NewBaseReward:   new(big.Int).SetUint64(polybftConfig.EpochReward),
-// 	}
-
-// 	input, err := initFn.EncodeAbi()
-// 	if err != nil {
-// 		return fmt.Errorf("RewardPool.initialize params encoding failed: %w", err)
-// 	}
-
-// 	return callContract(contracts.SystemCaller,
-// 		contracts.RewardPoolContract, input, "RewardPool.initialize", transition)
-// }
 
 // // getInitERC20PredicateInput builds initialization input parameters for child chain ERC20Predicate SC
 // func getInitERC20PredicateInput(config *BridgeConfig, childChainMintable bool) ([]byte, error) {
@@ -300,25 +359,22 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 // 		"RewardToken.mint", transition)
 // }
 
-// approveRewardPoolAsSpender approves reward pool contract as reward token spender
-// since reward pool distributes rewards.
-func approveRewardPoolAsSpender(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
-	approveFn := &contractsapi.ApproveRootERC20Fn{
-		Spender: contracts.RewardPoolContract,
-		Amount:  polyBFTConfig.RewardConfig.WalletAmount,
-	}
+// 	input, err := approveFn.EncodeAbi()
+// 	if err != nil {
+// 		return fmt.Errorf("RewardToken.approve params encoding failed: %w", err)
+// 	}
 
-	input, err := approveFn.EncodeAbi()
-	if err != nil {
-		return fmt.Errorf("RewardToken.approve params encoding failed: %w", err)
-	}
-
-	return callContract(polyBFTConfig.RewardConfig.WalletAddress,
-		polyBFTConfig.RewardConfig.TokenAddress, input, "RewardToken.approve", transition)
-}
+// 	return callContract(polyBFTConfig.RewardConfig.WalletAddress,
+// 		polyBFTConfig.RewardConfig.TokenAddress, input, "RewardToken.approve", transition)
+// }
 
 // callContract calls given smart contract function, encoded in input parameter
-func callContract(from, to types.Address, input []byte, contractName string, transition *state.Transition) error {
+func callContract(
+	from, to types.Address,
+	input []byte,
+	contractName string,
+	transition *state.Transition,
+) error {
 	result := transition.Call2(from, to, input, big.NewInt(0), contractCallGasLimit)
 	if result.Failed() {
 		if result.Reverted() {

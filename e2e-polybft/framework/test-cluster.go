@@ -80,12 +80,12 @@ func init() {
 }
 
 func resolveBinary() string {
-	bin := os.Getenv("EDGE_BINARY")
+	bin := os.Getenv("HYDRA_BINARY")
 	if bin != "" {
 		return bin
 	}
 	// fallback
-	return "polygon-edge"
+	return "hydra"
 }
 
 type TestClusterConfig struct {
@@ -853,8 +853,8 @@ func runCommand(binary string, args []string, stdout io.Writer) error {
 	return nil
 }
 
-// RunEdgeCommand - calls a command line edge function
-func RunEdgeCommand(args []string, stdout io.Writer) error {
+// RunHydraCommand - calls a command line edge function
+func RunHydraCommand(args []string, stdout io.Writer) error {
 	return runCommand(resolveBinary(), args, stdout)
 }
 

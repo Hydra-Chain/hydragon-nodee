@@ -11,13 +11,25 @@ func TestArtifactNotEmpty(t *testing.T) {
 	require.NotEmpty(t, BLS.DeployedBytecode)
 	require.NotEmpty(t, BLS.Abi)
 
-	require.NotEmpty(t, RewardPool.Bytecode)
-	require.NotEmpty(t, RewardPool.DeployedBytecode)
-	require.NotEmpty(t, RewardPool.Abi)
+	require.NotEmpty(t, HydraChain.Bytecode)
+	require.NotEmpty(t, HydraChain.DeployedBytecode)
+	require.NotEmpty(t, HydraChain.Abi)
 
-	require.NotEmpty(t, ValidatorSet.Bytecode)
-	require.NotEmpty(t, ValidatorSet.DeployedBytecode)
-	require.NotEmpty(t, ValidatorSet.Abi)
+	require.NotEmpty(t, HydraStaking.Bytecode)
+	require.NotEmpty(t, HydraStaking.DeployedBytecode)
+	require.NotEmpty(t, HydraStaking.Abi)
+
+	require.NotEmpty(t, HydraDelegation.Bytecode)
+	require.NotEmpty(t, HydraDelegation.DeployedBytecode)
+	require.NotEmpty(t, HydraDelegation.Abi)
+
+	require.NotEmpty(t, VestingManagerFactory.Bytecode)
+	require.NotEmpty(t, VestingManagerFactory.DeployedBytecode)
+	require.NotEmpty(t, VestingManagerFactory.Abi)
+
+	require.NotEmpty(t, APRCalculator.Bytecode)
+	require.NotEmpty(t, APRCalculator.DeployedBytecode)
+	require.NotEmpty(t, APRCalculator.Abi)
 
 	require.NotEmpty(t, LiquidityToken.Bytecode)
 	require.NotEmpty(t, LiquidityToken.DeployedBytecode)
