@@ -155,6 +155,10 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		err = initHydraDelegation(polyBFTConfig, transition)
 		require.NoError(t, err)
 
+		// initialize RewardWallet SC
+		err = initRewardWallet(polyBFTConfig, transition)
+		require.NoError(t, err)
+
 		// init VestingManagerFactory
 		err = initVestingManagerFactory(polyBFTConfig, transition)
 		require.NoError(t, err)
@@ -202,21 +206,21 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		)
 
 		// create input for distribute rewards
-		maxRewardToDistribute := createTestRewardToDistributeValue(t, transition)
 		distributeRewards := createTestDistributeRewardsInput(t, 1, accSet, polyBFTConfig.EpochSize)
 		distributeRewardsInput, err := distributeRewards.EncodeAbi()
 		require.NoError(t, err)
 
 		// Normally injecting balance to the system caller is handled by a higher order method in the executor.go
 		// but here we use call2 directly so we need to do it manually
-		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
+		// vito - add funds to the RewardWallet in a similar way
+		// transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
 
 		// call reward distributor
 		result = transition.Call2(
 			contracts.SystemCaller,
 			contracts.HydraStakingContract,
 			distributeRewardsInput,
-			maxRewardToDistribute,
+			big.NewInt(0),
 			10000000000,
 		)
 		require.NoError(t, result.Err)
@@ -251,14 +255,15 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		distributeRewardsInput, err = distributeRewards.EncodeAbi()
 		require.NoError(t, err)
 
-		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
+		// vito
+		// transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
 
 		// call reward distributor
 		result = transition.Call2(
 			contracts.SystemCaller,
 			contracts.HydraStakingContract,
 			distributeRewardsInput,
-			maxRewardToDistribute,
+			big.NewInt(0),
 			10000000000,
 		)
 		require.NoError(t, result.Err)

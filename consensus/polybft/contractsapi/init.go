@@ -51,6 +51,7 @@ var (
 	HydraChain                      *artifact.Artifact
 	HydraStaking                    *artifact.Artifact
 	HydraDelegation                 *artifact.Artifact
+	RewardWallet                    *artifact.Artifact
 	VestingManagerFactory           *artifact.Artifact
 	APRCalculator                   *artifact.Artifact
 	RootERC721                      *artifact.Artifact
@@ -65,7 +66,6 @@ var (
 	TestWriteBlockMetadata *artifact.Artifact
 	RootERC20              *artifact.Artifact
 	TestSimple             *artifact.Artifact
-	TestRewardToken        *artifact.Artifact
 	LiquidityToken         *artifact.Artifact
 	FeeHandler             *artifact.Artifact
 )
@@ -89,6 +89,11 @@ func init() {
 	}
 
 	HydraDelegation, err = artifact.DecodeArtifact([]byte(HydraDelegationArtifact))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	RewardWallet, err = artifact.DecodeArtifact([]byte(RewardWalletArtifact))
 	if err != nil {
 		log.Fatal(err)
 	}

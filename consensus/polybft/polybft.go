@@ -166,10 +166,6 @@ func GenesisPostHookFactory(config *chain.Chain, engineName string) func(txn *st
 		// 	proxyAddrMapping[contracts.DefaultBurnContract] = burnContractAddress
 		// }
 
-		if _, ok := config.Genesis.Alloc[contracts.RewardTokenContract]; ok {
-			proxyAddrMapping[contracts.RewardTokenContract] = contracts.RewardTokenContractV1
-		}
-
 		if err = initProxies(transition, polyBFTConfig.ProxyContractsAdmin, proxyAddrMapping); err != nil {
 			return err
 		}
@@ -189,6 +185,11 @@ func GenesisPostHookFactory(config *chain.Chain, engineName string) func(txn *st
 			return err
 		}
 
+		// initialize RewardWallet SC
+		if err = initRewardWallet(polyBFTConfig, transition); err != nil {
+			return err
+		}
+
 		// initialize VestingManagerFactory SC
 		if err = initVestingManagerFactory(polyBFTConfig, transition); err != nil {
 			return err
@@ -203,11 +204,6 @@ func GenesisPostHookFactory(config *chain.Chain, engineName string) func(txn *st
 		if err = initFeeHandler(polyBFTConfig, transition); err != nil {
 			return err
 		}
-
-		// // mint reward tokens to reward wallet
-		// if err = mintRewardTokensToWallet(polyBFTConfig, transition); err != nil {
-		// 	return err
-		// }
 
 		// check if there are Bridge Allow List Admins and Bridge Block List Admins
 		// and if there are, get the first address as the Admin

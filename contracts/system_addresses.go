@@ -15,32 +15,32 @@ var (
 	MerkleContract = types.StringToAddress("0x103")
 	// MerkleContractV1 is an address of Merkle contract on the child chain
 	MerkleContractV1 = types.StringToAddress("0x1031")
-	// RewardTokenContract is an address of reward token proxy on child chain
-	RewardTokenContract = types.StringToAddress("0x104")
-	// RewardTokenContractV1 is an address of reward token on child chain
-	RewardTokenContractV1 = types.StringToAddress("0x1041")
 	// HydraStakingContract is an address of the HydraStaking's proxy contract on the chain
-	HydraStakingContract = types.StringToAddress("0x105")
+	HydraStakingContract = types.StringToAddress("0x104")
 	// HydraStakingContractV1 is an address of the HydraStaking's implementation contract deployed on the chain
-	HydraStakingContractV1 = types.StringToAddress("0x1051")
+	HydraStakingContractV1 = types.StringToAddress("0x1041")
 	// DefaultBurnContract is an address of eip1559 default proxy contract
-	DefaultBurnContract = types.StringToAddress("0x106")
+	DefaultBurnContract = types.StringToAddress("0x105")
 	// FeeHandlerContract is an address of the fee handler proxy contract
-	FeeHandlerContract = types.StringToAddress("0x107")
+	FeeHandlerContract = types.StringToAddress("0x106")
 	// FeeHandlerContract is an address of fee handler implementation contract
-	FeeHandlerContractV1 = types.StringToAddress("0x1071")
+	FeeHandlerContractV1 = types.StringToAddress("0x1061")
 	// HydraDelegationContract is an address of the HydraDelegation's proxy contract on the chain
-	HydraDelegationContract = types.StringToAddress("0x108")
+	HydraDelegationContract = types.StringToAddress("0x107")
 	// HydraDelegationContractV1 is an address of the HydraDelegation's implementation contract deployed on the chain
-	HydraDelegationContractV1 = types.StringToAddress("0x1081")
+	HydraDelegationContractV1 = types.StringToAddress("0x1071")
 	// VestingManagerFactoryContract is an address of the VestingManagerFactory's proxy contract on the chain
-	VestingManagerFactoryContract = types.StringToAddress("0x109")
+	VestingManagerFactoryContract = types.StringToAddress("0x108")
 	// VestingManagerFactoryContractV1 is an address of the VestingManagerFactoryContract's implementation contract deployed on the chain
-	VestingManagerFactoryContractV1 = types.StringToAddress("0x1091")
+	VestingManagerFactoryContractV1 = types.StringToAddress("0x1081")
 	// APRCalculatorContract is an address of the APRCalculator's proxy contract on the chain
-	APRCalculatorContract = types.StringToAddress("0x110")
+	APRCalculatorContract = types.StringToAddress("0x109")
 	// APRCalculatorContractV1 is an address of the APRCalculator's implementation contract deployed on the chain
-	APRCalculatorContractV1 = types.StringToAddress("1101")
+	APRCalculatorContractV1 = types.StringToAddress("1091")
+	// RewardWalletContract is an address of the RewardWallet's proxy contract on the chain
+	RewardWalletContract = types.StringToAddress("0x110")
+	// RewardWalletContractV1 is an address of the RewardWallet's implementation contract deployed on the chain
+	RewardWalletContractV1 = types.StringToAddress("1101")
 	// StateReceiverContract is an address of bridge proxy contract on the child chain
 	StateReceiverContract = types.StringToAddress("0x1001")
 	// StateReceiverContractV1 is an address of bridge implementation contract on the child chain
@@ -123,5 +123,6 @@ func GetProxyImplementationMapping() map[types.Address]types.Address {
 		VestingManagerFactoryContract: VestingManagerFactoryContractV1,
 		APRCalculatorContract:         APRCalculatorContractV1,
 		FeeHandlerContract:            FeeHandlerContractV1,
+		RewardWalletContract:          RewardWalletContractV1,
 	}
 }

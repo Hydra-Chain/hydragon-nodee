@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
-	"math/big"
 	"strconv"
 	"strings"
 
@@ -72,9 +71,6 @@ type PolyBFTConfig struct {
 
 	// MaxValidatorSetSize indicates the maximum size of validator set
 	MaxValidatorSetSize uint64 `json:"maxValidatorSetSize"`
-
-	// RewardConfig defines rewards configuration
-	RewardConfig *RewardsConfig `json:"rewardConfig"`
 
 	// BlockTimeDrift defines the time slot in which a new block can be created
 	BlockTimeDrift uint64 `json:"blockTimeDrift"`
@@ -258,54 +254,6 @@ func ParseRawTokenConfig(rawConfig string) (*TokenConfig, error) {
 		IsMintable: isMintable,
 		Owner:      owner,
 	}, nil
-}
-
-type RewardsConfig struct {
-	// TokenAddress is the address of reward token on child chain
-	TokenAddress types.Address
-
-	// WalletAddress is the address of reward wallet on child chain
-	WalletAddress types.Address
-
-	// WalletAmount is the amount of tokens in reward wallet
-	WalletAmount *big.Int
-}
-
-func (r *RewardsConfig) MarshalJSON() ([]byte, error) {
-	raw := &rewardsConfigRaw{
-		TokenAddress:  r.TokenAddress,
-		WalletAddress: r.WalletAddress,
-		WalletAmount:  common.EncodeBigInt(r.WalletAmount),
-	}
-
-	return json.Marshal(raw)
-}
-
-func (r *RewardsConfig) UnmarshalJSON(data []byte) error {
-	var (
-		raw rewardsConfigRaw
-		err error
-	)
-
-	if err = json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-
-	r.TokenAddress = raw.TokenAddress
-	r.WalletAddress = raw.WalletAddress
-
-	r.WalletAmount, err = common.ParseUint256orHex(raw.WalletAmount)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-type rewardsConfigRaw struct {
-	TokenAddress  types.Address `json:"rewardTokenAddress"`
-	WalletAddress types.Address `json:"rewardWalletAddress"`
-	WalletAmount  *string       `json:"rewardWalletAmount"`
 }
 
 // BurnContractInfo contains metadata for burn contract, which is part of EIP-1559 specification

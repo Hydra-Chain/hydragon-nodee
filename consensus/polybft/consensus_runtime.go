@@ -126,9 +126,6 @@ type consensusRuntime struct {
 
 	// logger instance
 	logger hcf.Logger
-
-	// rewardsCalculator is the object which handles the reward that must be sent on CommitEpoch
-	rewardsCalculator RewardsCalculator
 }
 
 // newConsensusRuntime creates and starts a new consensus runtime instance with event tracking
@@ -145,15 +142,12 @@ func newConsensusRuntime(log hcf.Logger, config *runtimeConfig) (*consensusRunti
 		return nil, fmt.Errorf("failed to create consensus runtime, error while creating proposer calculator %w", err)
 	}
 
-	rewardsCalculator := NewRewardsCalculator(log.Named("rewards_calculator"), config.blockchain)
-
 	runtime := &consensusRuntime{
 		state:              config.State,
 		config:             config,
 		lastBuiltBlock:     config.blockchain.CurrentHeader(),
 		proposerCalculator: proposerCalculator,
 		logger:             log.Named("consensus_runtime"),
-		rewardsCalculator:  rewardsCalculator,
 		eventProvider:      NewEventProvider(config.blockchain),
 	}
 
@@ -464,8 +458,6 @@ func (c *consensusRuntime) FSM() error {
 			return fmt.Errorf("cannot calculate commit epoch info: %w", err)
 		}
 
-		ff.maxRewardToDistribute, err = c.calculateRewardValue(parent)
-
 		ff.newValidatorsDelta, err = c.stakeManager.UpdateValidatorSet(epoch.Number, epoch.Validators.Copy())
 		if err != nil {
 			return fmt.Errorf("cannot update validator set on epoch ending: %w", err)
@@ -663,10 +655,6 @@ func (c *consensusRuntime) calculateCommitEpochInput(
 	}
 
 	return commitEpoch, distributeRewards, nil
-}
-
-func (c *consensusRuntime) calculateRewardValue(latestBlock *types.Header) (*big.Int, error) {
-	return c.rewardsCalculator.GetMaxReward(latestBlock)
 }
 
 // GenerateExitProof generates proof of exit and is a bridge endpoint store function

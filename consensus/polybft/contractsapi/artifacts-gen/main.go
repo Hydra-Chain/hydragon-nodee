@@ -49,6 +49,10 @@ func main() {
 			"HydraDelegation",
 		},
 		{
+			"RewardWallet/RewardWallet.sol",
+			"RewardWallet",
+		},
+		{
 			"VestingManager/VestingManagerFactory.sol",
 			"VestingManagerFactory",
 		},

@@ -19,7 +19,6 @@ import (
 
 	"github.com/0xPolygon/polygon-edge/command/genesis"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"
-	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/txrelayer"
 	"github.com/0xPolygon/polygon-edge/types"
@@ -71,7 +70,6 @@ func (nt *NodeType) Append(value NodeType) {
 
 var (
 	startTime              int64
-	testRewardWalletAddr   = types.StringToAddress("0xFFFFFFFF")
 	ProxyContractAdminAddr = "0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed"
 )
 
@@ -129,8 +127,7 @@ type TestClusterConfig struct {
 	InitialTrieDB    string
 	InitialStateRoot types.Hash
 
-	IsPropertyTest  bool
-	TestRewardToken string
+	IsPropertyTest bool
 
 	RootTrackerPollInterval time.Duration
 
@@ -381,12 +378,6 @@ func WithNativeTokenConfig(tokenConfigRaw string) ClusterOption {
 	}
 }
 
-func WithTestRewardToken() ClusterOption {
-	return func(h *TestClusterConfig) {
-		h.TestRewardToken = hex.EncodeToString(contractsapi.TestRewardToken.DeployedBytecode)
-	}
-}
-
 func WithRootTrackerPollInterval(pollInterval time.Duration) ClusterOption {
 	return func(h *TestClusterConfig) {
 		h.RootTrackerPollInterval = pollInterval
@@ -491,7 +482,6 @@ func NewTestCluster(t *testing.T, validatorsCount int, opts ...ClusterOption) *T
 			"--epoch-size", strconv.Itoa(cluster.Config.EpochSize),
 			"--epoch-reward", strconv.Itoa(cluster.Config.EpochReward),
 			"--premine", "0x0000000000000000000000000000000000000000",
-			"--reward-wallet", testRewardWalletAddr.String(),
 			"--trieroot", cluster.Config.InitialStateRoot.String(),
 		}
 
@@ -503,10 +493,6 @@ func NewTestCluster(t *testing.T, validatorsCount int, opts ...ClusterOption) *T
 		if cluster.Config.RootTrackerPollInterval != 0 {
 			args = append(args, "--block-tracker-poll-interval",
 				cluster.Config.RootTrackerPollInterval.String())
-		}
-
-		if cluster.Config.TestRewardToken != "" {
-			args = append(args, "--reward-token-code", cluster.Config.TestRewardToken)
 		}
 
 		// add optional genesis flags

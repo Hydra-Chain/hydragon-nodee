@@ -98,6 +98,19 @@ func main() {
 			},
 		},
 		{
+			"RewardWallet",
+			gensc.RewardWallet,
+			false,
+			[]string{
+				"initialize",
+				"distributeReward",
+			},
+			[]string{
+				"Received",
+				"RewardDistributed",
+			},
+		},
+		{
 			"VestingManagerFactory",
 			gensc.VestingManagerFactory,
 			false,

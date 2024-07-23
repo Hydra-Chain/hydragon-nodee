@@ -696,6 +696,89 @@ func (d *DelegatorRewardsClaimedEvent) Decode(input []byte) error {
 	return HydraDelegation.Abi.Events["DelegatorRewardsClaimed"].Inputs.DecodeStruct(input, &d)
 }
 
+type InitializeRewardWalletFn struct {
+	Managers []ethgo.Address `abi:"managers"`
+}
+
+func (i *InitializeRewardWalletFn) Sig() []byte {
+	return RewardWallet.Abi.Methods["initialize"].ID()
+}
+
+func (i *InitializeRewardWalletFn) EncodeAbi() ([]byte, error) {
+	return RewardWallet.Abi.Methods["initialize"].Encode(i)
+}
+
+func (i *InitializeRewardWalletFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(RewardWallet.Abi.Methods["initialize"], buf, i)
+}
+
+type DistributeRewardRewardWalletFn struct {
+	To     types.Address `abi:"to"`
+	Amount *big.Int      `abi:"amount"`
+}
+
+func (d *DistributeRewardRewardWalletFn) Sig() []byte {
+	return RewardWallet.Abi.Methods["distributeReward"].ID()
+}
+
+func (d *DistributeRewardRewardWalletFn) EncodeAbi() ([]byte, error) {
+	return RewardWallet.Abi.Methods["distributeReward"].Encode(d)
+}
+
+func (d *DistributeRewardRewardWalletFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(RewardWallet.Abi.Methods["distributeReward"], buf, d)
+}
+
+type ReceivedEvent struct {
+	From   types.Address `abi:"from"`
+	Amount *big.Int      `abi:"amount"`
+}
+
+func (*ReceivedEvent) Sig() ethgo.Hash {
+	return RewardWallet.Abi.Events["Received"].ID()
+}
+
+func (r *ReceivedEvent) Encode() ([]byte, error) {
+	return RewardWallet.Abi.Events["Received"].Inputs.Encode(r)
+}
+
+func (r *ReceivedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !RewardWallet.Abi.Events["Received"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(RewardWallet.Abi.Events["Received"], log, r)
+}
+
+func (r *ReceivedEvent) Decode(input []byte) error {
+	return RewardWallet.Abi.Events["Received"].Inputs.DecodeStruct(input, &r)
+}
+
+type RewardDistributedEvent struct {
+	Account types.Address `abi:"account"`
+	Amount  *big.Int      `abi:"amount"`
+}
+
+func (*RewardDistributedEvent) Sig() ethgo.Hash {
+	return RewardWallet.Abi.Events["RewardDistributed"].ID()
+}
+
+func (r *RewardDistributedEvent) Encode() ([]byte, error) {
+	return RewardWallet.Abi.Events["RewardDistributed"].Inputs.Encode(r)
+}
+
+func (r *RewardDistributedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !RewardWallet.Abi.Events["RewardDistributed"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(RewardWallet.Abi.Events["RewardDistributed"], log, r)
+}
+
+func (r *RewardDistributedEvent) Decode(input []byte) error {
+	return RewardWallet.Abi.Events["RewardDistributed"].Inputs.DecodeStruct(input, &r)
+}
+
 type InitializeVestingManagerFactoryFn struct {
 	HydraDelegationAddr types.Address `abi:"hydraDelegationAddr"`
 }

@@ -14,11 +14,8 @@ import (
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
-	"github.com/0xPolygon/polygon-edge/contracts"
-	"github.com/0xPolygon/polygon-edge/state"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/hashicorp/go-hclog"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -89,30 +86,6 @@ func createTestCommitEpochInput(t *testing.T, epochID uint64,
 	}
 
 	return commitEpoch
-}
-
-func createTestRewardToDistributeValue(t *testing.T, transition *state.Transition) *big.Int {
-	stateProvider := NewStateProvider(transition)
-	systemState := NewSystemState(
-		contracts.HydraChainContract,
-		contracts.HydraStakingContract,
-		contracts.HydraDelegationContract,
-		contracts.VestingManagerFactoryContract,
-		contracts.APRCalculatorContract,
-		contracts.StateReceiverContract,
-		stateProvider,
-	)
-
-	blockchainMock := new(blockchainMock)
-	blockchainMock.On("GetStateProviderForBlock", mock.Anything).Return(nil, nil).Once()
-	blockchainMock.On("GetSystemState", mock.Anything).Return(systemState, nil).Once()
-
-	rc := NewRewardsCalculator(hclog.NewNullLogger(), blockchainMock)
-
-	maxReward, err := rc.GetMaxReward(&types.Header{})
-	require.NoError(t, err)
-
-	return maxReward
 }
 
 func createTestDistributeRewardsInput(

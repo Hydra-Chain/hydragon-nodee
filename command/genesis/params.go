@@ -3,7 +3,6 @@ package genesis
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"os"
 	"strings"
 	"time"
@@ -35,8 +34,6 @@ const (
 	genesisBaseFeeConfigFlag     = "base-fee-config"
 	posFlag                      = "pos"
 	nativeTokenConfigFlag        = "native-token-config"
-	rewardTokenCodeFlag          = "reward-token-code"
-	rewardWalletFlag             = "reward-wallet"
 	blockTrackerPollIntervalFlag = "block-tracker-poll-interval"
 	proxyContractsAdminFlag      = "proxy-contracts-admin"
 )
@@ -54,20 +51,11 @@ var (
 	errValidatorsNotSpecified   = errors.New("validator information not specified")
 	errUnsupportedConsensus     = errors.New("specified consensusRaw not supported")
 	errInvalidEpochSize         = errors.New("epoch size must be greater than 1")
-	errRewardWalletAmountZero   = errors.New("reward wallet amount can not be zero or negative")
-	errReserveAccMustBePremined = errors.New(
-		"it is mandatory to premine reserve account (0x0 address)",
-	)
+	errReserveAccMustBePremined = errors.New("it is mandatory to premine reserve account (0x0 address)")
 	errBlockTrackerPollInterval = errors.New("block tracker poll interval must be greater than 0")
 	errBaseFeeChangeDenomZero   = errors.New("base fee change denominator must be greater than 0")
-	errBaseFeeEMZero            = errors.New(
-		"base fee elasticity multiplier must be greater than 0",
-	)
+	errBaseFeeEMZero            = errors.New("base fee elasticity multiplier must be greater than 0")
 	errBaseFeeZero              = errors.New("base fee  must be greater than 0")
-	errRewardWalletNotDefined   = errors.New("reward wallet address must be defined")
-	errRewardTokenOnNonMintable = errors.New("a custom reward token must be defined when " +
-		"native ERC20 token is non-mintable")
-	errRewardWalletZero = errors.New("reward wallet address must not be zero address")
 )
 
 type genesisParams struct {
@@ -133,10 +121,6 @@ type genesisParams struct {
 
 	premineInfos []*helper.PremineInfo
 
-	// rewards
-	rewardTokenCode string
-	rewardWallet    string
-
 	blockTrackerPollInterval time.Duration
 
 	proxyContractsAdmin string
@@ -172,10 +156,6 @@ func (p *genesisParams) validateFlags() error {
 			return err
 		}
 
-		if err := p.validateRewardWalletAndToken(); err != nil {
-			return err
-		}
-
 		// Hydra modification: We don't need a reserve account premining, we use the 0x0 address for burning
 		// if err := p.validatePremineInfo(); err != nil {
 		// 	return err
@@ -202,11 +182,7 @@ func (p *genesisParams) validateFlags() error {
 	// Validate validatorsPath only if validators information were not provided via CLI flag
 	if len(p.validators) == 0 {
 		if _, err := os.Stat(p.validatorsPath); err != nil {
-			return fmt.Errorf(
-				"invalid validators path ('%s') provided. Error: %w",
-				p.validatorsPath,
-				err,
-			)
+			return fmt.Errorf("invalid validators path ('%s') provided. Error: %w", p.validatorsPath, err)
 		}
 	}
 
@@ -476,33 +452,6 @@ func (p *genesisParams) predeployStakingSC() (*chain.GenesisAccount, error) {
 	return stakingAccount, nil
 }
 
-// validateRewardWalletAndToken validates reward wallet flag
-func (p *genesisParams) validateRewardWalletAndToken() error {
-	if p.rewardWallet == "" {
-		return errRewardWalletNotDefined
-	}
-
-	if !p.nativeTokenConfig.IsMintable && p.rewardTokenCode == "" {
-		return errRewardTokenOnNonMintable
-	}
-
-	premineInfo, err := helper.ParsePremineInfo(p.rewardWallet)
-	if err != nil {
-		return err
-	}
-
-	if premineInfo.Address == types.ZeroAddress {
-		return errRewardWalletZero
-	}
-
-	// If epoch rewards are enabled, reward wallet must have some amount of premine
-	if p.epochReward > 0 && premineInfo.Amount.Cmp(big.NewInt(0)) < 1 {
-		return errRewardWalletAmountZero
-	}
-
-	return nil
-}
-
 // parsePremineInfo parses premine flag
 func (p *genesisParams) parsePremineInfo() error {
 	p.premineInfos = make([]*helper.PremineInfo, 0, len(p.premine))
@@ -553,9 +502,7 @@ func (p *genesisParams) validateBurnContract() error {
 
 		if p.nativeTokenConfig.IsMintable {
 			if burnContractInfo.Address != types.ZeroAddress {
-				return errors.New(
-					"only zero address is allowed as burn destination for mintable native token",
-				)
+				return errors.New("only zero address is allowed as burn destination for mintable native token")
 			}
 		} else {
 			if burnContractInfo.Address == types.ZeroAddress {
@@ -574,11 +521,7 @@ func (p *genesisParams) validateGenesisBaseFeeConfig() error {
 
 	baseFeeInfo, err := parseBaseFeeConfig(p.baseFeeConfig)
 	if err != nil {
-		return fmt.Errorf(
-			"failed to parse base fee config: %w, provided value %s",
-			err,
-			p.baseFeeConfig,
-		)
+		return fmt.Errorf("failed to parse base fee config: %w, provided value %s", err, p.baseFeeConfig)
 	}
 
 	p.parsedBaseFeeConfig = baseFeeInfo

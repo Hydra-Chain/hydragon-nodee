@@ -78,11 +78,6 @@ type fsm struct {
 	// It is populated only for epoch-ending blocks.
 	commitEpochInput *contractsapi.CommitEpochHydraChainFn
 
-	// maxRewardToDistribute holds info about the max amount of HYDRA that may be needed for rewards distribution
-	// It is send to the RewardPool contract on distributeRewardsFor transaction
-	// It is populated only for epoch-ending blocks.
-	maxRewardToDistribute *big.Int
-
 	// distributeRewardsInput holds info about validators work in a single epoch
 	// mainly, how many blocks they signed during given epoch
 	// It is populated only for epoch-ending blocks.
@@ -272,7 +267,7 @@ func (f *fsm) createDistributeRewardsTx() (*types.Transaction, error) {
 		return nil, err
 	}
 
-	return createStateTransactionWithData(f.Height(), contracts.HydraStakingContract, input, f.maxRewardToDistribute), nil
+	return createStateTransactionWithData(f.Height(), contracts.HydraStakingContract, input, nil), nil
 }
 
 // ValidateCommit is used to validate that a given commit is valid
