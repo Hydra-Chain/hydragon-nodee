@@ -9,7 +9,7 @@ git submodule set-url core-contracts https://github.com/Hydra-Chain/hydragon-cor
 ```
 
 ```
-git submodule update --init  --remote ./core-contracts
+git submodule update --init --remote ./core-contracts
 ```
 
 Install dependencies

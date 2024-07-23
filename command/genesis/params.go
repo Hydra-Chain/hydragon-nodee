@@ -55,10 +55,14 @@ var (
 	errUnsupportedConsensus     = errors.New("specified consensusRaw not supported")
 	errInvalidEpochSize         = errors.New("epoch size must be greater than 1")
 	errRewardWalletAmountZero   = errors.New("reward wallet amount can not be zero or negative")
-	errReserveAccMustBePremined = errors.New("it is mandatory to premine reserve account (0x0 address)")
+	errReserveAccMustBePremined = errors.New(
+		"it is mandatory to premine reserve account (0x0 address)",
+	)
 	errBlockTrackerPollInterval = errors.New("block tracker poll interval must be greater than 0")
 	errBaseFeeChangeDenomZero   = errors.New("base fee change denominator must be greater than 0")
-	errBaseFeeEMZero            = errors.New("base fee elasticity multiplier must be greater than 0")
+	errBaseFeeEMZero            = errors.New(
+		"base fee elasticity multiplier must be greater than 0",
+	)
 	errBaseFeeZero              = errors.New("base fee  must be greater than 0")
 	errRewardWalletNotDefined   = errors.New("reward wallet address must be defined")
 	errRewardTokenOnNonMintable = errors.New("a custom reward token must be defined when " +
@@ -198,7 +202,11 @@ func (p *genesisParams) validateFlags() error {
 	// Validate validatorsPath only if validators information were not provided via CLI flag
 	if len(p.validators) == 0 {
 		if _, err := os.Stat(p.validatorsPath); err != nil {
-			return fmt.Errorf("invalid validators path ('%s') provided. Error: %w", p.validatorsPath, err)
+			return fmt.Errorf(
+				"invalid validators path ('%s') provided. Error: %w",
+				p.validatorsPath,
+				err,
+			)
 		}
 	}
 
@@ -545,7 +553,9 @@ func (p *genesisParams) validateBurnContract() error {
 
 		if p.nativeTokenConfig.IsMintable {
 			if burnContractInfo.Address != types.ZeroAddress {
-				return errors.New("only zero address is allowed as burn destination for mintable native token")
+				return errors.New(
+					"only zero address is allowed as burn destination for mintable native token",
+				)
 			}
 		} else {
 			if burnContractInfo.Address == types.ZeroAddress {
@@ -564,7 +574,11 @@ func (p *genesisParams) validateGenesisBaseFeeConfig() error {
 
 	baseFeeInfo, err := parseBaseFeeConfig(p.baseFeeConfig)
 	if err != nil {
-		return fmt.Errorf("failed to parse base fee config: %w, provided value %s", err, p.baseFeeConfig)
+		return fmt.Errorf(
+			"failed to parse base fee config: %w, provided value %s",
+			err,
+			p.baseFeeConfig,
+		)
 	}
 
 	p.parsedBaseFeeConfig = baseFeeInfo
