@@ -904,9 +904,6 @@ func initProxies(transition *state.Transition, admin types.Address,
 			transition,
 		)
 		if err != nil {
-			fmt.Println("==== failing setupProxy....")
-			fmt.Println(proxyAddress)
-			fmt.Println(proxyInput)
 			return err
 		}
 	}

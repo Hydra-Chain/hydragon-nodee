@@ -205,7 +205,7 @@ func TestFSM_BuildProposal_WithCommitEpochTxGood(t *testing.T) {
 	stateBlock := createDummyStateBlock(parentBlockNumber+1, parent.Hash, extra)
 
 	mBlockBuilder := newBlockBuilderMock(stateBlock)
-	mBlockBuilder.On("WriteTx", mock.Anything).Return(error(nil)).Twice()
+	mBlockBuilder.On("WriteTx", mock.Anything).Return(error(nil)).Repeatability = 3
 
 	blockChainMock := new(blockchainMock)
 
@@ -224,6 +224,8 @@ func TestFSM_BuildProposal_WithCommitEpochTxGood(t *testing.T) {
 		validators:             validators.ToValidatorSet(),
 		commitEpochInput:       createTestCommitEpochInput(t, 0, validatorSet, 10),
 		distributeRewardsInput: createTestDistributeRewardsInput(t, 0, validatorSet, 10),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount: createTestRewardWalletFundAmount(t),
 		exitEventRootHash:      eventRoot,
 		logger:                 hclog.NewNullLogger(),
 	}
@@ -343,6 +345,8 @@ func TestFSM_BuildProposal_EpochEndingBlock_ValidatorsDeltaExists(t *testing.T) 
 		validators:             validatorSet,
 		commitEpochInput:       createTestCommitEpochInput(t, 0, validators, 10),
 		distributeRewardsInput: createTestDistributeRewardsInput(t, 0, validators, 10),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount: createTestRewardWalletFundAmount(t),
 		exitEventRootHash:      types.ZeroHash,
 		logger:                 hclog.NewNullLogger(),
 		newValidatorsDelta:     newDelta,
@@ -431,7 +435,7 @@ func TestFSM_BuildProposal_EpochEndingBlock_FailToGetNextValidatorsHash(t *testi
 	parent := &types.Header{Number: parentBlockNumber, ExtraData: extra.MarshalRLPTo(nil)}
 
 	blockBuilderMock := new(blockBuilderMock)
-	blockBuilderMock.On("WriteTx", mock.Anything).Return(error(nil)).Twice()
+	blockBuilderMock.On("WriteTx", mock.Anything).Return(error(nil)).Repeatability = 3
 	blockBuilderMock.On("Reset").Return(error(nil)).Once()
 	blockBuilderMock.On("Fill").Once()
 
@@ -442,6 +446,8 @@ func TestFSM_BuildProposal_EpochEndingBlock_FailToGetNextValidatorsHash(t *testi
 		validators:             testValidators.ToValidatorSet(),
 		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
 		distributeRewardsInput: createTestDistributeRewardsInput(t, 0, allAccounts, 10),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount: createTestRewardWalletFundAmount(t),
 		exitEventRootHash:      types.ZeroHash,
 		newValidatorsDelta:     newValidatorDelta,
 	}

@@ -402,8 +402,6 @@ func NewServer(config *Config) (*Server, error) {
 		return nil, err
 	}
 
-	fmt.Println("=== server is hit and consensus is starting...")
-
 	// start consensus
 	if err := m.consensus.Start(); err != nil {
 		return nil, err

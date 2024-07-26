@@ -32,13 +32,15 @@ func decodeMethod(method *abi.Method, input []byte, out interface{}) error {
 		return fmt.Errorf("prefix is not correct")
 	}
 
-	inputSize := method.Inputs.Size()
-	fmt.Println("test--- ", inputSize)
-	if inputSize == 0 {
+	// inputSize := method.Inputs.Size()
+	// if inputSize == 0 {
+	inputArgs := input[abiMethodIDLength:]
+	if len(inputArgs) == 0 {
+		// vito - nill or val
 		return decodeImpl(nil, out)
 	}
 
-	val, err := abi.Decode(method.Inputs, input[abiMethodIDLength:])
+	val, err := abi.Decode(method.Inputs, inputArgs)
 	if err != nil {
 		return err
 	}

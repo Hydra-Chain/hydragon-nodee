@@ -15,7 +15,6 @@ import (
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
-	"github.com/0xPolygon/polygon-edge/state"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/mock"
@@ -91,7 +90,17 @@ func createTestCommitEpochInput(t *testing.T, epochID uint64,
 	return commitEpoch
 }
 
-func createTestRewardWalletFundAmount(t *testing.T, transition *state.Transition) *big.Int {
+func createTestFundRewardWalletInput(
+	t *testing.T,
+) *contractsapi.FundRewardWalletFn {
+	t.Helper()
+
+	return &contractsapi.FundRewardWalletFn{}
+}
+
+func createTestRewardWalletFundAmount(t *testing.T) *big.Int {
+	t.Helper()
+
 	blockchainMock := new(blockchainMock)
 	blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
 		Return(big.NewInt(0), nil).
