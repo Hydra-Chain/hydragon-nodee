@@ -124,5 +124,6 @@ func GetProxyImplementationMapping() map[types.Address]types.Address {
 		APRCalculatorContract:         APRCalculatorContractV1,
 		FeeHandlerContract:            FeeHandlerContractV1,
 		RewardWalletContract:          RewardWalletContractV1,
+		DAOIncentiveVaultContract:     DAOIncentiveVaultContractV1,
 	}
 }

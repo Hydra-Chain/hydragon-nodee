@@ -66,8 +66,8 @@ func main() {
 			"LiquidityToken",
 		},
 		{
-			"FeeHandler/FeeHandler.sol",
-			"FeeHandler",
+			"HydraVault/HydraVault.sol",
+			"HydraVault",
 		},
 		{
 			"GenesisProxy/GenesisProxy.sol",

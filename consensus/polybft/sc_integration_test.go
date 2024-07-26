@@ -296,7 +296,7 @@ func TestIntegration_DistributeFee(t *testing.T) {
 
 	alloc := map[types.Address]*chain.GenesisAccount{
 		contracts.FeeHandlerContract: {
-			Code: contractsapi.FeeHandler.DeployedBytecode,
+			Code: contractsapi.HydraVault.DeployedBytecode,
 		},
 		fromAddr: {
 			Balance: fromBalance,

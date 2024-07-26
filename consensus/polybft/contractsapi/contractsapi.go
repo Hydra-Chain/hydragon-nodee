@@ -30,6 +30,9 @@ type InitializeHydraChainFn struct {
 	Governance          types.Address    `abi:"governance"`
 	HydraStakingAddr    types.Address    `abi:"hydraStakingAddr"`
 	HydraDelegationAddr types.Address    `abi:"hydraDelegationAddr"`
+	AprCalculatorAddr   types.Address    `abi:"aprCalculatorAddr"`
+	RewardWalletAddr    types.Address    `abi:"rewardWalletAddr"`
+	HydraVaultAddr      types.Address    `abi:"hydraVaultAddr"`
 	NewBls              types.Address    `abi:"newBls"`
 }
 
@@ -126,6 +129,21 @@ func (r *RegisterHydraChainFn) EncodeAbi() ([]byte, error) {
 
 func (r *RegisterHydraChainFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraChain.Abi.Methods["register"], buf, r)
+}
+
+type DistributeVaultFundsHydraChainFn struct {
+}
+
+func (d *DistributeVaultFundsHydraChainFn) Sig() []byte {
+	return HydraChain.Abi.Methods["distributeVaultFunds"].ID()
+}
+
+func (d *DistributeVaultFundsHydraChainFn) EncodeAbi() ([]byte, error) {
+	return HydraChain.Abi.Methods["distributeVaultFunds"].Encode(d)
+}
+
+func (d *DistributeVaultFundsHydraChainFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraChain.Abi.Methods["distributeVaultFunds"], buf, d)
 }
 
 type NewValidatorEvent struct {
@@ -818,20 +836,20 @@ func (i *InitializeLiquidityTokenFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(LiquidityToken.Abi.Methods["initialize"], buf, i)
 }
 
-type InitializeFeeHandlerFn struct {
-	Owner types.Address `abi:"owner"`
+type InitializeHydraVaultFn struct {
+	Governer types.Address `abi:"governer"`
 }
 
-func (i *InitializeFeeHandlerFn) Sig() []byte {
-	return FeeHandler.Abi.Methods["initialize"].ID()
+func (i *InitializeHydraVaultFn) Sig() []byte {
+	return HydraVault.Abi.Methods["initialize"].ID()
 }
 
-func (i *InitializeFeeHandlerFn) EncodeAbi() ([]byte, error) {
-	return FeeHandler.Abi.Methods["initialize"].Encode(i)
+func (i *InitializeHydraVaultFn) EncodeAbi() ([]byte, error) {
+	return HydraVault.Abi.Methods["initialize"].Encode(i)
 }
 
-func (i *InitializeFeeHandlerFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(FeeHandler.Abi.Methods["initialize"], buf, i)
+func (i *InitializeHydraVaultFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraVault.Abi.Methods["initialize"], buf, i)
 }
 
 type ProtectSetUpProxyGenesisProxyFn struct {
