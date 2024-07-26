@@ -137,6 +137,12 @@ func (m *blockchainMock) GetReceiptsByHash(hash types.Hash) ([]*types.Receipt, e
 	return args.Get(0).([]*types.Receipt), args.Error(1) //nolint:forcetypeassert
 }
 
+func (m *blockchainMock) GetAccountBalance(block *types.Header, addr types.Address) (*big.Int, error) {
+	args := m.Called(block, addr)
+
+	return args.Get(0).(*big.Int), args.Error(1) //nolint:forcetypeassert
+}
+
 var _ polybftBackend = (*polybftBackendMock)(nil)
 
 type polybftBackendMock struct {

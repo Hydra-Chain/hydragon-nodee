@@ -56,11 +56,21 @@ type SystemStateImpl struct {
 	hydraDelegationContract       *contract.Contract
 	vestingManagerFactoryContract *contract.Contract
 	aprCalculatorContract         *contract.Contract
+	rewardWalletContract          *contract.Contract
 	sidechainBridgeContract       *contract.Contract
 }
 
 // NewSystemState initializes new instance of systemState which abstracts smart contracts functions
-func NewSystemState(hydraChainAddr types.Address, hydraStakingAddr types.Address, hydraDelegationAddr types.Address, vestingManagerFactoryAddr types.Address, aprCalculatorAddr types.Address, stateRcvAddr types.Address, provider contract.Provider) *SystemStateImpl {
+func NewSystemState(
+	hydraChainAddr types.Address,
+	hydraStakingAddr types.Address,
+	hydraDelegationAddr types.Address,
+	vestingManagerFactoryAddr types.Address,
+	aprCalculatorAddr types.Address,
+	rewardWalletAddr types.Address,
+	stateRcvAddr types.Address,
+	provider contract.Provider,
+) *SystemStateImpl {
 	s := &SystemStateImpl{}
 	s.hydraChainContract = contract.NewContract(
 		ethgo.Address(hydraChainAddr),
@@ -85,6 +95,11 @@ func NewSystemState(hydraChainAddr types.Address, hydraStakingAddr types.Address
 	s.aprCalculatorContract = contract.NewContract(
 		ethgo.Address(aprCalculatorAddr),
 		contractsapi.APRCalculator.Abi, contract.WithProvider(provider),
+	)
+
+	s.rewardWalletContract = contract.NewContract(
+		ethgo.Address(rewardWalletAddr),
+		contractsapi.RewardWallet.Abi, contract.WithProvider(provider),
 	)
 
 	// Hydra modification: StateReceiver contract is not used

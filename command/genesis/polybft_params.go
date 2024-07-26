@@ -329,6 +329,10 @@ func (p *genesisParams) deployContracts(totalStake *big.Int) (map[types.Address]
 			artifact: contractsapi.FeeHandler,
 			address:  contracts.FeeHandlerContractV1,
 		},
+		{
+			artifact: contractsapi.RewardWallet,
+			address:  contracts.RewardWalletContractV1,
+		},
 	}
 
 	// if !params.nativeTokenConfig.IsMintable {
@@ -371,6 +375,9 @@ func (p *genesisParams) deployContracts(totalStake *big.Int) (map[types.Address]
 	// HydraStaking must have funds pre-allocated, because of withdrawal workflow
 	allocations[contracts.HydraStakingContract].Balance = totalStake
 
+	// RewardWallet must have funds pre-allocated (2/3 of maxUint256)
+	allocations[contracts.RewardWalletContract].Balance = common.GetTwoThirdOfMaxUint256()
+
 	return allocations, nil
 }
 
@@ -410,7 +417,6 @@ func (p *genesisParams) getValidatorAccounts() ([]*validator.GenesisValidator, e
 				MultiAddr: parts[0],
 				Address:   addr,
 				BlsKey:    trimmedBLSKey,
-				Stake:     command.DefaultStake,
 			}
 		}
 

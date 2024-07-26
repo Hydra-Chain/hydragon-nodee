@@ -84,6 +84,9 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 			contracts.LiquidityTokenContract: {
 				Code: contractsapi.LiquidityToken.DeployedBytecode,
 			},
+			contracts.RewardWalletContract: {
+				Code: contractsapi.RewardWallet.DeployedBytecode,
+			},
 		}
 
 		// validator data for polybft config
@@ -111,7 +114,6 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 				Address:      val.Address,
 				BlsKey:       hex.EncodeToString(val.BlsKey.Marshal()),
 				BlsSignature: hex.EncodeToString(signatureBytes),
-				Stake:        initialMinStake,
 			}
 
 			// create delegators
@@ -155,16 +157,16 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		err = initHydraDelegation(polyBFTConfig, transition)
 		require.NoError(t, err)
 
-		// initialize RewardWallet SC
-		err = initRewardWallet(polyBFTConfig, transition)
-		require.NoError(t, err)
-
 		// init VestingManagerFactory
 		err = initVestingManagerFactory(polyBFTConfig, transition)
 		require.NoError(t, err)
 
 		// init APRCalculator
 		err = initAPRCalculator(polyBFTConfig, transition)
+		require.NoError(t, err)
+
+		// initialize RewardWallet SC
+		err = initRewardWallet(polyBFTConfig, transition)
 		require.NoError(t, err)
 
 		// delegate amounts to validators
@@ -205,15 +207,15 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 			result.GasUsed,
 		)
 
+		// Normally injecting balance to the reward wallet is handled by a higher order method in the executor.go
+		// but here we use call2 directly so we need to do it manually
+		rewardWalletFundAmount := createTestRewardWalletFundAmount(t, transition)
+		transition.Txn().AddBalance(contracts.RewardWalletContract, rewardWalletFundAmount)
+
 		// create input for distribute rewards
 		distributeRewards := createTestDistributeRewardsInput(t, 1, accSet, polyBFTConfig.EpochSize)
 		distributeRewardsInput, err := distributeRewards.EncodeAbi()
 		require.NoError(t, err)
-
-		// Normally injecting balance to the system caller is handled by a higher order method in the executor.go
-		// but here we use call2 directly so we need to do it manually
-		// vito - add funds to the RewardWallet in a similar way
-		// transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
 
 		// call reward distributor
 		result = transition.Call2(
@@ -254,9 +256,6 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		distributeRewards = createTestDistributeRewardsInput(t, 2, accSet, polyBFTConfig.EpochSize)
 		distributeRewardsInput, err = distributeRewards.EncodeAbi()
 		require.NoError(t, err)
-
-		// vito
-		// transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
 
 		// call reward distributor
 		result = transition.Call2(

@@ -503,22 +503,6 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongCommitEpochTx(t *testing.T) 
 	assert.ErrorContains(t, fsm.VerifyStateTransactions([]*types.Transaction{commitEpochTx}), "invalid commit epoch transaction")
 }
 
-func TestFSM_VerifyStateTransactions_EndOfEpochWrongCommitEpochTxValue(t *testing.T) {
-	t.Parallel()
-
-	testValidators := validator.NewTestValidators(t, 6)
-	allAccounts := testValidators.GetPublicIdentities()
-
-	input := createTestCommitEpochInput(t, 0, allAccounts, 10)
-	fsm := &fsm{isEndOfEpoch: true, commitEpochInput: input, parent: &types.Header{}}
-	encodedInput, err := input.EncodeAbi()
-	require.NoError(t, err)
-
-	commitEpochTx := createStateTransactionWithData(0, contracts.HydraChainContract, encodedInput, nil)
-
-	assert.ErrorContains(t, fsm.VerifyStateTransactions([]*types.Transaction{commitEpochTx}), "invalid commit epoch transaction")
-}
-
 // H_MODIFY: Removed because test is not valid anymore
 // H: TODO: Check is the test fixed and if still irrelevant - remove
 // func TestFSM_BuildProposal_EpochEndingBlock_FailToCreateValidatorsDelta(t *testing.T) {

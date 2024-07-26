@@ -35,11 +35,11 @@ func initHydraChain(polyBFTConfig PolyBFTConfig, transition *state.Transition) e
 	}
 
 	initFn := &contractsapi.InitializeHydraChainFn{
-		NewValidators:          initialValidators,
-		Governance:             polyBFTConfig.Governance,
-		StakingContractAddr:    contracts.HydraStakingContract,
-		DelegationContractAddr: contracts.HydraDelegationContract,
-		NewBls:                 contracts.BLSContract,
+		NewValidators:       initialValidators,
+		Governance:          polyBFTConfig.Governance,
+		HydraStakingAddr:    contracts.HydraStakingContract,
+		HydraDelegationAddr: contracts.HydraDelegationContract,
+		NewBls:              contracts.BLSContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -59,14 +59,14 @@ func initHydraStaking(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 	}
 
 	initFn := &contractsapi.InitializeHydraStakingFn{
-		InitialStakers:           initialStakers,
-		NewMinStake:              initialMinStake,
-		NewLiquidToken:           contracts.LiquidityTokenContract,
-		HydraChainAddr:           contracts.HydraChainContract,
-		AprCalculatorAddr:        contracts.APRCalculatorContract,
-		Governance:               polyBFTConfig.Governance,
-		DelegationContractAddr:   contracts.HydraDelegationContract,
-		RewardWalletContractAddr: contracts.RewardWalletContract,
+		InitialStakers:      initialStakers,
+		NewMinStake:         initialMinStake,
+		NewLiquidToken:      contracts.LiquidityTokenContract,
+		HydraChainAddr:      contracts.HydraChainContract,
+		AprCalculatorAddr:   contracts.APRCalculatorContract,
+		Governance:          polyBFTConfig.Governance,
+		HydraDelegationAddr: contracts.HydraDelegationContract,
+		RewardWalletAddr:    contracts.RewardWalletContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -94,7 +94,7 @@ func initHydraDelegation(polyBFTConfig PolyBFTConfig, transition *state.Transiti
 		HydraStakingAddr:          contracts.HydraStakingContract,
 		HydraChainAddr:            contracts.HydraChainContract,
 		VestingManagerFactoryAddr: contracts.VestingManagerFactoryContract,
-		RewardWalletConnectorAddr: contracts.RewardWalletContract,
+		RewardWalletAddr:          contracts.RewardWalletContract,
 	}
 
 	input, err := initFn.EncodeAbi()

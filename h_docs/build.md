@@ -7,13 +7,13 @@ Information about building and using the application
 1. MacOS ARM64
 
 ```
-CGO_ENABLED=0 GOOS=darwin GOARCH=arm64  go build -o hydra -a -installsuffix cgo  main.go
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o hydra -a -installsuffix cgo main.go
 ```
 
 2. Linux
 
 ```
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hydra -a -installsuffix cgo  main.go
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hydra -a -installsuffix cgo main.go
 ```
 
 ## Move to path

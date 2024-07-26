@@ -51,9 +51,9 @@ var (
 	HydraChain                      *artifact.Artifact
 	HydraStaking                    *artifact.Artifact
 	HydraDelegation                 *artifact.Artifact
-	RewardWallet                    *artifact.Artifact
 	VestingManagerFactory           *artifact.Artifact
 	APRCalculator                   *artifact.Artifact
+	RewardWallet                    *artifact.Artifact
 	RootERC721                      *artifact.Artifact
 	RootERC1155                     *artifact.Artifact
 	EIP1559Burn                     *artifact.Artifact
@@ -93,17 +93,17 @@ func init() {
 		log.Fatal(err)
 	}
 
-	RewardWallet, err = artifact.DecodeArtifact([]byte(RewardWalletArtifact))
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	VestingManagerFactory, err = artifact.DecodeArtifact([]byte(VestingManagerFactoryArtifact))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	APRCalculator, err = artifact.DecodeArtifact([]byte(APRCalculatorArtifact))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	RewardWallet, err = artifact.DecodeArtifact([]byte(RewardWalletArtifact))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -123,7 +123,9 @@ func init() {
 		log.Fatal(err)
 	}
 
-	TransparentUpgradeableProxy, err = artifact.DecodeArtifact([]byte(TransparentUpgradeableProxyArtifact))
+	TransparentUpgradeableProxy, err = artifact.DecodeArtifact(
+		[]byte(TransparentUpgradeableProxyArtifact),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

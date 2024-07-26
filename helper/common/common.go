@@ -35,6 +35,10 @@ var (
 		"Please migrate to the PolyBFT protocol and plan your activities accordingly.\n" +
 		"More information on how to execute the migration process can be found here" +
 		"(https://wiki.polygon.technology/docs/edge/operate/ibft-to-polybft/)."
+
+	maxUint256 = big.NewInt(0).Add(
+		big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), nil),
+		big.NewInt(-1))
 )
 
 // RetryForever will execute a function until it completes without error or
@@ -380,4 +384,17 @@ func EncodeUint64ToBytes(value uint64) []byte {
 // EncodeBytesToUint64 big endian byte slice to uint64
 func EncodeBytesToUint64(b []byte) uint64 {
 	return binary.BigEndian.Uint64(b)
+}
+
+// getTwoThirdOfMaxUint256 returns 2/3 of maxUint256
+func GetTwoThirdOfMaxUint256() *big.Int {
+	// Define the numerator and denominator for 2/3
+	two := big.NewInt(2)
+	three := big.NewInt(3)
+
+	// Calculate (2/3) * MaxUint256
+	requiredAmount := new(big.Int).Mul(maxUint256, two) // Multiply MaxUint256 by 2
+	requiredAmount.Div(requiredAmount, three)           // Divide the result by 3
+
+	return requiredAmount
 }

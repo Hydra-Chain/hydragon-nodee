@@ -36,11 +36,11 @@ var (
 	// APRCalculatorContract is an address of the APRCalculator's proxy contract on the chain
 	APRCalculatorContract = types.StringToAddress("0x109")
 	// APRCalculatorContractV1 is an address of the APRCalculator's implementation contract deployed on the chain
-	APRCalculatorContractV1 = types.StringToAddress("1091")
+	APRCalculatorContractV1 = types.StringToAddress("0x1091")
 	// RewardWalletContract is an address of the RewardWallet's proxy contract on the chain
 	RewardWalletContract = types.StringToAddress("0x110")
 	// RewardWalletContractV1 is an address of the RewardWallet's implementation contract deployed on the chain
-	RewardWalletContractV1 = types.StringToAddress("1101")
+	RewardWalletContractV1 = types.StringToAddress("0x1101")
 	// StateReceiverContract is an address of bridge proxy contract on the child chain
 	StateReceiverContract = types.StringToAddress("0x1001")
 	// StateReceiverContractV1 is an address of bridge implementation contract on the child chain

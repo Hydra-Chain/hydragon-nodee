@@ -48,10 +48,7 @@ func main() {
 			"HydraDelegation/HydraDelegation.sol",
 			"HydraDelegation",
 		},
-		{
-			"RewardWallet/RewardWallet.sol",
-			"RewardWallet",
-		},
+
 		{
 			"VestingManager/VestingManagerFactory.sol",
 			"VestingManagerFactory",
@@ -59,6 +56,10 @@ func main() {
 		{
 			"APRCalculator/APRCalculator.sol",
 			"APRCalculator",
+		},
+		{
+			"RewardWallet/RewardWallet.sol",
+			"RewardWallet",
 		},
 		{
 			"LiquidityToken/LiquidityToken.sol",
