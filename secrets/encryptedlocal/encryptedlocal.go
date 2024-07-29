@@ -91,15 +91,28 @@ var onSetHandlers = map[string]AdditionalHandlerFunc{
 	secrets.ValidatorKey:    baseOnSetHandler,
 }
 
-func baseOnSetHandler(esm *EncryptedLocalSecretsManager, name string, value []byte) ([]byte, error) {
-	esm.logger.Info("Here is the raw hex value of your secret. \nPlease copy it and store it in a safe place.", name, string(value))
-	confirmValue, err := esm.prompt.DefaultPrompt("Please rewrite the secret value to confirm that you have copied it down correctly.", "")
+func baseOnSetHandler(
+	esm *EncryptedLocalSecretsManager,
+	name string,
+	value []byte,
+) ([]byte, error) {
+	esm.logger.Info(
+		"Here is the raw hex value of your secret. \nPlease copy it and store it in a safe place.",
+		name,
+		string(value),
+	)
+	confirmValue, err := esm.prompt.DefaultPrompt(
+		`Please re-type the secret key value (present above, after the "=") to confirm that you have backed it up in a safe location.`,
+		"",
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	if confirmValue != string(value) {
-		esm.logger.Error("The secret value you entered does not match the original value. Please try again.")
+		esm.logger.Error(
+			"The secret value you entered does not match the original value. Please try again.",
+		)
 		return nil, errors.New("secret value mismatch")
 	} else {
 		esm.logger.Info("The secret value you entered matches the original value. Continuing.")
@@ -126,7 +139,11 @@ var onGetHandlers = map[string]AdditionalHandlerFunc{
 	secrets.ValidatorKey:    baseOnGetHandler,
 }
 
-func baseOnGetHandler(esm *EncryptedLocalSecretsManager, name string, value []byte) ([]byte, error) {
+func baseOnGetHandler(
+	esm *EncryptedLocalSecretsManager,
+	name string,
+	value []byte,
+) ([]byte, error) {
 	if esm.pwd == nil || len(esm.pwd) == 0 {
 		var err error
 		esm.pwd, err = esm.prompt.InputPassword(false)
