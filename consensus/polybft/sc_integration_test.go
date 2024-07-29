@@ -114,6 +114,7 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 				Address:      val.Address,
 				BlsKey:       hex.EncodeToString(val.BlsKey.Marshal()),
 				BlsSignature: hex.EncodeToString(signatureBytes),
+				Stake:        initialMinStake,
 			}
 
 			// create delegators
