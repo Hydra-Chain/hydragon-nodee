@@ -14,7 +14,9 @@ import (
 )
 
 var (
-	ErrInvalidPassword     = errors.New("Password must contain at least one number, one uppercase letter, one special character, and be at least 8 characters long")
+	ErrInvalidPassword = errors.New(
+		"Password must contain at least one number, one uppercase letter, one special character, and be at least 8 characters long",
+	)
 	ErrPasswordMismatch    = errors.New("Passwords do not match")
 	ErrTerminatedOperation = errors.New("Operation terminated")
 )
@@ -61,7 +63,10 @@ func (p *Prompt) GenerateMnemonic(generator MnemonicGenerator) (string, error) {
 	mnemonic, err := generator.GenerateMnemonic()
 
 	fmt.Println("\nHere is your mnemonic. Please copy it and store it in a safe place.")
-	repeatMnemonic, err := p.DefaultPrompt("Please rewrite the mnemonic to confirm that you have copied it down correctly.", "")
+	repeatMnemonic, err := p.DefaultPrompt(
+		"Please re-type the mnemonic to confirm that you have backed it up in a safe location.",
+		"",
+	)
 	if err != nil {
 		return "", err
 	}
