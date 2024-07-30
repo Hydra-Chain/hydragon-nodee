@@ -287,36 +287,6 @@ func (s *systemStateMock) GetVotingPowerExponent() (*BigNumDecimal, error) {
 	return exp, err
 }
 
-func (s *systemStateMock) GetBaseReward() (*BigNumDecimal, error) {
-	args := s.Called()
-	reward, _ := args.Get(0).(*BigNumDecimal)
-	var err error
-	if args.Get(1) != nil {
-		err, _ = args.Get(1).(error)
-	}
-
-	return reward, err
-}
-
-func (s *systemStateMock) GetStakedBalance() (*big.Int, error) {
-	args := s.Called()
-	balance, _ := args.Get(0).(*big.Int)
-	var err error
-	if args.Get(1) != nil {
-		err, _ = args.Get(1).(error)
-	}
-
-	return balance, err
-}
-
-func (s *systemStateMock) GetMacroFactor() (*big.Int, error) {
-	return big.NewInt(7500), nil
-}
-
-func (s *systemStateMock) GetMaxRSI() (*big.Int, error) {
-	return big.NewInt(17000), nil
-}
-
 var _ contract.Provider = (*stateProviderMock)(nil)
 
 type stateProviderMock struct {

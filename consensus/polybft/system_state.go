@@ -37,14 +37,6 @@ type SystemState interface {
 	GetVotingPowerExponent() (exponent *BigNumDecimal, err error)
 	// GetValidatorBlsKey retrieves validator BLS public key from the HydraChain smart contract
 	GetValidatorBlsKey(addr types.Address) (*bls.PublicKey, error)
-	// GetBaseReward retrieves base reward from the ARPCalculator smart contract
-	GetBaseReward() (*BigNumDecimal, error)
-	// GetStakedBalance retrieves total staked balance from the HydraStaking smart contract
-	GetStakedBalance() (*big.Int, error)
-	// GetMacroFactor retrieves APR macro factor from the APRCalculator smart contract
-	GetMacroFactor() (*big.Int, error)
-	// GetMaxRSI retrieves the max RSI from the APRCalculator smart contract
-	GetMaxRSI() (*big.Int, error)
 }
 
 var _ SystemState = &SystemStateImpl{}
@@ -145,65 +137,6 @@ func (s *SystemStateImpl) GetVotingPowerExponent() (exponent *BigNumDecimal, err
 	}
 
 	return &BigNumDecimal{Numerator: expNumerator, Denominator: expDenominator}, nil
-}
-
-// GetBaseReward H: fetch the base reward from the apr calculator contract
-func (s *SystemStateImpl) GetBaseReward() (baseReward *BigNumDecimal, err error) {
-	rawOutput, err := s.aprCalculatorContract.Call("base", ethgo.Latest)
-	if err != nil {
-		return nil, err
-	}
-
-	numerator, ok := rawOutput["0"].(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("failed to decode baseReward")
-	}
-
-	return &BigNumDecimal{Numerator: numerator, Denominator: big.NewInt(10000)}, nil
-}
-
-func (s *SystemStateImpl) GetMaxRSI() (maxRSI *big.Int, err error) {
-	rawOutput, err := s.aprCalculatorContract.Call("MAX_RSI_BONUS", ethgo.Latest)
-	if err != nil {
-		return nil, err
-	}
-
-	maxRSI, ok := rawOutput["0"].(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("failed to decode max RSI numerator")
-	}
-
-	return maxRSI, nil
-}
-
-// GetStakedBalance H: fetch the total staked balance from the hydra staking contract
-func (s *SystemStateImpl) GetStakedBalance() (*big.Int, error) {
-	rawOutput, err := s.hydraStakingContract.Call("totalBalance", ethgo.Latest)
-	if err != nil {
-		return nil, err
-	}
-
-	stake, ok := rawOutput["0"].(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("failed to decode total stake")
-	}
-
-	return stake, nil
-}
-
-// GetMacroFactor H: fetch the APR macro factor from the apr calculator contract
-func (s *SystemStateImpl) GetMacroFactor() (*big.Int, error) {
-	rawOutput, err := s.aprCalculatorContract.Call("macroFactor", ethgo.Latest)
-	if err != nil {
-		return nil, err
-	}
-
-	macro, ok := rawOutput["0"].(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("failed to decode macro factor")
-	}
-
-	return macro, nil
 }
 
 // H: add a function to fetch the validator bls key

@@ -40,9 +40,6 @@ var (
 	)
 	errCommitEpochTxSingleExpected = errors.New("only one commit epoch transaction is allowed " +
 		"in an epoch ending block")
-	errFundRewardWalletTxDoesNotExist = errors.New(
-		"fund reward wallet transaction is not found in the epoch ending block",
-	)
 	errFundRewardWalletTxSingleExpected = errors.New("only one fund reward wallet transaction is allowed " +
 		"in an epoch ending block")
 	errDistributeRewardsTxDoesNotExist = errors.New("distribute rewards transaction is " +
@@ -550,7 +547,7 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 		case *contractsapi.FundRewardWalletFn:
 			if fundRewardWalletTxExists {
 				// if we already validated fund reward wallet tx,
-				// that means someone added more fund reward wallet tx to block,
+				// that means someone added more txs to fund reward wallet,
 				// which is invalid
 				return errFundRewardWalletTxSingleExpected
 			}
@@ -583,12 +580,6 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			// this is a check if commit epoch transaction is not in the list of transactions at all
 			// but it should be
 			return errCommitEpochTxDoesNotExist
-		}
-
-		if !fundRewardWalletTxExists {
-			// this is a check if fund reward wallet transaction is not in the list of transactions at all
-			// but it should be
-			return errFundRewardWalletTxDoesNotExist
 		}
 
 		if !distributeRewardsTxExists {
@@ -715,10 +706,6 @@ func (f *fsm) verifyCommitEpochTx(commitEpochTx *types.Transaction) error {
 // verifyCommitEpochTx creates commit epoch transaction and compares its hash with the one extracted from the block.
 func (f *fsm) verifyFundRewardWalletTx(fundRewardWalletTx *types.Transaction) error {
 	if f.isEndOfEpoch {
-		if fundRewardWalletTx.Value == nil || fundRewardWalletTx.Value.Cmp(big.NewInt(0)) == 0 {
-			return fmt.Errorf("cannot send fund transaction without value")
-		}
-
 		localFundRewardWalletTx, err := f.createRewardWalletFundTx()
 		if err != nil {
 			return err

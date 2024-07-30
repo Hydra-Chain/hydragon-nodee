@@ -603,7 +603,7 @@ func TestConsensusRuntime_calculateRewardWalletFundTxValue(t *testing.T) {
 	t.Run("return err of inner call", func(t *testing.T) {
 		blockchainMock := new(blockchainMock)
 		blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
-			Return(nil, assert.AnError)
+			Return(big.NewInt(0), assert.AnError)
 
 		rewardWalletCalculator := &rewardWalletCalculator{
 			blockchain: blockchainMock,
