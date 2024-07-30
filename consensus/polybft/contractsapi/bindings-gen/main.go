@@ -125,13 +125,9 @@ func main() {
 			false,
 			[]string{
 				"initialize",
-				"distributeReward",
 				"fund()",
 			},
-			[]string{
-				"Received",
-				"RewardDistributed",
-			},
+			[]string{},
 		},
 		{
 			"LiquidityToken",

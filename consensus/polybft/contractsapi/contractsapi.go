@@ -783,23 +783,6 @@ func (i *InitializeRewardWalletFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(RewardWallet.Abi.Methods["initialize"], buf, i)
 }
 
-type DistributeRewardRewardWalletFn struct {
-	To     types.Address `abi:"to"`
-	Amount *big.Int      `abi:"amount"`
-}
-
-func (d *DistributeRewardRewardWalletFn) Sig() []byte {
-	return RewardWallet.Abi.Methods["distributeReward"].ID()
-}
-
-func (d *DistributeRewardRewardWalletFn) EncodeAbi() ([]byte, error) {
-	return RewardWallet.Abi.Methods["distributeReward"].Encode(d)
-}
-
-func (d *DistributeRewardRewardWalletFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(RewardWallet.Abi.Methods["distributeReward"], buf, d)
-}
-
 type FundRewardWalletFn struct {
 }
 
@@ -813,56 +796,6 @@ func (f *FundRewardWalletFn) EncodeAbi() ([]byte, error) {
 
 func (f *FundRewardWalletFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(RewardWallet.Abi.MethodsBySignature["fund()"], buf, f)
-}
-
-type ReceivedEvent struct {
-	From   types.Address `abi:"from"`
-	Amount *big.Int      `abi:"amount"`
-}
-
-func (*ReceivedEvent) Sig() ethgo.Hash {
-	return RewardWallet.Abi.Events["Received"].ID()
-}
-
-func (r *ReceivedEvent) Encode() ([]byte, error) {
-	return RewardWallet.Abi.Events["Received"].Inputs.Encode(r)
-}
-
-func (r *ReceivedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !RewardWallet.Abi.Events["Received"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(RewardWallet.Abi.Events["Received"], log, r)
-}
-
-func (r *ReceivedEvent) Decode(input []byte) error {
-	return RewardWallet.Abi.Events["Received"].Inputs.DecodeStruct(input, &r)
-}
-
-type RewardDistributedEvent struct {
-	Account types.Address `abi:"account"`
-	Amount  *big.Int      `abi:"amount"`
-}
-
-func (*RewardDistributedEvent) Sig() ethgo.Hash {
-	return RewardWallet.Abi.Events["RewardDistributed"].ID()
-}
-
-func (r *RewardDistributedEvent) Encode() ([]byte, error) {
-	return RewardWallet.Abi.Events["RewardDistributed"].Inputs.Encode(r)
-}
-
-func (r *RewardDistributedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !RewardWallet.Abi.Events["RewardDistributed"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(RewardWallet.Abi.Events["RewardDistributed"], log, r)
-}
-
-func (r *RewardDistributedEvent) Decode(input []byte) error {
-	return RewardWallet.Abi.Events["RewardDistributed"].Inputs.DecodeStruct(input, &r)
 }
 
 type InitializeLiquidityTokenFn struct {

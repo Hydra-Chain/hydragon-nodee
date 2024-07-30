@@ -139,7 +139,8 @@ func DirectoryExists(directoryPath string) bool {
 	}
 
 	// Check if the directory exists, and that it's actually a directory if there is a hit
-	if fileInfo, statErr := os.Stat(pathAbs); os.IsNotExist(statErr) || (fileInfo != nil && !fileInfo.IsDir()) {
+	if fileInfo, statErr := os.Stat(pathAbs); os.IsNotExist(statErr) ||
+		(fileInfo != nil && !fileInfo.IsDir()) {
 		return false
 	}
 
@@ -160,7 +161,8 @@ func FileExists(filePath string) bool {
 	}
 
 	// Check if the file exists, and that it's actually a file if there is a hit
-	if fileInfo, statErr := os.Stat(pathAbs); os.IsNotExist(statErr) || (fileInfo != nil && fileInfo.IsDir()) {
+	if fileInfo, statErr := os.Stat(pathAbs); os.IsNotExist(statErr) ||
+		(fileInfo != nil && fileInfo.IsDir()) {
 		return false
 	}
 
@@ -240,7 +242,10 @@ func verifyFileOwnerAndPermissions(path string, info fs.FileInfo, expectedPerms 
 
 	// check if permissions are set correctly by the owner
 	if info.Mode() != expectedPerms {
-		return fmt.Errorf("permissions of the file/directory '%s' are set incorrectly by another user", path)
+		return fmt.Errorf(
+			"permissions of the file/directory '%s' are set incorrectly by another user",
+			path,
+		)
 	}
 
 	return nil
@@ -392,9 +397,7 @@ func GetTwoThirdOfMaxUint256() *big.Int {
 	two := big.NewInt(2)
 	three := big.NewInt(3)
 
-	// Calculate (2/3) * MaxUint256
-	requiredAmount := new(big.Int).Mul(maxUint256, two) // Multiply MaxUint256 by 2
-	requiredAmount.Div(requiredAmount, three)           // Divide the result by 3
-
-	return requiredAmount
+	// Calculate and return 2/3 of MaxUint256
+	requiredAmount := new(big.Int)
+	return requiredAmount.Mul(maxUint256, two).Div(requiredAmount, three)
 }

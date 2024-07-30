@@ -1,12 +1,17 @@
 package polybft
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/hashicorp/go-hclog"
+)
+
+var (
+	ErrCannotGetAccountBalance = fmt.Errorf("cannot get account balance")
 )
 
 type RewardWalletCalculator interface {
@@ -18,7 +23,10 @@ type rewardWalletCalculator struct {
 	blockchain blockchainBackend
 }
 
-func NewRewardWalletCalculator(logger hclog.Logger, blockchain blockchainBackend) RewardWalletCalculator {
+func NewRewardWalletCalculator(
+	logger hclog.Logger,
+	blockchain blockchainBackend,
+) RewardWalletCalculator {
 	return &rewardWalletCalculator{
 		logger:     logger,
 		blockchain: blockchain,
@@ -31,7 +39,7 @@ func (r *rewardWalletCalculator) GetRewardWalletFundAmount(block *types.Header) 
 	// Get the current RewardWallet balance
 	currentBalance, err := r.blockchain.GetAccountBalance(block, contracts.RewardWalletContract)
 	if err != nil {
-		return nil, err
+		return nil, ErrCannotGetAccountBalance
 	}
 
 	// Check if the current balance is less than the required amount

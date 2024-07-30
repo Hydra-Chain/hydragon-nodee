@@ -208,10 +208,19 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 			result.GasUsed,
 		)
 
-		// Normally injecting balance to the reward wallet is handled by a higher order method in the executor.go
-		// but here we use call2 directly so we need to do it manually
+		// create input for reward wallet fund
 		rewardWalletFundAmount := createTestRewardWalletFundAmount(t)
-		transition.Txn().AddBalance(contracts.RewardWalletContract, rewardWalletFundAmount)
+		fundRewardWalletInput, err := createTestFundRewardWalletInput(t).EncodeAbi()
+		require.NoError(t, err)
+
+		// call reward distributor
+		result = transition.Call2(
+			contracts.SystemCaller,
+			contracts.RewardWalletContract,
+			fundRewardWalletInput,
+			rewardWalletFundAmount,
+			10000000000,
+		)
 
 		// create input for distribute rewards
 		distributeRewards := createTestDistributeRewardsInput(t, 1, accSet, polyBFTConfig.EpochSize)

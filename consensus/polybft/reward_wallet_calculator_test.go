@@ -30,7 +30,7 @@ func TestRewardWalletCalculator_GetRewardWalletFundAmount(t *testing.T) {
 		calculator := NewRewardWalletCalculator(hclog.Default(), blockchainMock)
 
 		_, err := calculator.GetRewardWalletFundAmount(block)
-		assert.EqualError(t, err, assert.AnError.Error())
+		assert.EqualError(t, err, "cannot get account balance")
 
 		// Assert that the expected calls were made
 		blockchainMock.AssertExpectations(t)
@@ -47,6 +47,22 @@ func TestRewardWalletCalculator_GetRewardWalletFundAmount(t *testing.T) {
 
 		requiredAmount := common.GetTwoThirdOfMaxUint256()
 		assert.Equal(t, requiredAmount, amount)
+	})
+
+	t.Run("returns partial amount to fund the reward wallet", func(t *testing.T) {
+		blockchainMock := mockSetup()
+
+		requiredAmount := common.GetTwoThirdOfMaxUint256()
+		currentBalance := new(big.Int).Div(requiredAmount, big.NewInt(3))
+		blockchainMock.On("GetAccountBalance", block, contracts.RewardWalletContract).Return(currentBalance, nil)
+
+		calculator := NewRewardWalletCalculator(hclog.Default(), blockchainMock)
+
+		amount, err := calculator.GetRewardWalletFundAmount(block)
+		assert.NoError(t, err)
+
+		remainingAmountToFund := new(big.Int).Sub(requiredAmount, currentBalance)
+		assert.Equal(t, remainingAmountToFund, amount)
 	})
 
 	t.Run("returns 0 amount to fund the amount because there are sufficient HYDRA", func(t *testing.T) {

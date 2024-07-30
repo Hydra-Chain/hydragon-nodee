@@ -422,14 +422,8 @@ func TestConsensusRuntime_FSM_EndOfEpoch_BuildCommitEpoch(t *testing.T) {
 	blockchainMock := new(blockchainMock)
 	blockchainMock.On("NewBlockBuilder", mock.Anything).Return(&BlockBuilder{}, nil).Once()
 	blockchainMock.On("GetHeaderByNumber", mock.Anything).Return(headerMap.getHeader)
-
-	systemStateMock := new(systemStateMock)
 	blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
 		Return(big.NewInt(0), nil)
-	minStakedBalance := new(big.Int).Mul(big.NewInt(1), big.NewInt(1e18))
-	systemStateMock.On("GetStakedBalance").Return(minStakedBalance, nil)
-	systemStateMock.On("GetBaseReward").
-		Return(&BigNumDecimal{Numerator: big.NewInt(500), Denominator: big.NewInt(10000)}, nil)
 
 	rewardWalletCalculator := &rewardWalletCalculator{
 		blockchain: blockchainMock,
@@ -601,7 +595,52 @@ func TestConsensusRuntime_restartEpoch_SameEpochNumberAsTheLastOne(t *testing.T)
 	blockchainMock.AssertExpectations(t)
 }
 
-func TestConsensusRuntime_calculateCommitEpochInput_SecondEpoch(t *testing.T) {
+func TestConsensusRuntime_calculateRewardWalletFundTxValue(t *testing.T) {
+	t.Parallel()
+
+	block := &types.Header{}
+
+	t.Run("return err of inner call", func(t *testing.T) {
+		blockchainMock := new(blockchainMock)
+		blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
+			Return(nil, assert.AnError)
+
+		rewardWalletCalculator := &rewardWalletCalculator{
+			blockchain: blockchainMock,
+		}
+
+		runtime := &consensusRuntime{
+			rewardWalletCalculator: rewardWalletCalculator,
+		}
+
+		txValue, err := runtime.rewardWalletCalculator.GetRewardWalletFundAmount(block)
+		assert.Nil(t, txValue)
+		assert.EqualError(t, err, ErrCannotGetAccountBalance.Error())
+	})
+
+	t.Run("success", func(t *testing.T) {
+		blockchainMock := new(blockchainMock)
+
+		blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
+			Return(big.NewInt(0), nil)
+
+		rewardWalletCalculator := &rewardWalletCalculator{
+			blockchain: blockchainMock,
+		}
+
+		runtime := &consensusRuntime{
+			rewardWalletCalculator: rewardWalletCalculator,
+		}
+
+		requiredAmount := common.GetTwoThirdOfMaxUint256()
+
+		txValue, err := runtime.rewardWalletCalculator.GetRewardWalletFundAmount(block)
+		assert.NoError(t, err)
+		assert.Equal(t, requiredAmount, txValue)
+	})
+}
+
+func TestConsensusRuntime_calculateStateTxsInput_SecondEpoch(t *testing.T) {
 	t.Parallel()
 
 	const (
@@ -650,7 +689,7 @@ func TestConsensusRuntime_calculateCommitEpochInput_SecondEpoch(t *testing.T) {
 		lastBuiltBlock: lastBuiltBlock,
 	}
 
-	commitEpochInput, fundRewardWalletInput, distributeRewardsInput, err := consensusRuntime.calculateCommitEpochInput(
+	commitEpochInput, fundRewardWalletInput, distributeRewardsInput, err := consensusRuntime.calculateStateTxsInput(
 		lastBuiltBlock,
 		consensusRuntime.epoch,
 	)

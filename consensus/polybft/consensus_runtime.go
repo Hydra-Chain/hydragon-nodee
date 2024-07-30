@@ -469,7 +469,7 @@ func (c *consensusRuntime) FSM() error {
 	}
 
 	if isEndOfEpoch {
-		ff.commitEpochInput, ff.fundRewardWalletInput, ff.distributeRewardsInput, err = c.calculateCommitEpochInput(
+		ff.commitEpochInput, ff.fundRewardWalletInput, ff.distributeRewardsInput, err = c.calculateStateTxsInput(
 			parent,
 			epoch,
 		)
@@ -583,9 +583,9 @@ func (c *consensusRuntime) restartEpoch(
 	}, nil
 }
 
-// calculateCommitEpochInput calculates commit epoch input data for blocks starting from the last built block
+// calculateStateTxsInput calculates the state txs input data for blocks starting from the last built block
 // in the current epoch, and ending at the last block of previous epoch
-func (c *consensusRuntime) calculateCommitEpochInput(
+func (c *consensusRuntime) calculateStateTxsInput(
 	currentBlock *types.Header,
 	epoch *epochMetadata,
 ) (*contractsapi.CommitEpochHydraChainFn,
