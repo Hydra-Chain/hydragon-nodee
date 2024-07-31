@@ -584,7 +584,7 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			return errCommitEpochTxDoesNotExist
 		}
 
-		if f.rewardWalletFundAmount != big.NewInt(0) && !fundRewardWalletTxExists {
+		if f.rewardWalletFundAmount.Cmp(big.NewInt(0)) != 0 && !fundRewardWalletTxExists {
 			// this is a check if there is a need to fund the reward wallet, but the transaction is not in the
 			// list of transactions at all, but it should be
 			return errFundRewardWalletTxDoesNotExists

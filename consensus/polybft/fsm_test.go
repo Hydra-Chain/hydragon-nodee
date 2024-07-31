@@ -16,6 +16,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
+	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/Hydra-Chain/go-ibft/messages"
 	"github.com/Hydra-Chain/go-ibft/messages/proto"
@@ -793,6 +794,43 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingFundRewardWalletTx(t *test
 
 	assert.EqualError(t, fsm.VerifyStateTransactions([]*types.Transaction{commitEpochTx, distributeRewardsTx}),
 		"fund reward wallet transaction is not found in the epoch ending block")
+}
+
+func TestFSM_VerifyStateTransactions_EndOfEpochWithoutFundRewardWalletTx(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	blockchainMock := new(blockchainMock)
+	blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
+		Return(common.GetTwoThirdOfMaxUint256(), nil)
+
+	fsm := &fsm{
+		parent:                 &types.Header{Number: 1},
+		backend:                blockchainMock,
+		isEndOfEpoch:           true,
+		isEndOfSprint:          true,
+		validators:             validatorSet,
+		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount: big.NewInt(0),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		distributeRewardsInput: createTestDistributeRewardsInput(t, 0, allAccounts, 10),
+		logger:                 hclog.NewNullLogger(),
+	}
+
+	// add commit epoch commitEpochTx to the transactions list
+	commitEpochTx, err := fsm.createCommitEpochTx()
+	require.NoError(t, err)
+
+	// add distribute rewards distributeRewardsTx to the end of transactions list
+	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
+	require.NoError(t, err)
+
+	err = fsm.VerifyStateTransactions([]*types.Transaction{commitEpochTx, distributeRewardsTx})
+	require.NoError(t, err)
 }
 
 func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
