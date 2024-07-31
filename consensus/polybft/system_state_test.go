@@ -100,7 +100,16 @@ func TestSystemState_GetEpoch(t *testing.T) {
 		transition: transition,
 	}
 
-	systemState := NewSystemState(result.Address, contracts.HydraStakingContract, contracts.HydraDelegationContract, contracts.VestingManagerFactoryContract, contracts.APRCalculatorContract, contracts.StateReceiverContract, provider)
+	systemState := NewSystemState(
+		result.Address,
+		contracts.HydraStakingContract,
+		contracts.HydraDelegationContract,
+		contracts.VestingManagerFactoryContract,
+		contracts.APRCalculatorContract,
+		contracts.RewardWalletContract,
+		contracts.StateReceiverContract,
+		provider,
+	)
 
 	expectedEpoch := uint64(50)
 	input, err := setEpochMethod.Encode([1]interface{}{expectedEpoch})
@@ -127,7 +136,10 @@ func TestStateProvider_Txn_NotSupported(t *testing.T) {
 	require.ErrorIs(t, err, errSendTxnUnsupported)
 }
 
-func newTestTransition(t *testing.T, alloc map[types.Address]*chain.GenesisAccount) *state.Transition {
+func newTestTransition(
+	t *testing.T,
+	alloc map[types.Address]*chain.GenesisAccount,
+) *state.Transition {
 	t.Helper()
 
 	st := itrie.NewState(itrie.NewMemoryStorage())

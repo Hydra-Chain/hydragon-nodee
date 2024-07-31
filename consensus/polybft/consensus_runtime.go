@@ -127,8 +127,9 @@ type consensusRuntime struct {
 	// logger instance
 	logger hcf.Logger
 
-	// rewardsCalculator is the object which handles the reward that must be sent on CommitEpoch
-	rewardsCalculator RewardsCalculator
+	// rewardWalletCalculator is the object which handles the calculation of the required HYDRA
+	// that needs to be sent to the reward in order to have enough funds
+	rewardWalletCalculator RewardWalletCalculator
 }
 
 // newConsensusRuntime creates and starts a new consensus runtime instance with event tracking
@@ -142,19 +143,22 @@ func newConsensusRuntime(log hcf.Logger, config *runtimeConfig) (*consensusRunti
 
 	proposerCalculator, err := NewProposerCalculator(config, log.Named("proposer_calculator"), dbTx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create consensus runtime, error while creating proposer calculator %w", err)
+		return nil, fmt.Errorf(
+			"failed to create consensus runtime, error while creating proposer calculator %w",
+			err,
+		)
 	}
 
-	rewardsCalculator := NewRewardsCalculator(log.Named("rewards_calculator"), config.blockchain)
+	rewardCalculator := NewRewardWalletCalculator(log.Named("reward_wallet_calculator"), config.blockchain)
 
 	runtime := &consensusRuntime{
-		state:              config.State,
-		config:             config,
-		lastBuiltBlock:     config.blockchain.CurrentHeader(),
-		proposerCalculator: proposerCalculator,
-		logger:             log.Named("consensus_runtime"),
-		rewardsCalculator:  rewardsCalculator,
-		eventProvider:      NewEventProvider(config.blockchain),
+		state:                  config.State,
+		config:                 config,
+		lastBuiltBlock:         config.blockchain.CurrentHeader(),
+		proposerCalculator:     proposerCalculator,
+		logger:                 log.Named("consensus_runtime"),
+		eventProvider:          NewEventProvider(config.blockchain),
+		rewardWalletCalculator: rewardCalculator,
 	}
 
 	if err := runtime.initStateSyncManager(log); err != nil {
@@ -322,7 +326,13 @@ func (c *consensusRuntime) OnBlockInserted(fullBlock *types.FullBlock) {
 	}
 
 	if err := c.eventProvider.GetEventsFromBlocks(lastProcessedEventsBlock, fullBlock, dbTx); err != nil {
-		c.logger.Error("failed to process events on block finalization", "block", fullBlock.Block.Number(), "err", err)
+		c.logger.Error(
+			"failed to process events on block finalization",
+			"block",
+			fullBlock.Block.Number(),
+			"err",
+			err,
+		)
 
 		return
 	}
@@ -459,14 +469,23 @@ func (c *consensusRuntime) FSM() error {
 	}
 
 	if isEndOfEpoch {
-		ff.commitEpochInput, ff.distributeRewardsInput, err = c.calculateCommitEpochInput(parent, epoch)
+		ff.commitEpochInput, ff.fundRewardWalletInput, ff.distributeRewardsInput, err = c.calculateStateTxsInput(
+			parent,
+			epoch,
+		)
 		if err != nil {
 			return fmt.Errorf("cannot calculate commit epoch info: %w", err)
 		}
 
-		ff.maxRewardToDistribute, err = c.calculateRewardValue(parent)
+		ff.rewardWalletFundAmount, err = c.rewardWalletCalculator.GetRewardWalletFundAmount(parent)
+		if err != nil {
+			return fmt.Errorf("cannot calculate the reward wallet fund amount: %w", err)
+		}
 
-		ff.newValidatorsDelta, err = c.stakeManager.UpdateValidatorSet(epoch.Number, epoch.Validators.Copy())
+		ff.newValidatorsDelta, err = c.stakeManager.UpdateValidatorSet(
+			epoch.Number,
+			epoch.Validators.Copy(),
+		)
 		if err != nil {
 			return fmt.Errorf("cannot update validator set on epoch ending: %w", err)
 		}
@@ -488,7 +507,10 @@ func (c *consensusRuntime) FSM() error {
 
 // restartEpoch resets the previously run epoch and moves to the next one
 // returns *epochMetadata different from nil if the lastEpoch is not the current one and everything was successful
-func (c *consensusRuntime) restartEpoch(header *types.Header, dbTx *bolt.Tx) (*epochMetadata, error) {
+func (c *consensusRuntime) restartEpoch(
+	header *types.Header,
+	dbTx *bolt.Tx,
+) (*epochMetadata, error) {
 	lastEpoch := c.epoch
 	systemState, err := c.getSystemState(header)
 	if err != nil {
@@ -561,12 +583,13 @@ func (c *consensusRuntime) restartEpoch(header *types.Header, dbTx *bolt.Tx) (*e
 	}, nil
 }
 
-// calculateCommitEpochInput calculates commit epoch input data for blocks starting from the last built block
+// calculateStateTxsInput calculates the state txs input data for blocks starting from the last built block
 // in the current epoch, and ending at the last block of previous epoch
-func (c *consensusRuntime) calculateCommitEpochInput(
+func (c *consensusRuntime) calculateStateTxsInput(
 	currentBlock *types.Header,
 	epoch *epochMetadata,
 ) (*contractsapi.CommitEpochHydraChainFn,
+	*contractsapi.FundRewardWalletFn,
 	*contractsapi.DistributeRewardsForHydraStakingFn, error) {
 	uptimeCounter := map[types.Address]int64{}
 	blockHeader := currentBlock
@@ -590,18 +613,18 @@ func (c *consensusRuntime) calculateCommitEpochInput(
 
 	blockExtra, err := GetIbftExtra(currentBlock.ExtraData)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// calculate uptime for current epoch
 	for blockHeader.Number > epoch.FirstBlockInEpoch {
 		if err := getSealersForBlock(blockExtra, epoch.Validators); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
 		blockHeader, blockExtra, err = getBlockData(blockHeader.Number-1, c.config.blockchain)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
@@ -611,16 +634,16 @@ func (c *consensusRuntime) calculateCommitEpochInput(
 		for i := 0; i < commitEpochLookbackSize; i++ {
 			validators, err := c.config.polybftBackend.GetValidators(blockHeader.Number-2, nil)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 
 			if err := getSealersForBlock(blockExtra, validators); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 
 			blockHeader, blockExtra, err = getBlockData(blockHeader.Number-1, c.config.blockchain)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 		}
 	}
@@ -656,17 +679,15 @@ func (c *consensusRuntime) calculateCommitEpochInput(
 		Uptime:    uptime,
 	}
 
+	fundRewardWallet := &contractsapi.FundRewardWalletFn{}
+
 	distributeRewards := &contractsapi.DistributeRewardsForHydraStakingFn{
 		EpochID:   new(big.Int).SetUint64(epochID),
 		Uptime:    uptime,
 		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
 	}
 
-	return commitEpoch, distributeRewards, nil
-}
-
-func (c *consensusRuntime) calculateRewardValue(latestBlock *types.Header) (*big.Int, error) {
-	return c.rewardsCalculator.GetMaxReward(latestBlock)
+	return commitEpoch, fundRewardWallet, distributeRewards, nil
 }
 
 // GenerateExitProof generates proof of exit and is a bridge endpoint store function
@@ -776,9 +797,19 @@ func (c *consensusRuntime) IsValidProposalHash(proposal *proto.Proposal, hash []
 		return false
 	}
 
-	proposalHash, err := extra.Checkpoint.Hash(c.config.blockchain.GetChainID(), block.Number(), block.Hash())
+	proposalHash, err := extra.Checkpoint.Hash(
+		c.config.blockchain.GetChainID(),
+		block.Number(),
+		block.Hash(),
+	)
 	if err != nil {
-		c.logger.Error("failed to calculate proposal hash", "block number", block.Number(), "error", err)
+		c.logger.Error(
+			"failed to calculate proposal hash",
+			"block number",
+			block.Number(),
+			"error",
+			err,
+		)
 
 		return false
 	}
@@ -786,7 +817,10 @@ func (c *consensusRuntime) IsValidProposalHash(proposal *proto.Proposal, hash []
 	return bytes.Equal(proposalHash.Bytes(), hash)
 }
 
-func (c *consensusRuntime) IsValidCommittedSeal(proposalHash []byte, committedSeal *messages.CommittedSeal) bool {
+func (c *consensusRuntime) IsValidCommittedSeal(
+	proposalHash []byte,
+	committedSeal *messages.CommittedSeal,
+) bool {
 	err := c.fsm.ValidateCommit(committedSeal.Signer, committedSeal.Signature, proposalHash)
 	if err != nil {
 		c.logger.Info("Invalid committed seal", "error", err)
@@ -823,7 +857,10 @@ func (c *consensusRuntime) BuildProposal(view *proto.View) []byte {
 }
 
 // InsertProposal inserts a proposal with the specified committed seals
-func (c *consensusRuntime) InsertProposal(proposal *proto.Proposal, committedSeals []*messages.CommittedSeal) {
+func (c *consensusRuntime) InsertProposal(
+	proposal *proto.Proposal,
+	committedSeals []*messages.CommittedSeal,
+) {
 	fsm := c.fsm
 
 	fullBlock, err := fsm.Insert(proposal.RawProposal, committedSeals)
@@ -887,9 +924,19 @@ func (c *consensusRuntime) BuildPrePrepareMessage(
 		return nil
 	}
 
-	proposalHash, err := extra.Checkpoint.Hash(c.config.blockchain.GetChainID(), block.Number(), block.Hash())
+	proposalHash, err := extra.Checkpoint.Hash(
+		c.config.blockchain.GetChainID(),
+		block.Number(),
+		block.Hash(),
+	)
 	if err != nil {
-		c.logger.Error("failed to calculate proposal hash", "block number", block.Number(), "error", err)
+		c.logger.Error(
+			"failed to calculate proposal hash",
+			"block number",
+			block.Number(),
+			"error",
+			err,
+		)
 
 		return nil
 	}
@@ -923,7 +970,10 @@ func (c *consensusRuntime) BuildPrePrepareMessage(
 }
 
 // BuildPrepareMessage builds a PREPARE message based on the passed in proposal
-func (c *consensusRuntime) BuildPrepareMessage(proposalHash []byte, view *proto.View) *proto.Message {
+func (c *consensusRuntime) BuildPrepareMessage(
+	proposalHash []byte,
+	view *proto.View,
+) *proto.Message {
 	msg := proto.Message{
 		View: view,
 		From: c.ID(),
@@ -946,7 +996,10 @@ func (c *consensusRuntime) BuildPrepareMessage(proposalHash []byte, view *proto.
 }
 
 // BuildCommitMessage builds a COMMIT message based on the passed in proposal
-func (c *consensusRuntime) BuildCommitMessage(proposalHash []byte, view *proto.View) *proto.Message {
+func (c *consensusRuntime) BuildCommitMessage(
+	proposalHash []byte,
+	view *proto.View,
+) *proto.Message {
 	committedSeal, err := c.config.Key.SignWithDomain(proposalHash, signer.DomainCheckpointManager)
 	if err != nil {
 		c.logger.Error("Cannot create committed seal message.", "error", err)
@@ -1004,7 +1057,10 @@ func (c *consensusRuntime) BuildRoundChangeMessage(
 }
 
 // getFirstBlockOfEpoch returns the first block of epoch in which provided header resides
-func (c *consensusRuntime) getFirstBlockOfEpoch(epochNumber uint64, latestHeader *types.Header) (uint64, error) {
+func (c *consensusRuntime) getFirstBlockOfEpoch(
+	epochNumber uint64,
+	latestHeader *types.Header,
+) (uint64, error) {
 	if latestHeader.Number == 0 {
 		// if we are starting the chain, we know that the first block is block 1
 		return 1, nil

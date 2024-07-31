@@ -32,21 +32,35 @@ type blockBuilder interface {
 }
 
 var (
-	errCommitEpochTxDoesNotExist   = errors.New("commit epoch transaction is not found in the epoch ending block")
-	errCommitEpochTxNotExpected    = errors.New("didn't expect commit epoch transaction in a non epoch ending block")
+	errCommitEpochTxDoesNotExist = errors.New(
+		"commit epoch transaction is not found in the epoch ending block",
+	)
+	errCommitEpochTxNotExpected = errors.New(
+		"didn't expect commit epoch transaction in a non epoch ending block",
+	)
 	errCommitEpochTxSingleExpected = errors.New("only one commit epoch transaction is allowed " +
+		"in an epoch ending block")
+	errFundRewardWalletTxDoesNotExists = errors.New("fund reward wallet transaction is " +
+		"not found in the epoch ending block")
+	errFundRewardWalletTxSingleExpected = errors.New("only one fund reward wallet transaction is allowed " +
 		"in an epoch ending block")
 	errDistributeRewardsTxDoesNotExist = errors.New("distribute rewards transaction is " +
 		"not found in the epoch ending block")
 	errDistributeRewardsTxNotExpected = errors.New("didn't expect distribute rewards transaction " +
 		"in a non epoch ending block")
-	errDistributeRewardsTxSingleExpected = errors.New("only one distribute rewards transaction is " +
-		"allowed in an epoch ending block")
+	errDistributeRewardsTxSingleExpected = errors.New(
+		"only one distribute rewards transaction is " +
+			"allowed in an epoch ending block",
+	)
 	errProposalDontMatch = errors.New("failed to insert proposal, because the validated proposal " +
 		"is either nil or it does not match the received one")
-	errValidatorSetDeltaMismatch           = errors.New("validator set delta mismatch")
-	errValidatorsUpdateInNonEpochEnding    = errors.New("trying to update validator set in a non epoch ending block")
-	errValidatorDeltaNilInEpochEndingBlock = errors.New("validator set delta is nil in epoch ending block")
+	errValidatorSetDeltaMismatch        = errors.New("validator set delta mismatch")
+	errValidatorsUpdateInNonEpochEnding = errors.New(
+		"trying to update validator set in a non epoch ending block",
+	)
+	errValidatorDeltaNilInEpochEndingBlock = errors.New(
+		"validator set delta is nil in epoch ending block",
+	)
 )
 
 type fsm struct {
@@ -78,15 +92,19 @@ type fsm struct {
 	// It is populated only for epoch-ending blocks.
 	commitEpochInput *contractsapi.CommitEpochHydraChainFn
 
-	// maxRewardToDistribute holds info about the max amount of HYDRA that may be needed for rewards distribution
-	// It is send to the RewardPool contract on distributeRewardsFor transaction
-	// It is populated only for epoch-ending blocks.
-	maxRewardToDistribute *big.Int
-
 	// distributeRewardsInput holds info about validators work in a single epoch
 	// mainly, how many blocks they signed during given epoch
 	// It is populated only for epoch-ending blocks.
 	distributeRewardsInput *contractsapi.DistributeRewardsForHydraStakingFn
+
+	// fund the RewardWallet which is executed before each distributeRewardsFor
+	// in order to keep enough funds in the contract
+	fundRewardWalletInput *contractsapi.FundRewardWalletFn
+
+	// rewardWalletFundAmount holds the value of the HYDRA amount that needs to fulfill the reward wallet
+	// It is send to the RewardWallet contract on fund transaction
+	// It is populated only for epoch-ending blocks when there are no sufficient funds.
+	rewardWalletFundAmount *big.Int
 
 	// isEndOfEpoch indicates if epoch reached its end
 	isEndOfEpoch bool
@@ -139,6 +157,21 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 
 		if err := f.blockBuilder.WriteTx(tx); err != nil {
 			return nil, fmt.Errorf("failed to apply commit epoch transaction: %w", err)
+		}
+
+		// if fund amount is 0, then no need to fund the reward wallet
+		if f.rewardWalletFundAmount != big.NewInt(0) {
+			tx, err = f.createRewardWalletFundTx()
+			if err != nil {
+				return nil, err
+			}
+
+			if err := f.blockBuilder.WriteTx(tx); err != nil {
+				return nil, fmt.Errorf(
+					"failed to apply the RewardWallet contract fund transaction: %w",
+					err,
+				)
+			}
 		}
 
 		tx, err = f.createDistributeRewardsTx()
@@ -200,7 +233,11 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 	}
 
 	if f.logger.IsDebug() {
-		checkpointHash, err := extra.Checkpoint.Hash(f.backend.GetChainID(), f.Height(), stateBlock.Block.Hash())
+		checkpointHash, err := extra.Checkpoint.Hash(
+			f.backend.GetChainID(),
+			f.Height(),
+			stateBlock.Block.Hash(),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate proposal hash: %w", err)
 		}
@@ -235,14 +272,24 @@ func (f *fsm) applyBridgeCommitmentTx() error {
 func (f *fsm) createBridgeCommitmentTx() (*types.Transaction, error) {
 	inputData, err := f.proposerCommitmentToRegister.EncodeAbi()
 	if err != nil {
-		return nil, fmt.Errorf("failed to encode input data for bridge commitment registration: %w", err)
+		return nil, fmt.Errorf(
+			"failed to encode input data for bridge commitment registration: %w",
+			err,
+		)
 	}
 
-	return createStateTransactionWithData(f.Height(), contracts.StateReceiverContract, inputData, nil), nil
+	return createStateTransactionWithData(
+		f.Height(),
+		contracts.StateReceiverContract,
+		inputData,
+		nil,
+	), nil
 }
 
 // getValidatorsTransition applies delta to the current validators,
-func (f *fsm) getValidatorsTransition(delta *validator.ValidatorSetDelta) (validator.AccountSet, error) {
+func (f *fsm) getValidatorsTransition(
+	delta *validator.ValidatorSetDelta,
+) (validator.AccountSet, error) {
 	nextValidators, err := f.validators.Accounts().ApplyDelta(delta)
 	if err != nil {
 		return nil, err
@@ -264,7 +311,7 @@ func (f *fsm) createCommitEpochTx() (*types.Transaction, error) {
 	return createStateTransactionWithData(f.Height(), contracts.HydraChainContract, input, nil), nil
 }
 
-// createDistributeRewardsTx create a StateTransaction, which invokes RewardPool smart contract
+// createDistributeRewardsTx create a StateTransaction, which invokes HydraStaking smart contract
 // and sends all the necessary metadata to it.
 func (f *fsm) createDistributeRewardsTx() (*types.Transaction, error) {
 	input, err := f.distributeRewardsInput.EncodeAbi()
@@ -272,7 +319,28 @@ func (f *fsm) createDistributeRewardsTx() (*types.Transaction, error) {
 		return nil, err
 	}
 
-	return createStateTransactionWithData(f.Height(), contracts.HydraStakingContract, input, f.maxRewardToDistribute), nil
+	return createStateTransactionWithData(
+		f.Height(),
+		contracts.HydraStakingContract,
+		input,
+		nil,
+	), nil
+}
+
+// createRewardWalletFundTx create a StateTransaction, which invokes the RewardWallet smart contract
+// and sends some funds to it.
+func (f *fsm) createRewardWalletFundTx() (*types.Transaction, error) {
+	input, err := f.fundRewardWalletInput.EncodeAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	return createStateTransactionWithData(
+		f.Height(),
+		contracts.RewardWalletContract,
+		input,
+		f.rewardWalletFundAmount,
+	), nil
 }
 
 // ValidateCommit is used to validate that a given commit is valid
@@ -382,12 +450,22 @@ func (f *fsm) Validate(proposal []byte) error {
 	}
 
 	if f.logger.IsDebug() {
-		checkpointHash, err := extra.Checkpoint.Hash(f.backend.GetChainID(), block.Number(), block.Hash())
+		checkpointHash, err := extra.Checkpoint.Hash(
+			f.backend.GetChainID(),
+			block.Number(),
+			block.Hash(),
+		)
 		if err != nil {
 			return fmt.Errorf("failed to calculate proposal hash: %w", err)
 		}
 
-		f.logger.Debug("[FSM Validate]", "txs", len(block.Transactions), "proposal hash", checkpointHash)
+		f.logger.Debug(
+			"[FSM Validate]",
+			"txs",
+			len(block.Transactions),
+			"proposal hash",
+			checkpointHash,
+		)
 	}
 
 	f.target = stateBlock
@@ -414,7 +492,10 @@ func (f *fsm) ValidateSender(msg *proto.Message) error {
 
 	// verify the sender is in the active validator set
 	if !f.validators.Includes(signerAddress) {
-		return fmt.Errorf("signer address %s is not included in validator set", signerAddress.String())
+		return fmt.Errorf(
+			"signer address %s is not included in validator set",
+			signerAddress.String(),
+		)
 	}
 
 	return nil
@@ -423,6 +504,7 @@ func (f *fsm) ValidateSender(msg *proto.Message) error {
 func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 	var (
 		commitEpochTxExists       bool
+		fundRewardWalletTxExists  bool
 		distributeRewardsTxExists bool
 	)
 
@@ -464,6 +546,19 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			if err := f.verifyCommitEpochTx(tx); err != nil {
 				return fmt.Errorf("error while verifying commit epoch transaction. error: %w", err)
 			}
+		case *contractsapi.FundRewardWalletFn:
+			if fundRewardWalletTxExists {
+				// if we already validated fund reward wallet tx,
+				// that means someone added more txs to fund reward wallet,
+				// which is invalid
+				return errFundRewardWalletTxSingleExpected
+			}
+
+			fundRewardWalletTxExists = true
+
+			if err := f.verifyFundRewardWalletTx(tx); err != nil {
+				return fmt.Errorf("error while verifying fund reward wallet transaction. error: %w", err)
+			}
 		case *contractsapi.DistributeRewardsForHydraStakingFn:
 			if distributeRewardsTxExists {
 				// if we already validated distribute rewards tx,
@@ -489,6 +584,12 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			return errCommitEpochTxDoesNotExist
 		}
 
+		if f.rewardWalletFundAmount.Cmp(big.NewInt(0)) != 0 && !fundRewardWalletTxExists {
+			// this is a check if there is a need to fund the reward wallet, but the transaction is not in the
+			// list of transactions at all, but it should be
+			return errFundRewardWalletTxDoesNotExists
+		}
+
 		if !distributeRewardsTxExists {
 			// this is a check if distribute rewards transaction is not in the list of transactions at all
 			// but it should be
@@ -500,7 +601,10 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 }
 
 // Insert inserts the sealed proposal
-func (f *fsm) Insert(proposal []byte, committedSeals []*messages.CommittedSeal) (*types.FullBlock, error) {
+func (f *fsm) Insert(
+	proposal []byte,
+	committedSeals []*messages.CommittedSeal,
+) (*types.FullBlock, error) {
 	newBlock := f.target
 
 	var proposedBlock types.Block
@@ -518,7 +622,10 @@ func (f *fsm) Insert(proposal []byte, committedSeals []*messages.CommittedSeal) 
 	// we should have already computed beforehand.
 	extra, err := GetIbftExtra(newBlock.Block.Header.ExtraData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to insert proposal, due to not being able to extract extra data: %w", err)
+		return nil, fmt.Errorf(
+			"failed to insert proposal, due to not being able to extract extra data: %w",
+			err,
+		)
 	}
 
 	// create map for faster access to indexes
@@ -604,6 +711,28 @@ func (f *fsm) verifyCommitEpochTx(commitEpochTx *types.Transaction) error {
 	return errCommitEpochTxNotExpected
 }
 
+// verifyCommitEpochTx creates commit epoch transaction and compares its hash with the one extracted from the block.
+func (f *fsm) verifyFundRewardWalletTx(fundRewardWalletTx *types.Transaction) error {
+	if f.isEndOfEpoch {
+		localFundRewardWalletTx, err := f.createRewardWalletFundTx()
+		if err != nil {
+			return err
+		}
+
+		if fundRewardWalletTx.Hash != localFundRewardWalletTx.Hash {
+			return fmt.Errorf(
+				"invalid fund reward wallet transaction. Expected '%s', but got '%s' fund reward wallet transaction hash",
+				localFundRewardWalletTx.Hash,
+				fundRewardWalletTx.Hash,
+			)
+		}
+
+		return nil
+	}
+
+	return errFundRewardWalletTxSingleExpected
+}
+
 // verifyDistributeRewardsTx creates distribute rewards transaction
 // and compares its hash with the one extracted from the block.
 func (f *fsm) verifyDistributeRewardsTx(distributeRewardsTx *types.Transaction) error {
@@ -650,7 +779,11 @@ func verifyBridgeCommitmentTx(blockNumber uint64, txHash types.Hash,
 		return fmt.Errorf("error for state tx (%s) while unmarshaling signature: %w", txHash, err)
 	}
 
-	verified := signature.VerifyAggregated(signers.GetBlsKeys(), commitmentHash.Bytes(), signer.DomainStateReceiver)
+	verified := signature.VerifyAggregated(
+		signers.GetBlsKeys(),
+		commitmentHash.Bytes(),
+		signer.DomainStateReceiver,
+	)
 	if !verified {
 		return fmt.Errorf("invalid signature for state tx (%s)", txHash)
 	}
@@ -661,11 +794,19 @@ func verifyBridgeCommitmentTx(blockNumber uint64, txHash types.Hash,
 func validateHeaderFields(parent *types.Header, header *types.Header, blockTimeDrift uint64) error {
 	// header extra data must be higher or equal to ExtraVanity = 32 in order to be compliant with Ethereum blocks
 	if len(header.ExtraData) < ExtraVanity {
-		return fmt.Errorf("extra-data shorter than %d bytes (%d)", ExtraVanity, len(header.ExtraData))
+		return fmt.Errorf(
+			"extra-data shorter than %d bytes (%d)",
+			ExtraVanity,
+			len(header.ExtraData),
+		)
 	}
 	// verify parent hash
 	if parent.Hash != header.ParentHash {
-		return fmt.Errorf("incorrect header parent hash (parent=%s, header parent=%s)", parent.Hash, header.ParentHash)
+		return fmt.Errorf(
+			"incorrect header parent hash (parent=%s, header parent=%s)",
+			parent.Hash,
+			header.ParentHash,
+		)
 	}
 	// verify parent number
 	if header.Number != parent.Number+1 {
@@ -673,8 +814,11 @@ func validateHeaderFields(parent *types.Header, header *types.Header, blockTimeD
 	}
 	// verify time is from the future
 	if header.Timestamp > (uint64(time.Now().UTC().Unix()) + blockTimeDrift) {
-		return fmt.Errorf("block from the future. block timestamp: %s, configured block time drift %d seconds",
-			time.Unix(int64(header.Timestamp), 0).Format(time.RFC3339), blockTimeDrift)
+		return fmt.Errorf(
+			"block from the future. block timestamp: %s, configured block time drift %d seconds",
+			time.Unix(int64(header.Timestamp), 0).Format(time.RFC3339),
+			blockTimeDrift,
+		)
 	}
 	// verify header nonce is zero
 	if header.Nonce != types.ZeroNonce {
@@ -706,7 +850,12 @@ func validateHeaderFields(parent *types.Header, header *types.Header, blockTimeD
 
 // createStateTransactionWithData creates a state transaction
 // with provided target address and inputData parameter which is ABI encoded byte array.
-func createStateTransactionWithData(blockNumber uint64, target types.Address, inputData []byte, value *big.Int) *types.Transaction {
+func createStateTransactionWithData(
+	blockNumber uint64,
+	target types.Address,
+	inputData []byte,
+	value *big.Int,
+) *types.Transaction {
 	tx := &types.Transaction{
 		From:     contracts.SystemCaller,
 		To:       &target,

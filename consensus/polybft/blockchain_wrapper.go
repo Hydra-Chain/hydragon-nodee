@@ -66,6 +66,9 @@ type blockchainBackend interface {
 
 	// GetReceiptsByHash retrieves receipts by hash
 	GetReceiptsByHash(hash types.Hash) ([]*types.Receipt, error)
+
+	// GetAccountBalance returns the balance of the provided account at 'block'.
+	GetAccountBalance(block *types.Header, addr types.Address) (*big.Int, error)
 }
 
 var _ blockchainBackend = &blockchainWrapper{}
@@ -86,11 +89,18 @@ func (p *blockchainWrapper) CommitBlock(block *types.FullBlock) error {
 }
 
 // ProcessBlock builds a final block from given 'block' on top of 'parent'
-func (p *blockchainWrapper) ProcessBlock(parent *types.Header, block *types.Block) (*types.FullBlock, error) {
+func (p *blockchainWrapper) ProcessBlock(
+	parent *types.Header,
+	block *types.Block,
+) (*types.FullBlock, error) {
 	header := block.Header.Copy()
 	start := time.Now().UTC()
 
-	transition, err := p.executor.BeginTxn(parent.StateRoot, header, types.BytesToAddress(header.Miner))
+	transition, err := p.executor.BeginTxn(
+		parent.StateRoot,
+		header,
+		types.BytesToAddress(header.Miner),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +142,9 @@ func (p *blockchainWrapper) ProcessBlock(parent *types.Header, block *types.Bloc
 }
 
 // GetStateProviderForBlock is an implementation of blockchainBackend interface
-func (p *blockchainWrapper) GetStateProviderForBlock(header *types.Header) (contract.Provider, error) {
+func (p *blockchainWrapper) GetStateProviderForBlock(
+	header *types.Header,
+) (contract.Provider, error) {
 	transition, err := p.executor.BeginTxn(header.StateRoot, header, types.ZeroAddress)
 	if err != nil {
 		return nil, err
@@ -179,7 +191,16 @@ func (p *blockchainWrapper) NewBlockBuilder(
 
 // GetSystemState is an implementation of blockchainBackend interface
 func (p *blockchainWrapper) GetSystemState(provider contract.Provider) SystemState {
-	return NewSystemState(contracts.HydraChainContract, contracts.HydraStakingContract, contracts.HydraDelegationContract, contracts.VestingManagerFactoryContract, contracts.APRCalculatorContract, contracts.StateReceiverContract, provider)
+	return NewSystemState(
+		contracts.HydraChainContract,
+		contracts.HydraStakingContract,
+		contracts.HydraDelegationContract,
+		contracts.VestingManagerFactoryContract,
+		contracts.APRCalculatorContract,
+		contracts.RewardWalletContract,
+		contracts.StateReceiverContract,
+		provider,
+	)
 }
 
 func (p *blockchainWrapper) SubscribeEvents() blockchain.Subscription {
@@ -211,8 +232,18 @@ func NewStateProvider(transition *state.Transition) contract.Provider {
 }
 
 // Call implements the contract.Provider interface to make contract calls directly to the state
-func (s *stateProvider) Call(addr ethgo.Address, input []byte, opts *contract.CallOpts) ([]byte, error) {
-	result := s.transition.Call2(contracts.SystemCaller, types.Address(addr), input, big.NewInt(0), 10000000)
+func (s *stateProvider) Call(
+	addr ethgo.Address,
+	input []byte,
+	opts *contract.CallOpts,
+) ([]byte, error) {
+	result := s.transition.Call2(
+		contracts.SystemCaller,
+		types.Address(addr),
+		input,
+		big.NewInt(0),
+		10000000,
+	)
 	if result.Failed() {
 		return nil, result.Err
 	}
@@ -224,4 +255,18 @@ func (s *stateProvider) Call(addr ethgo.Address, input []byte, opts *contract.Ca
 // since the system state does not make any transaction
 func (s *stateProvider) Txn(ethgo.Address, ethgo.Key, []byte) (contract.Txn, error) {
 	return nil, errSendTxnUnsupported
+}
+
+// GetAccountBalance is used to get the balance of a given account via the transition.
+// It executes the call for a given header/block.
+func (p *blockchainWrapper) GetAccountBalance(
+	header *types.Header,
+	addr types.Address,
+) (*big.Int, error) {
+	transition, err := p.executor.BeginTxn(header.StateRoot, header, types.ZeroAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	return transition.GetBalance(addr), nil
 }

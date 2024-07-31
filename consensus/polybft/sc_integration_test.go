@@ -84,6 +84,9 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 			contracts.LiquidityTokenContract: {
 				Code: contractsapi.LiquidityToken.DeployedBytecode,
 			},
+			contracts.RewardWalletContract: {
+				Code: contractsapi.RewardWallet.DeployedBytecode,
+			},
 		}
 
 		// validator data for polybft config
@@ -163,6 +166,10 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		err = initAPRCalculator(polyBFTConfig, transition)
 		require.NoError(t, err)
 
+		// initialize RewardWallet SC
+		err = initRewardWallet(polyBFTConfig, transition)
+		require.NoError(t, err)
+
 		// delegate amounts to validators
 		for valAddress, delegators := range valid2deleg {
 			for _, delegator := range delegators {
@@ -201,22 +208,31 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 			result.GasUsed,
 		)
 
+		// create input for reward wallet fund
+		rewardWalletFundAmount := createTestRewardWalletFundAmount(t)
+		fundRewardWalletInput, err := createTestFundRewardWalletInput(t).EncodeAbi()
+		require.NoError(t, err)
+
+		// call reward distributor
+		result = transition.Call2(
+			contracts.SystemCaller,
+			contracts.RewardWalletContract,
+			fundRewardWalletInput,
+			rewardWalletFundAmount,
+			10000000000,
+		)
+
 		// create input for distribute rewards
-		maxRewardToDistribute := createTestRewardToDistributeValue(t, transition)
 		distributeRewards := createTestDistributeRewardsInput(t, 1, accSet, polyBFTConfig.EpochSize)
 		distributeRewardsInput, err := distributeRewards.EncodeAbi()
 		require.NoError(t, err)
-
-		// Normally injecting balance to the system caller is handled by a higher order method in the executor.go
-		// but here we use call2 directly so we need to do it manually
-		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
 
 		// call reward distributor
 		result = transition.Call2(
 			contracts.SystemCaller,
 			contracts.HydraStakingContract,
 			distributeRewardsInput,
-			maxRewardToDistribute,
+			big.NewInt(0),
 			10000000000,
 		)
 		require.NoError(t, result.Err)
@@ -251,14 +267,12 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 		distributeRewardsInput, err = distributeRewards.EncodeAbi()
 		require.NoError(t, err)
 
-		transition.Txn().AddBalance(contracts.SystemCaller, maxRewardToDistribute)
-
 		// call reward distributor
 		result = transition.Call2(
 			contracts.SystemCaller,
 			contracts.HydraStakingContract,
 			distributeRewardsInput,
-			maxRewardToDistribute,
+			big.NewInt(0),
 			10000000000,
 		)
 		require.NoError(t, result.Err)

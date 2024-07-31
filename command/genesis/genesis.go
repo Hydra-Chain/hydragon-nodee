@@ -215,20 +215,6 @@ func setFlags(cmd *cobra.Command) {
 				"<name:symbol:decimals count:mintable flag:[mintable token owner address]>",
 		)
 
-		cmd.Flags().StringVar(
-			&params.rewardTokenCode,
-			rewardTokenCodeFlag,
-			"",
-			"hex encoded reward token byte code",
-		)
-
-		cmd.Flags().StringVar(
-			&params.rewardWallet,
-			rewardWalletFlag,
-			"",
-			"configuration of reward wallet in format <address:amount>",
-		)
-
 		cmd.Flags().Uint64Var(
 			&params.blockTimeDrift,
 			blockTimeDriftFlag,

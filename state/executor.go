@@ -457,7 +457,9 @@ func (t *Transition) ContextPtr() *runtime.TxContext {
 }
 
 func (t *Transition) subGasLimitPrice(msg *types.Transaction) error {
-	upfrontGasCost := GetLondonFixHandler(uint64(t.ctx.Number)).getUpfrontGasCost(msg, t.ctx.BaseFee)
+	upfrontGasCost := GetLondonFixHandler(
+		uint64(t.ctx.Number),
+	).getUpfrontGasCost(msg, t.ctx.BaseFee)
 
 	if err := t.state.SubBalance(msg.From, upfrontGasCost); err != nil {
 		if errors.Is(err, runtime.ErrNotEnoughFunds) {
@@ -495,7 +497,9 @@ var (
 	ErrBlockLimitReached            = errors.New("gas limit reached in the pool")
 	ErrIntrinsicGasOverflow         = errors.New("overflow in intrinsic gas calculation")
 	ErrNotEnoughIntrinsicGas        = errors.New("not enough gas supplied for intrinsic gas costs")
-	ErrCannotClearSystemAddrBalance = fmt.Errorf("cannot clear system address balance when contract call failed")
+	ErrCannotClearSystemAddrBalance = fmt.Errorf(
+		"cannot clear system address balance when contract call failed",
+	)
 
 	// ErrTipAboveFeeCap is a sanity error to ensure no one is able to specify a
 	// transaction with a tip higher than the total fee cap.
@@ -537,7 +541,9 @@ type GasLimitReachedTransitionApplicationError struct {
 	TransitionApplicationError
 }
 
-func NewGasLimitReachedTransitionApplicationError(err error) *GasLimitReachedTransitionApplicationError {
+func NewGasLimitReachedTransitionApplicationError(
+	err error,
+) *GasLimitReachedTransitionApplicationError {
 	return &GasLimitReachedTransitionApplicationError{
 		*NewTransitionApplicationError(err, true),
 	}
@@ -556,7 +562,7 @@ func (t *Transition) apply(msg *types.Transaction) (*runtime.ExecutionResult, er
 		return nil, err
 	}
 
-	// H: fullfill system account's balance in case value is provided in tx
+	// H: fulfill system account's balance in case value is provided in tx
 	// System caller can be used in systemTxs only
 	// System transactions are verified at a higher level in fsm
 	// The above ensures fresh balance can be added only when consensus rules are met
@@ -1173,7 +1179,11 @@ func checkAndProcessTx(msg *types.Transaction, t *Transition) error {
 	// 4. caller must not be the system caller
 	if msg.From == contracts.SystemCaller {
 		return NewTransitionApplicationError(
-			fmt.Errorf("non-state transaction sender must NOT be %v, but got %v", contracts.SystemCaller, msg.From),
+			fmt.Errorf(
+				"non-state transaction sender must NOT be %v, but got %v",
+				contracts.SystemCaller,
+				msg.From,
+			),
 			true,
 		)
 	}
@@ -1198,7 +1208,11 @@ func checkAndProcessStateTx(msg *types.Transaction) error {
 
 	if msg.From != contracts.SystemCaller {
 		return NewTransitionApplicationError(
-			fmt.Errorf("state transaction sender must be %v, but got %v", contracts.SystemCaller, msg.From),
+			fmt.Errorf(
+				"state transaction sender must be %v, but got %v",
+				contracts.SystemCaller,
+				msg.From,
+			),
 			true,
 		)
 	}

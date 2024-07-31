@@ -97,6 +97,7 @@ func main() {
 				"DelegatorRewardsClaimed",
 			},
 		},
+
 		{
 			"VestingManagerFactory",
 			gensc.VestingManagerFactory,
@@ -115,6 +116,16 @@ func main() {
 			false,
 			[]string{
 				"initialize",
+			},
+			[]string{},
+		},
+		{
+			"RewardWallet",
+			gensc.RewardWallet,
+			false,
+			[]string{
+				"initialize",
+				"fund()",
 			},
 			[]string{},
 		},
@@ -235,7 +246,12 @@ func getInternalType(paramName string, paramAbiType *abi.Type) string {
 }
 
 // generateType generates code for structs used in smart contract functions and events
-func generateType(generatedData *generatedData, name string, obj *abi.Type, res *[]string) (string, error) {
+func generateType(
+	generatedData *generatedData,
+	name string,
+	obj *abi.Type,
+	res *[]string,
+) (string, error) {
 	if obj.Kind() != abi.KindTuple {
 		return "", errors.New("type not expected")
 	}
@@ -309,7 +325,12 @@ func generateType(generatedData *generatedData, name string, obj *abi.Type, res 
 }
 
 // generateNestedType generates code for nested types found in smart contracts structs
-func generateNestedType(generatedData *generatedData, name string, obj *abi.Type, res *[]string) (string, error) {
+func generateNestedType(
+	generatedData *generatedData,
+	name string,
+	obj *abi.Type,
+	res *[]string,
+) (string, error) {
 	for _, s := range generatedData.structs {
 		if s == name {
 			// do not generate the same type again if it's already generated

@@ -53,6 +53,7 @@ var (
 	HydraDelegation                 *artifact.Artifact
 	VestingManagerFactory           *artifact.Artifact
 	APRCalculator                   *artifact.Artifact
+	RewardWallet                    *artifact.Artifact
 	RootERC721                      *artifact.Artifact
 	RootERC1155                     *artifact.Artifact
 	EIP1559Burn                     *artifact.Artifact
@@ -65,7 +66,6 @@ var (
 	TestWriteBlockMetadata *artifact.Artifact
 	RootERC20              *artifact.Artifact
 	TestSimple             *artifact.Artifact
-	TestRewardToken        *artifact.Artifact
 	LiquidityToken         *artifact.Artifact
 	FeeHandler             *artifact.Artifact
 )
@@ -103,6 +103,11 @@ func init() {
 		log.Fatal(err)
 	}
 
+	RewardWallet, err = artifact.DecodeArtifact([]byte(RewardWalletArtifact))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	LiquidityToken, err = artifact.DecodeArtifact([]byte(LiquidityTokenArtifact))
 	if err != nil {
 		log.Fatal(err)
@@ -118,7 +123,9 @@ func init() {
 		log.Fatal(err)
 	}
 
-	TransparentUpgradeableProxy, err = artifact.DecodeArtifact([]byte(TransparentUpgradeableProxyArtifact))
+	TransparentUpgradeableProxy, err = artifact.DecodeArtifact(
+		[]byte(TransparentUpgradeableProxyArtifact),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

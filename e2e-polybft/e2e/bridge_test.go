@@ -65,7 +65,6 @@ package e2e
 // 	}
 
 // 	cluster := framework.NewTestCluster(t, 5,
-// 		framework.WithTestRewardToken(),
 // 		framework.WithNumBlockConfirmations(numBlockConfirmations),
 // 		framework.WithEpochSize(epochSize))
 // 	defer cluster.Stop()
@@ -1155,7 +1154,7 @@ package e2e
 
 // func TestE2E_CheckpointSubmission(t *testing.T) {
 // 	// spin up a cluster with epoch size set to 5 blocks
-// 	cluster := framework.NewTestCluster(t, 5, framework.WithEpochSize(5), framework.WithTestRewardToken())
+// 	cluster := framework.NewTestCluster(t, 5, framework.WithEpochSize(5))
 // 	defer cluster.Stop()
 
 // 	// initialize tx relayer used to query CheckpointManager smart contract
@@ -1344,7 +1343,6 @@ package e2e
 // 	cluster := framework.NewTestCluster(t, 5,
 // 		framework.WithNumBlockConfirmations(0),
 // 		framework.WithEpochSize(epochSize),
-// 		framework.WithTestRewardToken(),
 // 		framework.WithBridgeAllowListAdmin(adminAddr),
 // 		framework.WithBridgeBlockListAdmin(adminAddr),
 // 		framework.WithSecretsCallback(func(a []types.Address, tcc *framework.TestClusterConfig) {
@@ -1559,7 +1557,6 @@ package e2e
 // 		framework.WithEpochSize(epochSize),
 // 		framework.WithNumBlockConfirmations(numBlockConfirmations),
 // 		framework.WithRootTrackerPollInterval(rootPollInterval),
-// 		framework.WithTestRewardToken(),
 // 	)
 // 	defer cluster.Stop()
 
@@ -1646,7 +1643,6 @@ package e2e
 // 		framework.WithBurnContract(&polybft.BurnContractInfo{
 // 			BlockNumber: 0,
 // 			Address:     types.StringToAddress("0xBurnContractAddress")}),
-// 		framework.WithTestRewardToken(),
 // 		framework.WithSecretsCallback(func(_ []types.Address, tcc *framework.TestClusterConfig) {
 // 			nonValidatorKeyString := hex.EncodeToString(nonValidatorKeyRaw)
 

@@ -18,6 +18,7 @@ func decodeStateTransaction(txData []byte) (contractsapi.StateTransactionInput, 
 
 	var (
 		commitEpochFn       contractsapi.CommitEpochHydraChainFn
+		fundRewardWalletFn  contractsapi.FundRewardWalletFn
 		distributeRewardsFn contractsapi.DistributeRewardsForHydraStakingFn
 		obj                 contractsapi.StateTransactionInput
 	)
@@ -25,6 +26,9 @@ func decodeStateTransaction(txData []byte) (contractsapi.StateTransactionInput, 
 	if bytes.Equal(sig, commitEpochFn.Sig()) {
 		// commit epoch
 		obj = &contractsapi.CommitEpochHydraChainFn{}
+	} else if bytes.Equal(sig, fundRewardWalletFn.Sig()) {
+		// fund reward wallet
+		obj = &contractsapi.FundRewardWalletFn{}
 	} else if bytes.Equal(sig, distributeRewardsFn.Sig()) {
 		// distribute rewards
 		obj = &contractsapi.DistributeRewardsForHydraStakingFn{}

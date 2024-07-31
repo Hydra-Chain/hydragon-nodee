@@ -35,6 +35,10 @@ var (
 		"Please migrate to the PolyBFT protocol and plan your activities accordingly.\n" +
 		"More information on how to execute the migration process can be found here" +
 		"(https://wiki.polygon.technology/docs/edge/operate/ibft-to-polybft/)."
+
+	maxUint256 = big.NewInt(0).Add(
+		big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), nil),
+		big.NewInt(-1))
 )
 
 // RetryForever will execute a function until it completes without error or
@@ -135,7 +139,8 @@ func DirectoryExists(directoryPath string) bool {
 	}
 
 	// Check if the directory exists, and that it's actually a directory if there is a hit
-	if fileInfo, statErr := os.Stat(pathAbs); os.IsNotExist(statErr) || (fileInfo != nil && !fileInfo.IsDir()) {
+	if fileInfo, statErr := os.Stat(pathAbs); os.IsNotExist(statErr) ||
+		(fileInfo != nil && !fileInfo.IsDir()) {
 		return false
 	}
 
@@ -156,7 +161,8 @@ func FileExists(filePath string) bool {
 	}
 
 	// Check if the file exists, and that it's actually a file if there is a hit
-	if fileInfo, statErr := os.Stat(pathAbs); os.IsNotExist(statErr) || (fileInfo != nil && fileInfo.IsDir()) {
+	if fileInfo, statErr := os.Stat(pathAbs); os.IsNotExist(statErr) ||
+		(fileInfo != nil && fileInfo.IsDir()) {
 		return false
 	}
 
@@ -236,7 +242,10 @@ func verifyFileOwnerAndPermissions(path string, info fs.FileInfo, expectedPerms 
 
 	// check if permissions are set correctly by the owner
 	if info.Mode() != expectedPerms {
-		return fmt.Errorf("permissions of the file/directory '%s' are set incorrectly by another user", path)
+		return fmt.Errorf(
+			"permissions of the file/directory '%s' are set incorrectly by another user",
+			path,
+		)
 	}
 
 	return nil
@@ -380,4 +389,16 @@ func EncodeUint64ToBytes(value uint64) []byte {
 // EncodeBytesToUint64 big endian byte slice to uint64
 func EncodeBytesToUint64(b []byte) uint64 {
 	return binary.BigEndian.Uint64(b)
+}
+
+// getTwoThirdOfMaxUint256 returns 2/3 of maxUint256
+func GetTwoThirdOfMaxUint256() *big.Int {
+	// Define the numerator and denominator for 2/3
+	two := big.NewInt(2)
+	three := big.NewInt(3)
+
+	// Calculate and return 2/3 of MaxUint256
+	requiredAmount := new(big.Int)
+
+	return requiredAmount.Mul(maxUint256, two).Div(requiredAmount, three)
 }

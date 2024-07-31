@@ -1,7 +1,6 @@
 package genesis
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -79,40 +78,14 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		premineBalances[premine.Address] = premine
 	}
 
-	walletPremineInfo, err := helper.ParsePremineInfo(p.rewardWallet)
-	if err != nil {
-		return fmt.Errorf("invalid reward wallet configuration provided '%s' : %w", p.rewardWallet, err)
-	}
-
 	if !p.nativeTokenConfig.IsMintable {
 		// validate premine map, no premine is allowed if token is not mintable,
-		// except for the reward wallet (if native token is used as reward token) and zero address
+		// except for the zero address
 		for a := range premineBalances {
-			if a != types.ZeroAddress && (p.rewardTokenCode != "" || a != walletPremineInfo.Address) {
+			if a != types.ZeroAddress {
 				return errNoPremineAllowed
 			}
 		}
-	}
-
-	var (
-		rewardTokenByteCode []byte
-		rewardTokenAddr     = contracts.NativeERC20TokenContract
-	)
-
-	if p.rewardTokenCode == "" {
-		// native token is used as a reward token, and reward wallet is not a zero address
-		if p.epochReward > 0 {
-			// epoch reward is non zero so premine reward wallet
-			premineBalances[walletPremineInfo.Address] = walletPremineInfo
-		}
-	} else {
-		bytes, err := hex.DecodeString(p.rewardTokenCode)
-		if err != nil {
-			return fmt.Errorf("could not decode reward token byte code '%s' : %w", p.rewardTokenCode, err)
-		}
-
-		rewardTokenByteCode = bytes
-		rewardTokenAddr = contracts.RewardTokenContract
 	}
 
 	initialValidators, err := p.getValidatorAccounts()
@@ -141,16 +114,11 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		SprintSize:          p.sprintSize,
 		EpochReward:         p.epochReward,
 		// use 1st account as governance address
-		Governance:          initialValidators[0].Address,
-		InitialTrieRoot:     types.StringToHash(p.initialStateRoot),
-		NativeTokenConfig:   p.nativeTokenConfig,
-		MinValidatorSetSize: p.minNumValidators,
-		MaxValidatorSetSize: p.maxNumValidators,
-		RewardConfig: &polybft.RewardsConfig{
-			TokenAddress:  rewardTokenAddr,
-			WalletAddress: walletPremineInfo.Address,
-			WalletAmount:  walletPremineInfo.Amount,
-		},
+		Governance:               initialValidators[0].Address,
+		InitialTrieRoot:          types.StringToHash(p.initialStateRoot),
+		NativeTokenConfig:        p.nativeTokenConfig,
+		MinValidatorSetSize:      p.minNumValidators,
+		MaxValidatorSetSize:      p.maxNumValidators,
 		BlockTimeDrift:           p.blockTimeDrift,
 		BlockTrackerPollInterval: common.Duration{Duration: p.blockTrackerPollInterval},
 		ProxyContractsAdmin:      types.StringToAddress(p.proxyContractsAdmin),
@@ -204,7 +172,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	}
 
 	// deploy genesis contracts
-	allocs, err := p.deployContracts(totalStake, rewardTokenByteCode)
+	allocs, err := p.deployContracts(totalStake)
 	if err != nil {
 		return err
 	}
@@ -319,9 +287,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	return helper.WriteGenesisConfigToDisk(chainConfig, params.genesisPath)
 }
 
-func (p *genesisParams) deployContracts(
-	totalStake *big.Int,
-	rewardTokenByteCode []byte) (map[types.Address]*chain.GenesisAccount, error) {
+func (p *genesisParams) deployContracts(totalStake *big.Int) (map[types.Address]*chain.GenesisAccount, error) {
 	proxyToImplAddrMap := contracts.GetProxyImplementationMapping()
 	proxyAddresses := make([]types.Address, 0, len(proxyToImplAddrMap))
 
@@ -363,6 +329,10 @@ func (p *genesisParams) deployContracts(
 			artifact: contractsapi.FeeHandler,
 			address:  contracts.FeeHandlerContractV1,
 		},
+		{
+			artifact: contractsapi.RewardWallet,
+			address:  contracts.RewardWalletContractV1,
+		},
 	}
 
 	// if !params.nativeTokenConfig.IsMintable {
@@ -393,17 +363,6 @@ func (p *genesisParams) deployContracts(
 
 	allocations := make(map[types.Address]*chain.GenesisAccount, len(genesisContracts)+1)
 
-	if rewardTokenByteCode != nil {
-		// if reward token is provided in genesis then, add it to allocations
-		// to RewardTokenContract address and update Polybft config
-		allocations[contracts.RewardTokenContractV1] = &chain.GenesisAccount{
-			Balance: big.NewInt(0),
-			Code:    rewardTokenByteCode,
-		}
-
-		proxyAddresses = append(proxyAddresses, contracts.RewardTokenContract)
-	}
-
 	genesisContracts = append(genesisContracts, getProxyContractsInfo(proxyAddresses)...)
 
 	for _, contract := range genesisContracts {
@@ -416,14 +375,8 @@ func (p *genesisParams) deployContracts(
 	// HydraStaking must have funds pre-allocated, because of withdrawal workflow
 	allocations[contracts.HydraStakingContract].Balance = totalStake
 
-	if rewardTokenByteCode != nil {
-		// if reward token is provided in genesis then, add it to allocations
-		// to RewardTokenContract address and update Polybft config
-		allocations[contracts.RewardTokenContract] = &chain.GenesisAccount{
-			Balance: big.NewInt(0),
-			Code:    rewardTokenByteCode,
-		}
-	}
+	// RewardWallet must have funds pre-allocated (2/3 of maxUint256)
+	allocations[contracts.RewardWalletContract].Balance = common.GetTwoThirdOfMaxUint256()
 
 	return allocations, nil
 }
@@ -464,7 +417,6 @@ func (p *genesisParams) getValidatorAccounts() ([]*validator.GenesisValidator, e
 				MultiAddr: parts[0],
 				Address:   addr,
 				BlsKey:    trimmedBLSKey,
-				Stake:     command.DefaultStake,
 			}
 		}
 

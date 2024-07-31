@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/umbracle/ethgo"
 )
 
 var (
@@ -308,7 +307,6 @@ func Test_GenesisPostHookFactory(t *testing.T) {
 				InitialValidatorSet: validators.GetParamValidators(),
 				Bridge:              bridgeCfg,
 				EpochSize:           epochSize,
-				RewardConfig:        &RewardsConfig{WalletAmount: ethgo.Ether(1000)},
 				NativeTokenConfig:   &TokenConfig{Name: "Test", Symbol: "TEST", Decimals: 18},
 				MaxValidatorSetSize: maxValidators,
 			},
@@ -319,7 +317,6 @@ func Test_GenesisPostHookFactory(t *testing.T) {
 				InitialValidatorSet: validators.GetParamValidators(),
 				Bridge:              bridgeCfg,
 				EpochSize:           epochSize,
-				RewardConfig:        &RewardsConfig{WalletAmount: ethgo.Ether(1000)},
 				NativeTokenConfig:   &TokenConfig{Name: "Test Mintable", Symbol: "TEST_MNT", Decimals: 18, IsMintable: true},
 				MaxValidatorSetSize: maxValidators,
 			},

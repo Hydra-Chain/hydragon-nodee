@@ -15,7 +15,6 @@ import (
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
-	"github.com/0xPolygon/polygon-edge/state"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/mock"
@@ -91,28 +90,28 @@ func createTestCommitEpochInput(t *testing.T, epochID uint64,
 	return commitEpoch
 }
 
-func createTestRewardToDistributeValue(t *testing.T, transition *state.Transition) *big.Int {
-	stateProvider := NewStateProvider(transition)
-	systemState := NewSystemState(
-		contracts.HydraChainContract,
-		contracts.HydraStakingContract,
-		contracts.HydraDelegationContract,
-		contracts.VestingManagerFactoryContract,
-		contracts.APRCalculatorContract,
-		contracts.StateReceiverContract,
-		stateProvider,
-	)
+func createTestFundRewardWalletInput(
+	t *testing.T,
+) *contractsapi.FundRewardWalletFn {
+	t.Helper()
+
+	return &contractsapi.FundRewardWalletFn{}
+}
+
+func createTestRewardWalletFundAmount(t *testing.T) *big.Int {
+	t.Helper()
 
 	blockchainMock := new(blockchainMock)
-	blockchainMock.On("GetStateProviderForBlock", mock.Anything).Return(nil, nil).Once()
-	blockchainMock.On("GetSystemState", mock.Anything).Return(systemState, nil).Once()
+	blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
+		Return(big.NewInt(0), nil).
+		Once()
 
-	rc := NewRewardsCalculator(hclog.NewNullLogger(), blockchainMock)
+	rwc := NewRewardWalletCalculator(hclog.NewNullLogger(), blockchainMock)
 
-	maxReward, err := rc.GetMaxReward(&types.Header{})
+	fundAmount, err := rwc.GetRewardWalletFundAmount(&types.Header{})
 	require.NoError(t, err)
 
-	return maxReward
+	return fundAmount
 }
 
 func createTestDistributeRewardsInput(

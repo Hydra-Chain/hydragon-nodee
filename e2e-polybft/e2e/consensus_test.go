@@ -37,7 +37,6 @@ func TestE2E_Consensus_Basic_WithNonValidators(t *testing.T) {
 	cluster := framework.NewTestCluster(t, validatorsNum,
 		framework.WithEpochSize(epochSize),
 		framework.WithNonValidators(2),
-		framework.WithTestRewardToken(),
 	)
 	defer cluster.Stop()
 
@@ -107,7 +106,6 @@ func TestE2E_Consensus_BulkDrop(t *testing.T) {
 	cluster := framework.NewTestCluster(t, clusterSize,
 		framework.WithEpochSize(epochSize),
 		framework.WithBlockTime(time.Second),
-		framework.WithTestRewardToken(),
 	)
 	defer cluster.Stop()
 
@@ -590,44 +588,6 @@ func TestE2E_Consensus_BulkDrop(t *testing.T) {
 // 		}, nonMinterAcc.Ecdsa)
 // 	require.Error(t, err)
 // 	require.Nil(t, receipt)
-// }
-
-// func TestE2E_Consensus_CustomRewardToken(t *testing.T) {
-// 	const epochSize = 5
-
-// 	cluster := framework.NewTestCluster(t, 5,
-// 		framework.WithEpochSize(epochSize),
-// 		framework.WithEpochReward(1000000),
-// 		framework.WithTestRewardToken(),
-// 	)
-// 	defer cluster.Stop()
-
-// 	cluster.WaitForReady(t)
-
-// 	// wait for couple of epochs to accumulate some rewards
-// 	require.NoError(t, cluster.WaitForBlock(epochSize*3, 3*time.Minute))
-
-// 	// first validator is the owner of ChildValidator set smart contract
-// 	owner := cluster.Servers[0]
-// 	childChainRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(owner.JSONRPCAddr()))
-// 	require.NoError(t, err)
-
-// 	rootChainRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(cluster.Bridge.JSONRPCAddr()))
-// 	require.NoError(t, err)
-
-// 	polybftConfig, err := polybft.LoadPolyBFTConfig(path.Join(cluster.Config.TmpDir, chainConfigFileName))
-// 	require.NoError(t, err)
-
-// 	validatorAcc, err := sidechain.GetAccountFromDir(owner.DataDir())
-// 	require.NoError(t, err)
-
-// 	validatorInfo, err := sidechain.GetValidatorInfo(validatorAcc.Ecdsa.Address(),
-// 		polybftConfig.Bridge.CustomSupernetManagerAddr, polybftConfig.Bridge.StakeManagerAddr,
-// 		polybftConfig.SupernetID, rootChainRelayer, childChainRelayer)
-// 	t.Logf("[Validator#%v] Witdhrawable rewards=%d\n", validatorInfo.Address, validatorInfo.WithdrawableRewards)
-
-// 	require.NoError(t, err)
-// 	require.True(t, validatorInfo.WithdrawableRewards.Cmp(big.NewInt(0)) > 0)
 // }
 
 // TestE2E_Consensus_EIP1559Check sends a legacy and a dynamic tx to the cluster

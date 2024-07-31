@@ -36,7 +36,9 @@ const (
 )
 
 var (
-	errMissingBridgeConfig = errors.New("invalid genesis configuration, missing bridge configuration")
+	errMissingBridgeConfig = errors.New(
+		"invalid genesis configuration, missing bridge configuration",
+	)
 )
 
 // polybftBackend is an interface defining polybft methods needed by fsm and sync tracker
@@ -127,7 +129,10 @@ type Polybft struct {
 	txPool txPoolInterface
 }
 
-func GenesisPostHookFactory(config *chain.Chain, engineName string) func(txn *state.Transition) error {
+func GenesisPostHookFactory(
+	config *chain.Chain,
+	engineName string,
+) func(txn *state.Transition) error {
 	return func(transition *state.Transition) error {
 		polyBFTConfig, err := GetPolyBFTConfig(config)
 		if err != nil {
@@ -166,10 +171,6 @@ func GenesisPostHookFactory(config *chain.Chain, engineName string) func(txn *st
 		// 	proxyAddrMapping[contracts.DefaultBurnContract] = burnContractAddress
 		// }
 
-		if _, ok := config.Genesis.Alloc[contracts.RewardTokenContract]; ok {
-			proxyAddrMapping[contracts.RewardTokenContract] = contracts.RewardTokenContractV1
-		}
-
 		if err = initProxies(transition, polyBFTConfig.ProxyContractsAdmin, proxyAddrMapping); err != nil {
 			return err
 		}
@@ -204,10 +205,10 @@ func GenesisPostHookFactory(config *chain.Chain, engineName string) func(txn *st
 			return err
 		}
 
-		// // mint reward tokens to reward wallet
-		// if err = mintRewardTokensToWallet(polyBFTConfig, transition); err != nil {
-		// 	return err
-		// }
+		// initialize RewardWallet SC
+		if err = initRewardWallet(polyBFTConfig, transition); err != nil {
+			return err
+		}
 
 		// check if there are Bridge Allow List Admins and Bridge Block List Admins
 		// and if there are, get the first address as the Admin
@@ -616,9 +617,15 @@ func (p *Polybft) startConsensusProtocol() {
 			case ev := <-eventCh:
 				// The blockchain notification system can eventually deliver
 				// stale block notifications. These should be ignored
-				if ev.Source == "syncer" && ev.NewChain[0].Number >= p.blockchain.CurrentHeader().Number {
-					p.logger.Info("sync block notification received", "block height", ev.NewChain[0].Number,
-						"current height", p.blockchain.CurrentHeader().Number)
+				if ev.Source == "syncer" &&
+					ev.NewChain[0].Number >= p.blockchain.CurrentHeader().Number {
+					p.logger.Info(
+						"sync block notification received",
+						"block height",
+						ev.NewChain[0].Number,
+						"current height",
+						p.blockchain.CurrentHeader().Number,
+					)
 					syncerBlockCh <- struct{}{}
 				}
 			}
@@ -635,7 +642,13 @@ func (p *Polybft) startConsensusProtocol() {
 
 		currentValidators, err := p.GetValidators(latestHeader.Number, nil)
 		if err != nil {
-			p.logger.Error("failed to query current validator set", "block number", latestHeader.Number, "error", err)
+			p.logger.Error(
+				"failed to query current validator set",
+				"block number",
+				latestHeader.Number,
+				"error",
+				err,
+			)
 		}
 
 		isValidator := currentValidators.ContainsNodeID(p.key.String())
@@ -647,7 +660,13 @@ func (p *Polybft) startConsensusProtocol() {
 			// initialize FSM as a stateless ibft backend via runtime as an adapter
 			err = p.runtime.FSM()
 			if err != nil {
-				p.logger.Error("failed to create fsm", "block number", latestHeader.Number, "error", err)
+				p.logger.Error(
+					"failed to create fsm",
+					"block number",
+					latestHeader.Number,
+					"error",
+					err,
+				)
 
 				continue
 			}
@@ -733,7 +752,11 @@ func (p *Polybft) VerifyHeader(header *types.Header) error {
 	return p.verifyHeaderImpl(parent, header, p.consensusConfig.BlockTimeDrift, nil)
 }
 
-func (p *Polybft) verifyHeaderImpl(parent, header *types.Header, blockTimeDrift uint64, parents []*types.Header) error {
+func (p *Polybft) verifyHeaderImpl(
+	parent, header *types.Header,
+	blockTimeDrift uint64,
+	parents []*types.Header,
+) error {
 	// validate header fields
 	if err := validateHeaderFields(parent, header, blockTimeDrift); err != nil {
 		return fmt.Errorf("failed to validate header for block %d. error = %w", header.Number, err)
@@ -742,18 +765,32 @@ func (p *Polybft) verifyHeaderImpl(parent, header *types.Header, blockTimeDrift 
 	// decode the extra data
 	extra, err := GetIbftExtra(header.ExtraData)
 	if err != nil {
-		return fmt.Errorf("failed to verify header for block %d. get extra error = %w", header.Number, err)
+		return fmt.Errorf(
+			"failed to verify header for block %d. get extra error = %w",
+			header.Number,
+			err,
+		)
 	}
 
 	// validate extra data
 	return extra.ValidateFinalizedData(
-		header, parent, parents, p.blockchain.GetChainID(), p, signer.DomainCheckpointManager, p.logger)
+		header,
+		parent,
+		parents,
+		p.blockchain.GetChainID(),
+		p,
+		signer.DomainCheckpointManager,
+		p.logger,
+	)
 }
 
 // Hydra notes: data is not taken from smart contract but is computed
 // based on validatorSetDelta extra field in the last block of an epoch
 // Then it is saved in the db (state_store_epoch)
-func (p *Polybft) GetValidators(blockNumber uint64, parents []*types.Header) (validator.AccountSet, error) {
+func (p *Polybft) GetValidators(
+	blockNumber uint64,
+	parents []*types.Header,
+) (validator.AccountSet, error) {
 	return p.validatorsCache.GetSnapshot(blockNumber, parents, nil)
 }
 
@@ -828,14 +865,22 @@ func (p *Polybft) FilterExtra(extra []byte) ([]byte, error) {
 func initProxies(transition *state.Transition, admin types.Address,
 	proxyToImplMap map[types.Address]types.Address) error {
 	for proxyAddress, implAddress := range proxyToImplMap {
-		protectSetupProxyFn := &contractsapi.ProtectSetUpProxyGenesisProxyFn{Initiator: contracts.SystemCaller}
+		protectSetupProxyFn := &contractsapi.ProtectSetUpProxyGenesisProxyFn{
+			Initiator: contracts.SystemCaller,
+		}
 
 		proxyInput, err := protectSetupProxyFn.EncodeAbi()
 		if err != nil {
 			return fmt.Errorf("GenesisProxy.protectSetUpProxy params encoding failed: %w", err)
 		}
 
-		err = callContract(contracts.SystemCaller, proxyAddress, proxyInput, "GenesisProxy.protectSetUpProxy", transition)
+		err = callContract(
+			contracts.SystemCaller,
+			proxyAddress,
+			proxyInput,
+			"GenesisProxy.protectSetUpProxy",
+			transition,
+		)
 		if err != nil {
 			return err
 		}
@@ -851,7 +896,13 @@ func initProxies(transition *state.Transition, admin types.Address,
 			return fmt.Errorf("GenesisProxy.setUpProxy params encoding failed: %w", err)
 		}
 
-		err = callContract(contracts.SystemCaller, proxyAddress, proxyInput, "GenesisProxy.setUpProxy", transition)
+		err = callContract(
+			contracts.SystemCaller,
+			proxyAddress,
+			proxyInput,
+			"GenesisProxy.setUpProxy",
+			transition,
+		)
 		if err != nil {
 			return err
 		}
@@ -860,7 +911,10 @@ func initProxies(transition *state.Transition, admin types.Address,
 	return nil
 }
 
-func getBurnContractAddress(config *chain.Chain, polyBFTConfig PolyBFTConfig) (types.Address, bool) {
+func getBurnContractAddress(
+	config *chain.Chain,
+	polyBFTConfig PolyBFTConfig,
+) (types.Address, bool) {
 	if config.Params.BurnContract != nil &&
 		len(config.Params.BurnContract) == 1 &&
 		!polyBFTConfig.NativeTokenConfig.IsMintable {

@@ -10,6 +10,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/state"
 	"github.com/0xPolygon/polygon-edge/types"
+	"github.com/umbracle/ethgo"
 	"github.com/umbracle/ethgo/abi"
 )
 
@@ -34,11 +35,11 @@ func initHydraChain(polyBFTConfig PolyBFTConfig, transition *state.Transition) e
 	}
 
 	initFn := &contractsapi.InitializeHydraChainFn{
-		NewValidators:          initialValidators,
-		Governance:             polyBFTConfig.Governance,
-		StakingContractAddr:    contracts.HydraStakingContract,
-		DelegationContractAddr: contracts.HydraDelegationContract,
-		NewBls:                 contracts.BLSContract,
+		NewValidators:       initialValidators,
+		Governance:          polyBFTConfig.Governance,
+		HydraStakingAddr:    contracts.HydraStakingContract,
+		HydraDelegationAddr: contracts.HydraDelegationContract,
+		NewBls:              contracts.BLSContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -58,13 +59,14 @@ func initHydraStaking(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 	}
 
 	initFn := &contractsapi.InitializeHydraStakingFn{
-		InitialStakers:         initialStakers,
-		NewMinStake:            initialMinStake,
-		NewLiquidToken:         contracts.LiquidityTokenContract,
-		HydraChainAddr:         contracts.HydraChainContract,
-		AprCalculatorAddr:      contracts.APRCalculatorContract,
-		Governance:             polyBFTConfig.Governance,
-		DelegationContractAddr: contracts.HydraDelegationContract,
+		InitialStakers:      initialStakers,
+		NewMinStake:         initialMinStake,
+		NewLiquidToken:      contracts.LiquidityTokenContract,
+		HydraChainAddr:      contracts.HydraChainContract,
+		AprCalculatorAddr:   contracts.APRCalculatorContract,
+		Governance:          polyBFTConfig.Governance,
+		HydraDelegationAddr: contracts.HydraDelegationContract,
+		RewardWalletAddr:    contracts.RewardWalletContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -92,6 +94,7 @@ func initHydraDelegation(polyBFTConfig PolyBFTConfig, transition *state.Transiti
 		HydraStakingAddr:          contracts.HydraStakingContract,
 		HydraChainAddr:            contracts.HydraChainContract,
 		VestingManagerFactoryAddr: contracts.VestingManagerFactoryContract,
+		RewardWalletAddr:          contracts.RewardWalletContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -101,6 +104,26 @@ func initHydraDelegation(polyBFTConfig PolyBFTConfig, transition *state.Transiti
 
 	return callContract(contracts.SystemCaller,
 		contracts.HydraDelegationContract, input, "HydraDelegation.initialize", transition)
+}
+
+// initRewardWallet initializes RewardWallet SC
+func initRewardWallet(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
+	managers := []ethgo.Address{
+		ethgo.Address(contracts.HydraStakingContract),
+		ethgo.Address(contracts.HydraDelegationContract),
+	}
+
+	initFn := &contractsapi.InitializeRewardWalletFn{
+		Managers: managers,
+	}
+
+	input, err := initFn.EncodeAbi()
+	if err != nil {
+		return fmt.Errorf("RewardWallet.initialize params encoding failed: %w", err)
+	}
+
+	return callContract(contracts.SystemCaller,
+		contracts.RewardWalletContract, input, "RewardWallet.initialize", transition)
 }
 
 // initVestingManagerFactory initializes VestingManagerFactory SC
@@ -337,37 +360,6 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 // 	return params.EncodeAbi()
 // }
 
-// mintRewardTokensToWallet mints configured amount of reward tokens to reward wallet address
-// func mintRewardTokensToWallet(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
-// 	if isNativeRewardToken(polyBFTConfig) {
-// 		// if reward token is a native erc20 token, we don't need to mint an amount of tokens
-// 		// for given wallet address to it since this is done in premine
-// 		return nil
-// 	}
-
-// 	mintFn := contractsapi.MintRootERC20Fn{
-// 		To:     polyBFTConfig.RewardConfig.WalletAddress,
-// 		Amount: polyBFTConfig.RewardConfig.WalletAmount,
-// 	}
-
-// 	input, err := mintFn.EncodeAbi()
-// 	if err != nil {
-// 		return fmt.Errorf("RewardToken.mint params encoding failed: %w", err)
-// 	}
-
-// 	return callContract(contracts.SystemCaller, polyBFTConfig.RewardConfig.TokenAddress, input,
-// 		"RewardToken.mint", transition)
-// }
-
-// 	input, err := approveFn.EncodeAbi()
-// 	if err != nil {
-// 		return fmt.Errorf("RewardToken.approve params encoding failed: %w", err)
-// 	}
-
-// 	return callContract(polyBFTConfig.RewardConfig.WalletAddress,
-// 		polyBFTConfig.RewardConfig.TokenAddress, input, "RewardToken.approve", transition)
-// }
-
 // callContract calls given smart contract function, encoded in input parameter
 func callContract(
 	from, to types.Address,
@@ -391,9 +383,4 @@ func callContract(
 	}
 
 	return nil
-}
-
-// isNativeRewardToken returns true in case a native token is used as a reward token as well
-func isNativeRewardToken(cfg PolyBFTConfig) bool {
-	return cfg.RewardConfig.TokenAddress == contracts.NativeERC20TokenContract
 }
