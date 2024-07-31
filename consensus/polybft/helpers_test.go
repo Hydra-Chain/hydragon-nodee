@@ -131,7 +131,13 @@ func createTestDistributeRewardsInput(
 	}
 }
 
-// vito - create tests for the new dao rewards distribution func
+func createTestDistributeVaultFundsInput(
+	t *testing.T,
+) *contractsapi.DistributeVaultFundsHydraChainFn {
+	t.Helper()
+
+	return &contractsapi.DistributeVaultFundsHydraChainFn{}
+}
 
 func generateStateSyncEvents(
 	t *testing.T,

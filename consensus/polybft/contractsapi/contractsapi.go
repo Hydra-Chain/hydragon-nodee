@@ -770,7 +770,9 @@ func (n *NewVestingManagerEvent) Decode(input []byte) error {
 }
 
 type InitializeAPRCalculatorFn struct {
-	Manager types.Address `abi:"manager"`
+	Manager        types.Address `abi:"manager"`
+	HydraChainAddr types.Address `abi:"hydraChainAddr"`
+	InitialPrice   *big.Int      `abi:"initialPrice"`
 }
 
 func (i *InitializeAPRCalculatorFn) Sig() []byte {

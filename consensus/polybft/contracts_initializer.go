@@ -40,7 +40,8 @@ func initHydraChain(polyBFTConfig PolyBFTConfig, transition *state.Transition) e
 		HydraStakingAddr:    contracts.HydraStakingContract,
 		HydraDelegationAddr: contracts.HydraDelegationContract,
 		AprCalculatorAddr:   contracts.APRCalculatorContract,
-		RewardWalletAddr:    contracts.APRCalculatorContract, // TODO: Fix after rebase - vito
+		RewardWalletAddr:    contracts.RewardWalletContract,
+		HydraVaultAddr:      contracts.FeeHandlerContract,
 		NewBls:              contracts.BLSContract,
 	}
 
@@ -68,7 +69,7 @@ func initHydraStaking(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 		HydraChainAddr:      contracts.HydraChainContract,
 		AprCalculatorAddr:   contracts.APRCalculatorContract,
 		HydraDelegationAddr: contracts.HydraDelegationContract,
-		RewardWalletAddr:    contracts.RewardWalletContract, // TODO: fix after rebase - vito
+		RewardWalletAddr:    contracts.RewardWalletContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -163,6 +164,7 @@ func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition
 		contracts.APRCalculatorContract, input, "APRCalculator.initialize", transition)
 }
 
+// initFeeHandler initializes FeeHandler (HydraVault) SC
 func initFeeHandler(polybftConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeHydraVaultFn{
 		Governer: polybftConfig.Governance,
@@ -182,6 +184,7 @@ func initFeeHandler(polybftConfig PolyBFTConfig, transition *state.Transition) e
 	)
 }
 
+// initDAOIncentiveVault initializes DAOIncentiveVault (HydraVault) SC
 func initDAOIncentiveVault(polybftConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeHydraVaultFn{
 		Governer: polybftConfig.Governance,
@@ -201,6 +204,7 @@ func initDAOIncentiveVault(polybftConfig PolyBFTConfig, transition *state.Transi
 	)
 }
 
+// initLiquidityToken initializes LiquidityToken SC
 func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := contractsapi.InitializeLiquidityTokenFn{
 		Name_:               "Liquid Hydra",

@@ -41,6 +41,10 @@ var (
 	RewardWalletContract = types.StringToAddress("0x110")
 	// RewardWalletContractV1 is an address of the RewardWallet's implementation contract deployed on the chain
 	RewardWalletContractV1 = types.StringToAddress("0x1101")
+	// DAOIncentiveVaultContract is an address of the DAO Incentive Vault proxy contract
+	DAOIncentiveVaultContract = types.StringToAddress("0x111")
+	// DAOIncentiveVaultContractV1 is an address of DAO Incentive Vault implementation contract
+	DAOIncentiveVaultContractV1 = types.StringToAddress("0x1111")
 	// StateReceiverContract is an address of bridge proxy contract on the child chain
 	StateReceiverContract = types.StringToAddress("0x1001")
 	// StateReceiverContractV1 is an address of bridge implementation contract on the child chain
