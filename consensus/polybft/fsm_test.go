@@ -760,6 +760,41 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongFundRewardWalletTx(t *testin
 	)
 }
 
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingFundRewardWalletTx(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	blockchainMock := new(blockchainMock)
+	blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
+		Return(big.NewInt(0), nil)
+
+	fsm := &fsm{
+		parent:                 &types.Header{Number: 1},
+		backend:                blockchainMock,
+		isEndOfEpoch:           true,
+		isEndOfSprint:          true,
+		validators:             validatorSet,
+		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		distributeRewardsInput: createTestDistributeRewardsInput(t, 0, allAccounts, 10),
+		logger:                 hclog.NewNullLogger(),
+	}
+
+	// add commit epoch commitEpochTx to the transactions list
+	commitEpochTx, err := fsm.createCommitEpochTx()
+	require.NoError(t, err)
+
+	// add distribute rewards distributeRewardsTx to the end of transactions list
+	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
+	require.NoError(t, err)
+
+	assert.EqualError(t, fsm.VerifyStateTransactions([]*types.Transaction{commitEpochTx, distributeRewardsTx}),
+		"fund reward wallet transaction is not found in the epoch ending block")
+}
+
 func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 	t.Parallel()
 

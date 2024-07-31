@@ -399,5 +399,6 @@ func GetTwoThirdOfMaxUint256() *big.Int {
 
 	// Calculate and return 2/3 of MaxUint256
 	requiredAmount := new(big.Int)
+
 	return requiredAmount.Mul(maxUint256, two).Div(requiredAmount, three)
 }

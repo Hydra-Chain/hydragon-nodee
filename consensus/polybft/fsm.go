@@ -40,6 +40,8 @@ var (
 	)
 	errCommitEpochTxSingleExpected = errors.New("only one commit epoch transaction is allowed " +
 		"in an epoch ending block")
+	errFundRewardWalletTxDoesNotExists = errors.New("fund reward wallet transaction is " +
+		"not found in the epoch ending block")
 	errFundRewardWalletTxSingleExpected = errors.New("only one fund reward wallet transaction is allowed " +
 		"in an epoch ending block")
 	errDistributeRewardsTxDoesNotExist = errors.New("distribute rewards transaction is " +
@@ -580,6 +582,12 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			// this is a check if commit epoch transaction is not in the list of transactions at all
 			// but it should be
 			return errCommitEpochTxDoesNotExist
+		}
+
+		if f.rewardWalletFundAmount != big.NewInt(0) && !fundRewardWalletTxExists {
+			// this is a check if there is a need to fund the reward wallet, but the transaction is not in the
+			// list of transactions at all, but it should be
+			return errFundRewardWalletTxDoesNotExists
 		}
 
 		if !distributeRewardsTxExists {
