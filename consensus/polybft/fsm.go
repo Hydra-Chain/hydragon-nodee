@@ -182,6 +182,10 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 		if err := f.blockBuilder.WriteTx(tx); err != nil {
 			return nil, fmt.Errorf("failed to apply distribute rewards transaction: %w", err)
 		}
+
+		// vito - create a transaction to distribute rewards to the DAO treasury
+		// 2% of the total staked + delegated amount, but this is for the whole year
+		// so, divide to epochs in year
 	}
 
 	if f.config.IsBridgeEnabled() {
@@ -572,6 +576,7 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			if err := f.verifyDistributeRewardsTx(tx); err != nil {
 				return fmt.Errorf("error while verifying distribute rewards transaction. error: %w", err)
 			}
+		// vito - make a case to verify the dao rewards distribution tx at the end of each epoch
 		default:
 			return fmt.Errorf("invalid state transaction data type: %v", stateTxData)
 		}
@@ -595,6 +600,8 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			// but it should be
 			return errDistributeRewardsTxDoesNotExist
 		}
+
+		// vito - validate that the dao rewards are distributed at the end of each epoch
 	}
 
 	return nil

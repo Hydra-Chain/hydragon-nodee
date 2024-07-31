@@ -131,6 +131,8 @@ func createTestDistributeRewardsInput(
 	}
 }
 
+// vito - create tests for the new dao rewards distribution func
+
 func generateStateSyncEvents(
 	t *testing.T,
 	eventsCount int,

@@ -469,6 +469,9 @@ func (c *consensusRuntime) FSM() error {
 	}
 
 	if isEndOfEpoch {
+		// vito - will receive distribute dao rewards input
+		// 2% of the total staked + delegated amount, but this is for the whole year
+		// so, divide to epochs in year
 		ff.commitEpochInput, ff.fundRewardWalletInput, ff.distributeRewardsInput, err = c.calculateStateTxsInput(
 			parent,
 			epoch,
@@ -686,6 +689,10 @@ func (c *consensusRuntime) calculateStateTxsInput(
 		Uptime:    uptime,
 		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
 	}
+
+	// vito - create a transaction to distribute rewards to the DAO treasury
+	// 2% of the total staked + delegated amount, but this is for the whole year
+	// so, divide to epochs in year
 
 	return commitEpoch, fundRewardWallet, distributeRewards, nil
 }
