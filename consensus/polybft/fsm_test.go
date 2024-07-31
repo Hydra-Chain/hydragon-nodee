@@ -780,6 +780,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingFundRewardWalletTx(t *test
 		isEndOfSprint:          true,
 		validators:             validatorSet,
 		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount: common.GetTwoThirdOfMaxUint256(),
 		distributeRewardsInput: createTestDistributeRewardsInput(t, 0, allAccounts, 10),
 		logger:                 hclog.NewNullLogger(),
 	}
