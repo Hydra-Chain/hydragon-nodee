@@ -1274,12 +1274,13 @@ func TestFSM_Validate_EpochEndingBlock_MismatchInDeltas(t *testing.T) {
 	}
 
 	fsm := &fsm{
-		parent:           parent,
-		backend:          blockchainMock,
-		validators:       validators.ToValidatorSet(),
-		logger:           hclog.NewNullLogger(),
-		isEndOfEpoch:     true,
-		commitEpochInput: commitEpoch,
+		parent:                 parent,
+		backend:                blockchainMock,
+		validators:             validators.ToValidatorSet(),
+		logger:                 hclog.NewNullLogger(),
+		isEndOfEpoch:           true,
+		commitEpochInput:       commitEpoch,
+		rewardWalletFundAmount: big.NewInt(0),
 		distributeRewardsInput: createTestDistributeRewardsInput(
 			t,
 			1,
