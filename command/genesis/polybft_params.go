@@ -326,6 +326,10 @@ func (p *genesisParams) deployContracts(totalStake *big.Int) (map[types.Address]
 			address:  contracts.LiquidityTokenContract,
 		},
 		{
+			artifact: contractsapi.RewardWallet,
+			address:  contracts.RewardWalletContractV1,
+		},
+		{
 			// FeeHandler is an instance of the HydraVault contract
 			artifact: contractsapi.HydraVault,
 			address:  contracts.FeeHandlerContractV1,

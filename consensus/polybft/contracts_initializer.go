@@ -112,6 +112,7 @@ func initHydraDelegation(polyBFTConfig PolyBFTConfig, transition *state.Transiti
 // initRewardWallet initializes RewardWallet SC
 func initRewardWallet(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	managers := []ethgo.Address{
+		ethgo.Address(contracts.HydraChainContract),
 		ethgo.Address(contracts.HydraStakingContract),
 		ethgo.Address(contracts.HydraDelegationContract),
 	}
@@ -152,7 +153,9 @@ func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Tr
 // initAPRCalculator initializes APRCalculator SC
 func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeAPRCalculatorFn{
-		Manager: polyBFTConfig.Governance,
+		Manager:        polyBFTConfig.Governance,
+		HydraChainAddr: contracts.HydraChainContract,
+		InitialPrice:   big.NewInt(0),
 	}
 
 	input, err := initFn.EncodeAbi()
