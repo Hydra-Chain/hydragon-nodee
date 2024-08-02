@@ -18,6 +18,7 @@ import (
 	consensusPolyBFT "github.com/0xPolygon/polygon-edge/consensus/polybft"
 	"github.com/0xPolygon/polygon-edge/forkmanager"
 	"github.com/0xPolygon/polygon-edge/gasprice"
+	priceoracle "github.com/0xPolygon/polygon-edge/price-oracle"
 
 	"github.com/0xPolygon/polygon-edge/archive"
 	"github.com/0xPolygon/polygon-edge/blockchain"
@@ -88,6 +89,9 @@ type Server struct {
 
 	// gasHelper is providing functions regarding gas and fees
 	gasHelper *gasprice.GasHelper
+
+	// core price oracle module
+	priceOracle *priceoracle.PriceOracle
 }
 
 // newFileLogger returns logger instance that writes all logs to a specified file.
@@ -172,7 +176,7 @@ func NewServer(config *Config) (*Server, error) {
 	}
 
 	// Set up datadog profiler
-	if ddErr := m.enableDataDogProfiler(); err != nil {
+	if ddErr := m.enableDataDogProfiler(); ddErr != nil {
 		m.logger.Error("DataDog profiler setup failed", "err", ddErr.Error())
 	}
 
@@ -402,6 +406,9 @@ func NewServer(config *Config) (*Server, error) {
 		return nil, err
 	}
 
+	// create price oracle instance
+	m.priceOracle = priceoracle.NewPriceOracle(m.blockchain, m.logger)
+
 	// start consensus
 	if err := m.consensus.Start(); err != nil {
 		return nil, err
@@ -409,6 +416,11 @@ func NewServer(config *Config) (*Server, error) {
 
 	m.txpool.SetBaseFee(m.blockchain.Header())
 	m.txpool.Start()
+
+	// start price oracle
+	if err := m.priceOracle.Start(); err != nil {
+		return nil, err
+	}
 
 	return m, nil
 }
