@@ -42,14 +42,28 @@ var (
 		"in an epoch ending block")
 	errFundRewardWalletTxDoesNotExists = errors.New("fund reward wallet transaction is " +
 		"not found in the epoch ending block")
-	errFundRewardWalletTxSingleExpected = errors.New("only one fund reward wallet transaction is allowed " +
-		"in an epoch ending block")
+	errFundRewardWalletTxSingleExpected = errors.New(
+		"only one fund reward wallet transaction is allowed " +
+			"in an epoch ending block",
+	)
 	errDistributeRewardsTxDoesNotExist = errors.New("distribute rewards transaction is " +
 		"not found in the epoch ending block")
 	errDistributeRewardsTxNotExpected = errors.New("didn't expect distribute rewards transaction " +
 		"in a non epoch ending block")
 	errDistributeRewardsTxSingleExpected = errors.New(
 		"only one distribute rewards transaction is " +
+			"allowed in an epoch ending block",
+	)
+	errDistributeDAOIncentiveTxDoesNotExist = errors.New(
+		"distribute DAO incentive transaction is " +
+			"not found in the epoch ending block",
+	)
+	errDistributeDAOIncentiveTxNotExpected = errors.New(
+		"didn't expect distribute DAO incentive transaction " +
+			"in a non epoch ending block",
+	)
+	errDistributeDAOIncentiveTxSingleExpected = errors.New(
+		"only one distribute DAO incentive transaction is " +
 			"allowed in an epoch ending block",
 	)
 	errProposalDontMatch = errors.New("failed to insert proposal, because the validated proposal " +
@@ -105,6 +119,9 @@ type fsm struct {
 	// It is send to the RewardWallet contract on fund transaction
 	// It is populated only for epoch-ending blocks when there are no sufficient funds.
 	rewardWalletFundAmount *big.Int
+
+	// distributeDAOIncentiveInputs will be used to distribute DAO incentive at the end of each epoch
+	distributeDAOIncentiveInput *contractsapi.DistributeVaultFundsHydraChainFn
 
 	// isEndOfEpoch indicates if epoch reached its end
 	isEndOfEpoch bool
@@ -181,6 +198,18 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 
 		if err := f.blockBuilder.WriteTx(tx); err != nil {
 			return nil, fmt.Errorf("failed to apply distribute rewards transaction: %w", err)
+		}
+
+		tx, err = f.createDistributeDAOIncentiveTx()
+		if err != nil {
+			return nil, err
+		}
+
+		if err := f.blockBuilder.WriteTx(tx); err != nil {
+			return nil, fmt.Errorf(
+				"failed to apply distribute DAO incentive rewards transaction: %w",
+				err,
+			)
 		}
 	}
 
@@ -340,6 +369,22 @@ func (f *fsm) createRewardWalletFundTx() (*types.Transaction, error) {
 		contracts.RewardWalletContract,
 		input,
 		f.rewardWalletFundAmount,
+	), nil
+}
+
+// createDistributeDAOIncentiveTx create a StateTransaction, which invokes HydraChain smart contract
+// and sends all the necessary metadata to it.
+func (f *fsm) createDistributeDAOIncentiveTx() (*types.Transaction, error) {
+	input, err := f.distributeDAOIncentiveInput.EncodeAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	return createStateTransactionWithData(
+		f.Height(),
+		contracts.HydraChainContract,
+		input,
+		nil,
 	), nil
 }
 
@@ -503,9 +548,10 @@ func (f *fsm) ValidateSender(msg *proto.Message) error {
 
 func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 	var (
-		commitEpochTxExists       bool
-		fundRewardWalletTxExists  bool
-		distributeRewardsTxExists bool
+		commitEpochTxExists            bool
+		fundRewardWalletTxExists       bool
+		distributeRewardsTxExists      bool
+		distributeDAOIncentiveTxExists bool
 	)
 
 	for _, tx := range transactions {
@@ -572,6 +618,19 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			if err := f.verifyDistributeRewardsTx(tx); err != nil {
 				return fmt.Errorf("error while verifying distribute rewards transaction. error: %w", err)
 			}
+		case *contractsapi.DistributeVaultFundsHydraChainFn:
+			if distributeDAOIncentiveTxExists {
+				// if we already validated distribute DAO incentive tx,
+				// that means someone added more than one distribute DAO incentive tx to block,
+				// which is invalid
+				return errDistributeDAOIncentiveTxSingleExpected
+			}
+
+			distributeDAOIncentiveTxExists = true
+
+			if err := f.verifyDistributeDAOIncentiveTx(tx); err != nil {
+				return fmt.Errorf("error while verifying distribute DAO incentive rewards transaction. error: %w", err)
+			}
 		default:
 			return fmt.Errorf("invalid state transaction data type: %v", stateTxData)
 		}
@@ -594,6 +653,12 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			// this is a check if distribute rewards transaction is not in the list of transactions at all
 			// but it should be
 			return errDistributeRewardsTxDoesNotExist
+		}
+
+		if !distributeDAOIncentiveTxExists {
+			// this is a check if distribute DAO incentive rewards tx is not in the list of transactions at all
+			// but it should be
+			return errDistributeDAOIncentiveTxDoesNotExist
 		}
 	}
 
@@ -754,6 +819,31 @@ func (f *fsm) verifyDistributeRewardsTx(distributeRewardsTx *types.Transaction) 
 	}
 
 	return errDistributeRewardsTxNotExpected
+}
+
+// verifyDistributeDAOIncentiveTx creates distribute vault rewards transaction
+// and compares its hash with the one extracted from the block.
+func (f *fsm) verifyDistributeDAOIncentiveTx(
+	distributeDAOIncentiveTx *types.Transaction,
+) error {
+	if f.isEndOfEpoch {
+		localDistributeDAOIncentiveTx, err := f.createDistributeDAOIncentiveTx()
+		if err != nil {
+			return err
+		}
+
+		if distributeDAOIncentiveTx.Hash != localDistributeDAOIncentiveTx.Hash {
+			return fmt.Errorf(
+				"invalid distribute DAO incentive rewards transaction. Expected '%s', but got '%s' distribute DAO incentive rewards hash",
+				localDistributeDAOIncentiveTx.Hash,
+				distributeDAOIncentiveTx.Hash,
+			)
+		}
+
+		return nil
+	}
+
+	return errDistributeDAOIncentiveTxNotExpected
 }
 
 // verifyBridgeCommitmentTx validates bridge commitment transaction

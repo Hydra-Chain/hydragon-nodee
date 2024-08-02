@@ -149,7 +149,10 @@ func newConsensusRuntime(log hcf.Logger, config *runtimeConfig) (*consensusRunti
 		)
 	}
 
-	rewardCalculator := NewRewardWalletCalculator(log.Named("reward_wallet_calculator"), config.blockchain)
+	rewardCalculator := NewRewardWalletCalculator(
+		log.Named("reward_wallet_calculator"),
+		config.blockchain,
+	)
 
 	runtime := &consensusRuntime{
 		state:                  config.State,
@@ -469,7 +472,7 @@ func (c *consensusRuntime) FSM() error {
 	}
 
 	if isEndOfEpoch {
-		ff.commitEpochInput, ff.fundRewardWalletInput, ff.distributeRewardsInput, err = c.calculateStateTxsInput(
+		ff.commitEpochInput, ff.fundRewardWalletInput, ff.distributeRewardsInput, ff.distributeDAOIncentiveInput, err = c.calculateStateTxsInput(
 			parent,
 			epoch,
 		)
@@ -590,7 +593,8 @@ func (c *consensusRuntime) calculateStateTxsInput(
 	epoch *epochMetadata,
 ) (*contractsapi.CommitEpochHydraChainFn,
 	*contractsapi.FundRewardWalletFn,
-	*contractsapi.DistributeRewardsForHydraStakingFn, error) {
+	*contractsapi.DistributeRewardsForHydraStakingFn,
+	*contractsapi.DistributeVaultFundsHydraChainFn, error) {
 	uptimeCounter := map[types.Address]int64{}
 	blockHeader := currentBlock
 	epochID := epoch.Number
@@ -613,18 +617,18 @@ func (c *consensusRuntime) calculateStateTxsInput(
 
 	blockExtra, err := GetIbftExtra(currentBlock.ExtraData)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	// calculate uptime for current epoch
 	for blockHeader.Number > epoch.FirstBlockInEpoch {
 		if err := getSealersForBlock(blockExtra, epoch.Validators); err != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, nil, err
 		}
 
 		blockHeader, blockExtra, err = getBlockData(blockHeader.Number-1, c.config.blockchain)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, nil, err
 		}
 	}
 
@@ -634,16 +638,16 @@ func (c *consensusRuntime) calculateStateTxsInput(
 		for i := 0; i < commitEpochLookbackSize; i++ {
 			validators, err := c.config.polybftBackend.GetValidators(blockHeader.Number-2, nil)
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, nil, nil, err
 			}
 
 			if err := getSealersForBlock(blockExtra, validators); err != nil {
-				return nil, nil, nil, err
+				return nil, nil, nil, nil, err
 			}
 
 			blockHeader, blockExtra, err = getBlockData(blockHeader.Number-1, c.config.blockchain)
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, nil, nil, err
 			}
 		}
 	}
@@ -687,7 +691,9 @@ func (c *consensusRuntime) calculateStateTxsInput(
 		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
 	}
 
-	return commitEpoch, fundRewardWallet, distributeRewards, nil
+	distributeVaultFunds := &contractsapi.DistributeVaultFundsHydraChainFn{}
+
+	return commitEpoch, fundRewardWallet, distributeRewards, distributeVaultFunds, nil
 }
 
 // GenerateExitProof generates proof of exit and is a bridge endpoint store function

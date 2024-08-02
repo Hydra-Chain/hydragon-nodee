@@ -689,13 +689,14 @@ func TestConsensusRuntime_calculateStateTxsInput_SecondEpoch(t *testing.T) {
 		lastBuiltBlock: lastBuiltBlock,
 	}
 
-	commitEpochInput, fundRewardWalletInput, distributeRewardsInput, err := consensusRuntime.calculateStateTxsInput(
+	commitEpochInput, fundRewardWalletInput, distributeRewardsInput, distributeVaultFundsInput, err := consensusRuntime.calculateStateTxsInput(
 		lastBuiltBlock,
 		consensusRuntime.epoch,
 	)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, commitEpochInput)
 	assert.Empty(t, fundRewardWalletInput)
+	assert.Empty(t, distributeVaultFundsInput)
 	assert.Equal(t, uint64(epoch), commitEpochInput.ID.Uint64())
 	assert.Equal(t, uint64(epochStartBlock), commitEpochInput.Epoch.StartBlock.Uint64())
 	assert.Equal(t, uint64(epochEndBlock), commitEpochInput.Epoch.EndBlock.Uint64())

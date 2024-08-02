@@ -210,6 +210,11 @@ func GenesisPostHookFactory(
 			return err
 		}
 
+		// initialize DAOIncentiveVault SC
+		if err = initDAOIncentiveVault(polyBFTConfig, transition); err != nil {
+			return err
+		}
+
 		// check if there are Bridge Allow List Admins and Bridge Block List Admins
 		// and if there are, get the first address as the Admin
 		// bridgeAllowListAdmin := types.ZeroAddress

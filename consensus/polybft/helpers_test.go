@@ -131,6 +131,14 @@ func createTestDistributeRewardsInput(
 	}
 }
 
+func createTestDistributeDAOIncentiveInput(
+	t *testing.T,
+) *contractsapi.DistributeVaultFundsHydraChainFn {
+	t.Helper()
+
+	return &contractsapi.DistributeVaultFundsHydraChainFn{}
+}
+
 func generateStateSyncEvents(
 	t *testing.T,
 	eventsCount int,

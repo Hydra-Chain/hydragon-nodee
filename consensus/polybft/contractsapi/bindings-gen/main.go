@@ -50,6 +50,7 @@ func main() {
 				"commitEpoch",
 				"addToWhitelist",
 				"register",
+				"distributeVaultFunds",
 			},
 			[]string{
 				"NewValidator",
@@ -139,8 +140,8 @@ func main() {
 			[]string{},
 		},
 		{
-			"FeeHandler",
-			gensc.FeeHandler,
+			"HydraVault",
+			gensc.HydraVault,
 			false,
 			[]string{
 				"initialize",

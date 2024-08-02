@@ -67,7 +67,7 @@ var (
 	RootERC20              *artifact.Artifact
 	TestSimple             *artifact.Artifact
 	LiquidityToken         *artifact.Artifact
-	FeeHandler             *artifact.Artifact
+	HydraVault             *artifact.Artifact
 )
 
 func init() {
@@ -113,7 +113,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	FeeHandler, err = artifact.DecodeArtifact([]byte(FeeHandlerArtifact))
+	HydraVault, err = artifact.DecodeArtifact([]byte(HydraVaultArtifact))
 	if err != nil {
 		log.Fatal(err)
 	}
