@@ -293,11 +293,11 @@ func TestFSM_BuildProposal_WithCommitEpochTxGood(t *testing.T) {
 			validatorSet,
 			10,
 		),
-		fundRewardWalletInput:        createTestFundRewardWalletInput(t),
-		rewardWalletFundAmount:       createTestRewardWalletFundAmount(t),
-		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
-		exitEventRootHash:            eventRoot,
-		logger:                       hclog.NewNullLogger(),
+		fundRewardWalletInput:       createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount:      createTestRewardWalletFundAmount(t),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		exitEventRootHash:           eventRoot,
+		logger:                      hclog.NewNullLogger(),
 	}
 
 	proposal, err := fsm.BuildProposal(currentRound)
@@ -419,20 +419,20 @@ func TestFSM_BuildProposal_EpochEndingBlock_ValidatorsDeltaExists(t *testing.T) 
 	validatorSet := validator.NewValidatorSet(validators, hclog.NewNullLogger())
 
 	fsm := &fsm{
-		parent:                       parent,
-		blockBuilder:                 blockBuilderMock,
-		config:                       &PolyBFTConfig{},
-		backend:                      blockChainMock,
-		isEndOfEpoch:                 true,
-		validators:                   validatorSet,
-		commitEpochInput:             createTestCommitEpochInput(t, 0, validators, 10),
-		distributeRewardsInput:       createTestDistributeRewardsInput(t, 0, validators, 10),
-		fundRewardWalletInput:        createTestFundRewardWalletInput(t),
-		rewardWalletFundAmount:       createTestRewardWalletFundAmount(t),
-		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
-		exitEventRootHash:            types.ZeroHash,
-		logger:                       hclog.NewNullLogger(),
-		newValidatorsDelta:           newDelta,
+		parent:                      parent,
+		blockBuilder:                blockBuilderMock,
+		config:                      &PolyBFTConfig{},
+		backend:                     blockChainMock,
+		isEndOfEpoch:                true,
+		validators:                  validatorSet,
+		commitEpochInput:            createTestCommitEpochInput(t, 0, validators, 10),
+		distributeRewardsInput:      createTestDistributeRewardsInput(t, 0, validators, 10),
+		fundRewardWalletInput:       createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount:      createTestRewardWalletFundAmount(t),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		exitEventRootHash:           types.ZeroHash,
+		logger:                      hclog.NewNullLogger(),
+		newValidatorsDelta:          newDelta,
 	}
 
 	proposal, err := fsm.BuildProposal(0)
@@ -549,11 +549,11 @@ func TestFSM_BuildProposal_EpochEndingBlock_FailToGetNextValidatorsHash(t *testi
 			allAccounts,
 			10,
 		),
-		fundRewardWalletInput:        createTestFundRewardWalletInput(t),
-		rewardWalletFundAmount:       createTestRewardWalletFundAmount(t),
-		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
-		exitEventRootHash:            types.ZeroHash,
-		newValidatorsDelta:           newValidatorDelta,
+		fundRewardWalletInput:       createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount:      createTestRewardWalletFundAmount(t),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		exitEventRootHash:           types.ZeroHash,
+		newValidatorsDelta:          newValidatorDelta,
 	}
 
 	proposal, err := fsm.BuildProposal(0)
@@ -842,8 +842,8 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWithoutFundRewardWalletTx(t *test
 			allAccounts,
 			10,
 		),
-		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
-		logger:                       hclog.NewNullLogger(),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		logger:                      hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -885,8 +885,8 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeDAOIncentiveTx(t *
 			allAccounts,
 			10,
 		),
-		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
-		logger:                       hclog.NewNullLogger(),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		logger:                      hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -950,8 +950,8 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 			allAccounts,
 			10,
 		),
-		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
-		logger:                       hclog.NewNullLogger(),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		logger:                      hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -997,8 +997,8 @@ func TestFSM_VerifyStateTransactions_NonEndOfEpochErrOnCommitEpochTx(t *testing.
 			allAccounts,
 			10,
 		),
-		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
-		logger:                       hclog.NewNullLogger(),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		logger:                      hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -1053,8 +1053,8 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 			allAccounts,
 			10,
 		),
-		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
-		logger:                       hclog.NewNullLogger(),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		logger:                      hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -1511,10 +1511,10 @@ func TestFSM_Validate_EpochEndingBlock_MismatchInDeltas(t *testing.T) {
 			validators.GetPublicIdentities(),
 			10,
 		),
-		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
-		polybftBackend:               polybftBackendMock,
-		newValidatorsDelta:           newValidatorDelta,
-		config:                       &PolyBFTConfig{BlockTimeDrift: 1},
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		polybftBackend:              polybftBackendMock,
+		newValidatorsDelta:          newValidatorDelta,
+		config:                      &PolyBFTConfig{BlockTimeDrift: 1},
 	}
 
 	err = fsm.Validate(proposal)

@@ -472,7 +472,7 @@ func (c *consensusRuntime) FSM() error {
 	}
 
 	if isEndOfEpoch {
-		ff.commitEpochInput, ff.fundRewardWalletInput, ff.distributeRewardsInput, ff.distributeDAOIncentiveInputs, err = c.calculateStateTxsInput(
+		ff.commitEpochInput, ff.fundRewardWalletInput, ff.distributeRewardsInput, ff.distributeDAOIncentiveInput, err = c.calculateStateTxsInput(
 			parent,
 			epoch,
 		)

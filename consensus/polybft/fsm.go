@@ -121,7 +121,7 @@ type fsm struct {
 	rewardWalletFundAmount *big.Int
 
 	// distributeDAOIncentiveInputs will be used to distribute DAO incentive at the end of each epoch
-	distributeDAOIncentiveInputs *contractsapi.DistributeVaultFundsHydraChainFn
+	distributeDAOIncentiveInput *contractsapi.DistributeVaultFundsHydraChainFn
 
 	// isEndOfEpoch indicates if epoch reached its end
 	isEndOfEpoch bool
@@ -375,7 +375,7 @@ func (f *fsm) createRewardWalletFundTx() (*types.Transaction, error) {
 // createDistributeDAOIncentiveTx create a StateTransaction, which invokes HydraChain smart contract
 // and sends all the necessary metadata to it.
 func (f *fsm) createDistributeDAOIncentiveTx() (*types.Transaction, error) {
-	input, err := f.distributeDAOIncentiveInputs.EncodeAbi()
+	input, err := f.distributeDAOIncentiveInput.EncodeAbi()
 	if err != nil {
 		return nil, err
 	}

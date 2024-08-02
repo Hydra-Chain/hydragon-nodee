@@ -152,23 +152,34 @@ func TestIntegration_DistributeDAOIncentive(t *testing.T) {
 		result.GasUsed,
 	)
 
-	// create input for the vault distribution
+	// create the input that will be used to fetch the vault distribution amount from the contract
 	vaultDistributionInput, err := contractsapi.HydraChain.Abi.Methods["vaultDistribution"].Encode(&VaultDistributionHydraChainFn{})
 	require.NoError(t, err)
 
-	// call the vault distribution to get the value before distribution
-	vaultDistributionRes := systemCallResult(t, transition, contracts.HydraChainContract, vaultDistributionInput)
-	valueDistributionAmount := new(big.Int).SetBytes(vaultDistributionRes.ReturnValue)
+	// make a call to fetch the distribution amount and ensure it is initially 0
+	vaultDistributionAmountRes := systemCallResult(t, transition, contracts.HydraChainContract, vaultDistributionInput)
+	valueDistributionAmount := new(big.Int).SetBytes(vaultDistributionAmountRes.ReturnValue)
 	require.Equal(t, new(big.Int).Cmp(valueDistributionAmount), 0)
 
-	// create input for distribute DAO incentive
+	// create the input for the distrbute DAO incentive transaction
 	distributeDAOIncentiveInput, err := createTestDistributeDAOIncentiveInput(t).EncodeAbi()
 	require.NoError(t, err)
 
-	// call reward DAO incentive distributor
-	result = systemCallResult(t, transition, contracts.HydraChainContract, distributeDAOIncentiveInput)
+	// create & write a transaction to distribute the DAO incentive
+	distributeDAOIncentiveTx := &types.Transaction{
+		From:     contracts.SystemCaller,
+		To:       &contracts.HydraChainContract,
+		Type:     types.StateTx,
+		Input:    distributeDAOIncentiveInput,
+		Gas:      types.StateTransactionGasLimit,
+		Value:    big.NewInt(0),
+		GasPrice: big.NewInt(0),
+	}
 
-	// create input to get the total balance
+	err = transition.Write(distributeDAOIncentiveTx)
+	require.NoError(t, err)
+
+	// create input to get the total staked balance
 	totalBalanceInput, err := contractsapi.HydraStaking.Abi.Methods["totalBalance"].Encode(&TotalBalanceHydraStakingFn{})
 	require.NoError(t, err)
 
@@ -177,9 +188,9 @@ func TestIntegration_DistributeDAOIncentive(t *testing.T) {
 	totalBalance := new(big.Int).SetBytes(totalBalanceRes.ReturnValue)
 	daoIncentiveRewards := calcDAORewards(totalBalance)
 
-	// call the vault distribution to get the value before distribution
-	vaultDistributionRes = systemCallResult(t, transition, contracts.HydraChainContract, vaultDistributionInput)
-	valueDistributionAmount = new(big.Int).SetBytes(vaultDistributionRes.ReturnValue)
+	// make a call to fetch the distribution amount after the distribution
+	vaultDistributionAmountRes = systemCallResult(t, transition, contracts.HydraChainContract, vaultDistributionInput)
+	valueDistributionAmount = new(big.Int).SetBytes(vaultDistributionAmountRes.ReturnValue)
 
 	// Vault distribution amount must increase 2% of the total staked amount
 	require.Equal(
