@@ -280,19 +280,24 @@ func TestFSM_BuildProposal_WithCommitEpochTxGood(t *testing.T) {
 	validatorSet := validators.GetPublicIdentities()
 
 	fsm := &fsm{
-		parent:                    parent,
-		blockBuilder:              mBlockBuilder,
-		config:                    &PolyBFTConfig{},
-		backend:                   blockChainMock,
-		isEndOfEpoch:              true,
-		validators:                validators.ToValidatorSet(),
-		commitEpochInput:          createTestCommitEpochInput(t, 0, validatorSet, 10),
-		distributeRewardsInput:    createTestDistributeRewardsInput(t, 0, validatorSet, 10),
-		fundRewardWalletInput:     createTestFundRewardWalletInput(t),
-		rewardWalletFundAmount:    createTestRewardWalletFundAmount(t),
-		distributeVaultFundsInput: createTestDistributeVaultFundsInput(t),
-		exitEventRootHash:         eventRoot,
-		logger:                    hclog.NewNullLogger(),
+		parent:           parent,
+		blockBuilder:     mBlockBuilder,
+		config:           &PolyBFTConfig{},
+		backend:          blockChainMock,
+		isEndOfEpoch:     true,
+		validators:       validators.ToValidatorSet(),
+		commitEpochInput: createTestCommitEpochInput(t, 0, validatorSet, 10),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			validatorSet,
+			10,
+		),
+		fundRewardWalletInput:        createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount:       createTestRewardWalletFundAmount(t),
+		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
+		exitEventRootHash:            eventRoot,
+		logger:                       hclog.NewNullLogger(),
 	}
 
 	proposal, err := fsm.BuildProposal(currentRound)
@@ -414,20 +419,20 @@ func TestFSM_BuildProposal_EpochEndingBlock_ValidatorsDeltaExists(t *testing.T) 
 	validatorSet := validator.NewValidatorSet(validators, hclog.NewNullLogger())
 
 	fsm := &fsm{
-		parent:                    parent,
-		blockBuilder:              blockBuilderMock,
-		config:                    &PolyBFTConfig{},
-		backend:                   blockChainMock,
-		isEndOfEpoch:              true,
-		validators:                validatorSet,
-		commitEpochInput:          createTestCommitEpochInput(t, 0, validators, 10),
-		distributeRewardsInput:    createTestDistributeRewardsInput(t, 0, validators, 10),
-		fundRewardWalletInput:     createTestFundRewardWalletInput(t),
-		rewardWalletFundAmount:    createTestRewardWalletFundAmount(t),
-		distributeVaultFundsInput: createTestDistributeVaultFundsInput(t),
-		exitEventRootHash:         types.ZeroHash,
-		logger:                    hclog.NewNullLogger(),
-		newValidatorsDelta:        newDelta,
+		parent:                       parent,
+		blockBuilder:                 blockBuilderMock,
+		config:                       &PolyBFTConfig{},
+		backend:                      blockChainMock,
+		isEndOfEpoch:                 true,
+		validators:                   validatorSet,
+		commitEpochInput:             createTestCommitEpochInput(t, 0, validators, 10),
+		distributeRewardsInput:       createTestDistributeRewardsInput(t, 0, validators, 10),
+		fundRewardWalletInput:        createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount:       createTestRewardWalletFundAmount(t),
+		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
+		exitEventRootHash:            types.ZeroHash,
+		logger:                       hclog.NewNullLogger(),
+		newValidatorsDelta:           newDelta,
 	}
 
 	proposal, err := fsm.BuildProposal(0)
@@ -533,17 +538,22 @@ func TestFSM_BuildProposal_EpochEndingBlock_FailToGetNextValidatorsHash(t *testi
 	blockBuilderMock.On("Fill").Once()
 
 	fsm := &fsm{parent: parent,
-		blockBuilder:              blockBuilderMock,
-		config:                    &PolyBFTConfig{},
-		isEndOfEpoch:              true,
-		validators:                testValidators.ToValidatorSet(),
-		commitEpochInput:          createTestCommitEpochInput(t, 0, allAccounts, 10),
-		distributeRewardsInput:    createTestDistributeRewardsInput(t, 0, allAccounts, 10),
-		fundRewardWalletInput:     createTestFundRewardWalletInput(t),
-		rewardWalletFundAmount:    createTestRewardWalletFundAmount(t),
-		distributeVaultFundsInput: createTestDistributeVaultFundsInput(t),
-		exitEventRootHash:         types.ZeroHash,
-		newValidatorsDelta:        newValidatorDelta,
+		blockBuilder:     blockBuilderMock,
+		config:           &PolyBFTConfig{},
+		isEndOfEpoch:     true,
+		validators:       testValidators.ToValidatorSet(),
+		commitEpochInput: createTestCommitEpochInput(t, 0, allAccounts, 10),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			allAccounts,
+			10,
+		),
+		fundRewardWalletInput:        createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount:       createTestRewardWalletFundAmount(t),
+		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
+		exitEventRootHash:            types.ZeroHash,
+		newValidatorsDelta:           newValidatorDelta,
 	}
 
 	proposal, err := fsm.BuildProposal(0)
@@ -818,17 +828,22 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWithoutFundRewardWalletTx(t *test
 		Return(common.GetTwoThirdOfMaxUint256(), nil)
 
 	fsm := &fsm{
-		parent:                    &types.Header{Number: 1},
-		backend:                   blockchainMock,
-		isEndOfEpoch:              true,
-		isEndOfSprint:             true,
-		validators:                validatorSet,
-		commitEpochInput:          createTestCommitEpochInput(t, 0, allAccounts, 10),
-		rewardWalletFundAmount:    big.NewInt(0),
-		fundRewardWalletInput:     createTestFundRewardWalletInput(t),
-		distributeRewardsInput:    createTestDistributeRewardsInput(t, 0, allAccounts, 10),
-		distributeVaultFundsInput: createTestDistributeVaultFundsInput(t),
-		logger:                    hclog.NewNullLogger(),
+		parent:                 &types.Header{Number: 1},
+		backend:                blockchainMock,
+		isEndOfEpoch:           true,
+		isEndOfSprint:          true,
+		validators:             validatorSet,
+		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount: big.NewInt(0),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			allAccounts,
+			10,
+		),
+		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
+		logger:                       hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -839,17 +854,17 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWithoutFundRewardWalletTx(t *test
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
-	// add distribute vault funds distributeVaultFundsTx to the end of transactions list
-	distributeVaultFundsTx, err := fsm.createDistributeVaultFundsTx()
+	// add distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
 	err = fsm.VerifyStateTransactions(
-		[]*types.Transaction{commitEpochTx, distributeRewardsTx, distributeVaultFundsTx},
+		[]*types.Transaction{commitEpochTx, distributeRewardsTx, distributeDAOIncentiveTx},
 	)
 	require.NoError(t, err)
 }
 
-func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeVaultFundsTx(t *testing.T) {
+func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeDAOIncentiveTx(t *testing.T) {
 	t.Parallel()
 
 	validators := validator.NewTestValidators(t, 5)
@@ -858,15 +873,20 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeVaultFundsTx(t *te
 	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
 
 	fsm := &fsm{
-		parent:                    &types.Header{Number: 1},
-		isEndOfEpoch:              true,
-		isEndOfSprint:             true,
-		validators:                validatorSet,
-		commitEpochInput:          createTestCommitEpochInput(t, 0, allAccounts, 10),
-		fundRewardWalletInput:     createTestFundRewardWalletInput(t),
-		distributeRewardsInput:    createTestDistributeRewardsInput(t, 0, allAccounts, 10),
-		distributeVaultFundsInput: createTestDistributeVaultFundsInput(t),
-		logger:                    hclog.NewNullLogger(),
+		parent:                &types.Header{Number: 1},
+		isEndOfEpoch:          true,
+		isEndOfSprint:         true,
+		validators:            validatorSet,
+		commitEpochInput:      createTestCommitEpochInput(t, 0, allAccounts, 10),
+		fundRewardWalletInput: createTestFundRewardWalletInput(t),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			allAccounts,
+			10,
+		),
+		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
+		logger:                       hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -877,14 +897,16 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeVaultFundsTx(t *te
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
-	distributeVaultFundsInput, err := createTestDistributeVaultFundsInput(t).EncodeAbi()
+	distributeDAOIncentiveInput, err := createTestDistributeDAOIncentiveInput(
+		t,
+	).EncodeAbi()
 	require.NoError(t, err)
 
-	// create invalid distribute vault funds tx
-	distributeVaultFundsTx := createStateTransactionWithData(
+	// create invalid distribute DAO incentive rewards tx
+	distributeDAOIncentiveTx := createStateTransactionWithData(
 		0,
 		contracts.HydraChainContract,
-		distributeVaultFundsInput,
+		distributeDAOIncentiveInput,
 		big.NewInt(10),
 	)
 
@@ -899,10 +921,10 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeVaultFundsTx(t *te
 				commitEpochTx,
 				fundRewardWalletTx,
 				distributeRewardsTx,
-				distributeVaultFundsTx,
+				distributeDAOIncentiveTx,
 			},
 		),
-		"invalid distribute vault funds transaction",
+		"invalid distribute DAO incentive rewards transaction",
 	)
 }
 
@@ -915,16 +937,21 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
 
 	fsm := &fsm{
-		parent:                    &types.Header{Number: 1},
-		isEndOfEpoch:              true,
-		isEndOfSprint:             true,
-		validators:                validatorSet,
-		commitEpochInput:          createTestCommitEpochInput(t, 0, allAccounts, 10),
-		rewardWalletFundAmount:    createTestRewardWalletFundAmount(t),
-		fundRewardWalletInput:     createTestFundRewardWalletInput(t),
-		distributeRewardsInput:    createTestDistributeRewardsInput(t, 0, allAccounts, 10),
-		distributeVaultFundsInput: createTestDistributeVaultFundsInput(t),
-		logger:                    hclog.NewNullLogger(),
+		parent:                 &types.Header{Number: 1},
+		isEndOfEpoch:           true,
+		isEndOfSprint:          true,
+		validators:             validatorSet,
+		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount: createTestRewardWalletFundAmount(t),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			allAccounts,
+			10,
+		),
+		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
+		logger:                       hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -944,7 +971,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 		fsm.VerifyStateTransactions(
 			[]*types.Transaction{commitEpochTx, fundRewardWalletTx, distributeRewardsTx},
 		),
-		"distribute vault funds transaction is not found in the epoch ending block",
+		"distribute DAO incentive rewards transaction is not found in the epoch ending block",
 	)
 }
 
@@ -957,16 +984,21 @@ func TestFSM_VerifyStateTransactions_NonEndOfEpochErrOnCommitEpochTx(t *testing.
 	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
 
 	fsm := &fsm{
-		parent:                    &types.Header{Number: 1},
-		isEndOfEpoch:              false,
-		isEndOfSprint:             true,
-		validators:                validatorSet,
-		commitEpochInput:          createTestCommitEpochInput(t, 0, allAccounts, 10),
-		rewardWalletFundAmount:    createTestRewardWalletFundAmount(t),
-		fundRewardWalletInput:     createTestFundRewardWalletInput(t),
-		distributeRewardsInput:    createTestDistributeRewardsInput(t, 0, allAccounts, 10),
-		distributeVaultFundsInput: createTestDistributeVaultFundsInput(t),
-		logger:                    hclog.NewNullLogger(),
+		parent:                 &types.Header{Number: 1},
+		isEndOfEpoch:           false,
+		isEndOfSprint:          true,
+		validators:             validatorSet,
+		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount: createTestRewardWalletFundAmount(t),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			allAccounts,
+			10,
+		),
+		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
+		logger:                       hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -981,8 +1013,8 @@ func TestFSM_VerifyStateTransactions_NonEndOfEpochErrOnCommitEpochTx(t *testing.
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
-	// add distribute vault funds distributeVaultFundsTx to the end of transactions list
-	distributeVaultFundsTx, err := fsm.createDistributeVaultFundsTx()
+	// add distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
 	assert.ErrorContains(
@@ -992,7 +1024,7 @@ func TestFSM_VerifyStateTransactions_NonEndOfEpochErrOnCommitEpochTx(t *testing.
 				commitEpochTx,
 				fundRewardWalletTx,
 				distributeRewardsTx,
-				distributeVaultFundsTx,
+				distributeDAOIncentiveTx,
 			},
 		),
 		"didn't expect commit epoch transaction in a non epoch ending block",
@@ -1008,16 +1040,21 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
 
 	fsm := &fsm{
-		parent:                    &types.Header{Number: 1},
-		isEndOfEpoch:              true,
-		isEndOfSprint:             true,
-		validators:                validatorSet,
-		commitEpochInput:          createTestCommitEpochInput(t, 0, allAccounts, 10),
-		rewardWalletFundAmount:    createTestRewardWalletFundAmount(t),
-		fundRewardWalletInput:     createTestFundRewardWalletInput(t),
-		distributeRewardsInput:    createTestDistributeRewardsInput(t, 0, allAccounts, 10),
-		distributeVaultFundsInput: createTestDistributeVaultFundsInput(t),
-		logger:                    hclog.NewNullLogger(),
+		parent:                 &types.Header{Number: 1},
+		isEndOfEpoch:           true,
+		isEndOfSprint:          true,
+		validators:             validatorSet,
+		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount: createTestRewardWalletFundAmount(t),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			allAccounts,
+			10,
+		),
+		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
+		logger:                       hclog.NewNullLogger(),
 	}
 
 	// add commit epoch commitEpochTx to the transactions list
@@ -1032,8 +1069,8 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
-	// add distribute vault funds distributeVaultFundsTx to the end of transactions list
-	distributeVaultFundsTx, err := fsm.createDistributeVaultFundsTx()
+	// add distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
 	err = fsm.VerifyStateTransactions(
@@ -1041,7 +1078,7 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 			commitEpochTx,
 			fundRewardWalletTx,
 			distributeRewardsTx,
-			distributeVaultFundsTx,
+			distributeDAOIncentiveTx,
 		},
 	)
 	require.NoError(t, err)
@@ -1417,8 +1454,8 @@ func TestFSM_Validate_EpochEndingBlock_MismatchInDeltas(t *testing.T) {
 	distributeRewardsTxInput, err := distributeRewards.EncodeAbi()
 	require.NoError(t, err)
 
-	distributeVaultFunds := createTestDistributeVaultFundsInput(t)
-	distributeVaultFundsTxInput, err := distributeVaultFunds.EncodeAbi()
+	distributeDAOIncentive := createTestDistributeDAOIncentiveInput(t)
+	distributeDAOIncentiveTxInput, err := distributeDAOIncentive.EncodeAbi()
 	require.NoError(t, err)
 
 	stateBlock.Block.Header.Hash = proposalHash
@@ -1435,7 +1472,7 @@ func TestFSM_Validate_EpochEndingBlock_MismatchInDeltas(t *testing.T) {
 		createStateTransactionWithData(
 			1,
 			contracts.HydraChainContract,
-			distributeVaultFundsTxInput,
+			distributeDAOIncentiveTxInput,
 			nil,
 		),
 	}
@@ -1474,10 +1511,10 @@ func TestFSM_Validate_EpochEndingBlock_MismatchInDeltas(t *testing.T) {
 			validators.GetPublicIdentities(),
 			10,
 		),
-		distributeVaultFundsInput: createTestDistributeVaultFundsInput(t),
-		polybftBackend:            polybftBackendMock,
-		newValidatorsDelta:        newValidatorDelta,
-		config:                    &PolyBFTConfig{BlockTimeDrift: 1},
+		distributeDAOIncentiveInputs: createTestDistributeDAOIncentiveInput(t),
+		polybftBackend:               polybftBackendMock,
+		newValidatorsDelta:           newValidatorDelta,
+		config:                       &PolyBFTConfig{BlockTimeDrift: 1},
 	}
 
 	err = fsm.Validate(proposal)

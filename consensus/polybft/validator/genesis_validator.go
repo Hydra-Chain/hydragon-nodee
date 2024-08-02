@@ -80,14 +80,17 @@ func (v GenesisValidator) ToValidatorInitAPIBinding() (*contractsapi.ValidatorIn
 	if err != nil {
 		return nil, err
 	}
+
 	signBigInts, err := blsSignature.ToBigInt()
 	if err != nil {
 		return nil, err
 	}
+
 	pubKey, err := v.UnmarshalBLSPublicKey()
 	if err != nil {
 		return nil, err
 	}
+
 	return &contractsapi.ValidatorInit{
 		Addr:      v.Address,
 		Pubkey:    pubKey.ToBigInt(),

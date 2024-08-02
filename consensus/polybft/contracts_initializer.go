@@ -41,7 +41,7 @@ func initHydraChain(polyBFTConfig PolyBFTConfig, transition *state.Transition) e
 		HydraDelegationAddr: contracts.HydraDelegationContract,
 		AprCalculatorAddr:   contracts.APRCalculatorContract,
 		RewardWalletAddr:    contracts.RewardWalletContract,
-		HydraVaultAddr:      contracts.FeeHandlerContract,
+		HydraVaultAddr:      contracts.DAOIncentiveVaultContract,
 		NewBls:              contracts.BLSContract,
 	}
 

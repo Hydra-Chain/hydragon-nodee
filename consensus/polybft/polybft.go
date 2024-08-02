@@ -209,6 +209,7 @@ func GenesisPostHookFactory(
 		if err = initRewardWallet(polyBFTConfig, transition); err != nil {
 			return err
 		}
+
 		// initialize DAOIncentiveVault SC
 		if err = initDAOIncentiveVault(polyBFTConfig, transition); err != nil {
 			return err
