@@ -889,7 +889,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeDAOIncentiveTx(t *
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
-	// create fund reward wallet tx and add it to the transactions list
+	// create fund reward wallet transaction in order to add it to the transactions list
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
