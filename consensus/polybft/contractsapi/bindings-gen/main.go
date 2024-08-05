@@ -50,7 +50,7 @@ func main() {
 				"commitEpoch",
 				"addToWhitelist",
 				"register",
-				"distributeVaultFunds",
+				"distributeDAOIncentive",
 			},
 			[]string{
 				"NewValidator",

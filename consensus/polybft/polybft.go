@@ -932,3 +932,16 @@ func getBurnContractAddress(
 
 	return types.ZeroAddress, false
 }
+
+// A function used to initialize a big.Int slice with a given size and value
+func NewBigIntSlice(size int, value int64) []*big.Int {
+	// Create a slice of the given size
+	slice := make([]*big.Int, size)
+
+	// Initialize each element to point to a new big.Int set to given number
+	for i := range slice {
+		slice[i] = big.NewInt(value)
+	}
+
+	return slice
+}

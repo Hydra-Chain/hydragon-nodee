@@ -35,14 +35,14 @@ func initHydraChain(polyBFTConfig PolyBFTConfig, transition *state.Transition) e
 	}
 
 	initFn := &contractsapi.InitializeHydraChainFn{
-		NewValidators:       initialValidators,
-		Governance:          polyBFTConfig.Governance,
-		HydraStakingAddr:    contracts.HydraStakingContract,
-		HydraDelegationAddr: contracts.HydraDelegationContract,
-		AprCalculatorAddr:   contracts.APRCalculatorContract,
-		RewardWalletAddr:    contracts.RewardWalletContract,
-		HydraVaultAddr:      contracts.DAOIncentiveVaultContract,
-		NewBls:              contracts.BLSContract,
+		NewValidators:         initialValidators,
+		Governance:            polyBFTConfig.Governance,
+		HydraStakingAddr:      contracts.HydraStakingContract,
+		HydraDelegationAddr:   contracts.HydraDelegationContract,
+		AprCalculatorAddr:     contracts.APRCalculatorContract,
+		RewardWalletAddr:      contracts.RewardWalletContract,
+		DaoIncentiveVaultAddr: contracts.DAOIncentiveVaultContract,
+		NewBls:                contracts.BLSContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -153,9 +153,9 @@ func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Tr
 // initAPRCalculator initializes APRCalculator SC
 func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeAPRCalculatorFn{
-		Manager:        polyBFTConfig.Governance,
+		Governance:     polyBFTConfig.Governance,
 		HydraChainAddr: contracts.HydraChainContract,
-		InitialPrice:   big.NewInt(0),
+		Prices:         [310]*big.Int(NewBigIntSlice(310, 1)),
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -170,7 +170,7 @@ func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition
 // initFeeHandler initializes FeeHandler (HydraVault) SC
 func initFeeHandler(polybftConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeHydraVaultFn{
-		Governer: polybftConfig.Governance,
+		Governance: polybftConfig.Governance,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -190,7 +190,7 @@ func initFeeHandler(polybftConfig PolyBFTConfig, transition *state.Transition) e
 // initDAOIncentiveVault initializes DAOIncentiveVault (HydraVault) SC
 func initDAOIncentiveVault(polybftConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeHydraVaultFn{
-		Governer: polybftConfig.Governance,
+		Governance: polybftConfig.Governance,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -212,7 +212,7 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 	initFn := contractsapi.InitializeLiquidityTokenFn{
 		Name_:               "Liquid Hydra",
 		Symbol_:             "LYDRA",
-		Governer:            polyBFTConfig.Governance,
+		Governance:          polyBFTConfig.Governance,
 		HydraStakingAddr:    contracts.HydraStakingContract,
 		HydraDelegationAddr: contracts.HydraDelegationContract,
 	}

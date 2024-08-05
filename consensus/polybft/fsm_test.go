@@ -748,7 +748,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongFundRewardWalletTx(t *testin
 		logger:                 hclog.NewNullLogger(),
 	}
 
-	// add commit epoch commitEpochTx to the transactions list
+	// create commit epoch commitEpochTx to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -763,7 +763,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongFundRewardWalletTx(t *testin
 		big.NewInt(10),
 	)
 
-	// add distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards distributeRewardsTx to the end of transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
@@ -796,21 +796,16 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingFundRewardWalletTx(t *test
 		validators:             validatorSet,
 		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
 		rewardWalletFundAmount: common.GetTwoThirdOfMaxUint256(),
-		distributeRewardsInput: createTestDistributeRewardsInput(t, 0, allAccounts, 10),
 		logger:                 hclog.NewNullLogger(),
 	}
 
-	// add commit epoch commitEpochTx to the transactions list
+	// create commit epoch commitEpochTx to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
-	require.NoError(t, err)
-
-	// add distribute rewards distributeRewardsTx to the end of transactions list
-	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
 	assert.EqualError(
 		t,
-		fsm.VerifyStateTransactions([]*types.Transaction{commitEpochTx, distributeRewardsTx}),
+		fsm.VerifyStateTransactions([]*types.Transaction{commitEpochTx}),
 		"fund reward wallet transaction is not found in the epoch ending block",
 	)
 }
@@ -846,15 +841,15 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWithoutFundRewardWalletTx(t *test
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// add commit epoch commitEpochTx to the transactions list
+	// create commit epoch commitEpochTx to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
-	// add distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards distributeRewardsTx to the end of transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
-	// add distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	// create distribute vault funds distributeDAOIncentiveTx to the end of transactions list
 	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
@@ -873,12 +868,13 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeDAOIncentiveTx(t *
 	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
 
 	fsm := &fsm{
-		parent:                &types.Header{Number: 1},
-		isEndOfEpoch:          true,
-		isEndOfSprint:         true,
-		validators:            validatorSet,
-		commitEpochInput:      createTestCommitEpochInput(t, 0, allAccounts, 10),
-		fundRewardWalletInput: createTestFundRewardWalletInput(t),
+		parent:                 &types.Header{Number: 1},
+		isEndOfEpoch:           true,
+		isEndOfSprint:          true,
+		validators:             validatorSet,
+		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount: big.NewInt(0),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
 		distributeRewardsInput: createTestDistributeRewardsInput(
 			t,
 			0,
@@ -889,7 +885,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeDAOIncentiveTx(t *
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// add commit epoch commitEpochTx to the transactions list
+	// create commit epoch commitEpochTx to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -954,7 +950,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// add commit epoch commitEpochTx to the transactions list
+	// create commit epoch commitEpochTx to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -962,7 +958,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
-	// add distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards distributeRewardsTx to the end of transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
@@ -971,7 +967,205 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 		fsm.VerifyStateTransactions(
 			[]*types.Transaction{commitEpochTx, fundRewardWalletTx, distributeRewardsTx},
 		),
-		"distribute DAO incentive rewards transaction is not found in the epoch ending block",
+		"distribute DAO incentive transaction is not found in the epoch ending block",
+	)
+}
+
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingCommitEpochTxWhenFundRewardWallet(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	fsm := &fsm{
+		parent:                 &types.Header{Number: 1},
+		isEndOfEpoch:           true,
+		isEndOfSprint:          true,
+		validators:             validatorSet,
+		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount: createTestRewardWalletFundAmount(t),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		logger:                 hclog.NewNullLogger(),
+	}
+
+	// create fund reward wallet tx and add it to the transactions list
+	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
+	require.NoError(t, err)
+
+	// create commit epoch commitEpochTx to the transactions list
+	commitEpochTx, err := fsm.createCommitEpochTx()
+	require.NoError(t, err)
+
+	assert.EqualError(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{fundRewardWalletTx, commitEpochTx},
+		),
+		"the commit epoch transaction must be executed first",
+	)
+}
+
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingCommitEpochTxWhenDistributeRewards(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	fsm := &fsm{
+		parent:           &types.Header{Number: 1},
+		isEndOfEpoch:     true,
+		isEndOfSprint:    true,
+		validators:       validatorSet,
+		commitEpochInput: createTestCommitEpochInput(t, 0, allAccounts, 10),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			allAccounts,
+			10,
+		),
+		logger: hclog.NewNullLogger(),
+	}
+
+	// create distribute rewards distributeRewardsTx to the end of transactions list
+	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
+	require.NoError(t, err)
+
+	// create commit epoch commitEpochTx to the transactions list
+	commitEpochTx, err := fsm.createCommitEpochTx()
+	require.NoError(t, err)
+
+	assert.EqualError(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{distributeRewardsTx, commitEpochTx},
+		),
+		"the commit epoch transaction must be executed first",
+	)
+}
+
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingCommitEpochTxWhenDistributeDAOIncentive(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	fsm := &fsm{
+		parent:                      &types.Header{Number: 1},
+		isEndOfEpoch:                true,
+		isEndOfSprint:               true,
+		validators:                  validatorSet,
+		commitEpochInput:            createTestCommitEpochInput(t, 0, allAccounts, 10),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		logger:                      hclog.NewNullLogger(),
+	}
+
+	// create distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
+	require.NoError(t, err)
+
+	// create commit epoch commitEpochTx to the transactions list
+	commitEpochTx, err := fsm.createCommitEpochTx()
+	require.NoError(t, err)
+
+	assert.EqualError(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{distributeDAOIncentiveTx, commitEpochTx},
+		),
+		"the commit epoch transaction must be executed first",
+	)
+}
+
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeRewards(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	fsm := &fsm{
+		parent:                 &types.Header{Number: 1},
+		isEndOfEpoch:           true,
+		isEndOfSprint:          true,
+		validators:             validatorSet,
+		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount: createTestRewardWalletFundAmount(t),
+		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			allAccounts,
+			10,
+		),
+		logger: hclog.NewNullLogger(),
+	}
+
+	// create commit epoch commitEpochTx to the transactions list
+	commitEpochTx, err := fsm.createCommitEpochTx()
+	require.NoError(t, err)
+
+	// create fund reward wallet tx and add it to the transactions list
+	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
+	require.NoError(t, err)
+
+	// create distribute rewards distributeRewardsTx to the end of transactions list
+	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
+	require.NoError(t, err)
+
+	assert.EqualError(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{commitEpochTx, distributeRewardsTx, fundRewardWalletTx},
+		),
+		"the reward wallet fund transaction must be executed before distributing rewards",
+	)
+}
+
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeDAOIncentive(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	fsm := &fsm{
+		parent:                      &types.Header{Number: 1},
+		isEndOfEpoch:                true,
+		isEndOfSprint:               true,
+		validators:                  validatorSet,
+		commitEpochInput:            createTestCommitEpochInput(t, 0, allAccounts, 10),
+		rewardWalletFundAmount:      createTestRewardWalletFundAmount(t),
+		fundRewardWalletInput:       createTestFundRewardWalletInput(t),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		logger:                      hclog.NewNullLogger(),
+	}
+
+	// create commit epoch commitEpochTx to the transactions list
+	commitEpochTx, err := fsm.createCommitEpochTx()
+	require.NoError(t, err)
+
+	// create distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
+	require.NoError(t, err)
+
+	// create fund reward wallet tx and add it to the transactions list
+	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
+	require.NoError(t, err)
+
+	assert.EqualError(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{commitEpochTx, distributeDAOIncentiveTx, fundRewardWalletTx},
+		),
+		"the reward wallet fund transaction must be executed before distributing rewards",
 	)
 }
 
@@ -1057,7 +1251,7 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// add commit epoch commitEpochTx to the transactions list
+	// create commit epoch commitEpochTx to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -1065,11 +1259,11 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
-	// add distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards distributeRewardsTx to the end of transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
-	// add distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	// create distribute vault funds distributeDAOIncentiveTx to the end of transactions list
 	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
