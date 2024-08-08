@@ -100,7 +100,7 @@ type fsm struct {
 	parent *types.Header
 
 	// backend implements methods for retrieving data from block chain
-	backend blockchainBackend
+	backend BlockchainBackend
 
 	// polybftBackend implements methods needed from the polybft
 	polybftBackend polybftBackend

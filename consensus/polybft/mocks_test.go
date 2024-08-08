@@ -19,7 +19,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-var _ blockchainBackend = (*blockchainMock)(nil)
+var _ BlockchainBackend = (*blockchainMock)(nil)
 
 type blockchainMock struct {
 	mock.Mock

@@ -26,7 +26,7 @@ var (
 )
 
 // blockchain is an interface that wraps the methods called on blockchain
-type blockchainBackend interface {
+type BlockchainBackend interface {
 	// CurrentHeader returns the header of blockchain block head
 	CurrentHeader() *types.Header
 
@@ -71,11 +71,22 @@ type blockchainBackend interface {
 	GetAccountBalance(block *types.Header, addr types.Address) (*big.Int, error)
 }
 
-var _ blockchainBackend = &blockchainWrapper{}
+var _ BlockchainBackend = &blockchainWrapper{}
 
 type blockchainWrapper struct {
 	executor   *state.Executor
 	blockchain *blockchain.Blockchain
+}
+
+// NewBlockchainWrapper creates a new instance of blockchainWrapper
+func NewBlockchainBackend(
+	executor *state.Executor,
+	blockchain *blockchain.Blockchain,
+) *blockchainWrapper {
+	return &blockchainWrapper{
+		executor:   executor,
+		blockchain: blockchain,
+	}
 }
 
 // CurrentHeader returns the header of blockchain block head

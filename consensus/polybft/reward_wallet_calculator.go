@@ -20,12 +20,12 @@ type RewardWalletCalculator interface {
 
 type rewardWalletCalculator struct {
 	logger     hclog.Logger
-	blockchain blockchainBackend
+	blockchain BlockchainBackend
 }
 
 func NewRewardWalletCalculator(
 	logger hclog.Logger,
-	blockchain blockchainBackend,
+	blockchain BlockchainBackend,
 ) RewardWalletCalculator {
 	return &rewardWalletCalculator{
 		logger:     logger,

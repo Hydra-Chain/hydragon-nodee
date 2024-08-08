@@ -77,7 +77,7 @@ type runtimeConfig struct {
 	DataDir               string
 	Key                   *wallet.Key
 	State                 *State
-	blockchain            blockchainBackend
+	blockchain            BlockchainBackend
 	polybftBackend        polybftBackend
 	txPool                txPoolInterface
 	numBlockConfirmations uint64

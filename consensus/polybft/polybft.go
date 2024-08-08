@@ -96,7 +96,7 @@ type Polybft struct {
 	consensusConfig *PolyBFTConfig
 
 	// blockchain is a reference to the blockchain object
-	blockchain blockchainBackend
+	blockchain BlockchainBackend
 
 	// runtime handles consensus runtime features like epoch, state and event management
 	runtime *consensusRuntime

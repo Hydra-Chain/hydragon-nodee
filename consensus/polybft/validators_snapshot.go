@@ -31,14 +31,14 @@ func (vs *validatorSnapshot) copy() *validatorSnapshot {
 type validatorsSnapshotCache struct {
 	snapshots  map[uint64]*validatorSnapshot
 	state      *State
-	blockchain blockchainBackend
+	blockchain BlockchainBackend
 	lock       sync.Mutex
 	logger     hclog.Logger
 }
 
 // newValidatorsSnapshotCache initializes a new instance of validatorsSnapshotCache
 func newValidatorsSnapshotCache(
-	logger hclog.Logger, state *State, blockchain blockchainBackend,
+	logger hclog.Logger, state *State, blockchain BlockchainBackend,
 ) *validatorsSnapshotCache {
 	return &validatorsSnapshotCache{
 		snapshots:  map[uint64]*validatorSnapshot{},

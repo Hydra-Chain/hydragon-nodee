@@ -407,7 +407,17 @@ func NewServer(config *Config) (*Server, error) {
 	}
 
 	// create price oracle instance
-	m.priceOracle = priceoracle.NewPriceOracle(m.blockchain, m.logger)
+	m.priceOracle, err = priceoracle.NewPriceOracle(
+		m.logger,
+		m.blockchain,
+		m.executor,
+		m.consensus,
+		m.config.JSONRPC.JSONRPCAddr.String(),
+		m.secretsManager,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	// start consensus
 	if err := m.consensus.Start(); err != nil {
@@ -955,6 +965,9 @@ func (s *Server) Close() {
 			s.logger.Error("Prometheus server shutdown error", err)
 		}
 	}
+
+	// Close the price oracle
+	s.priceOracle.Close()
 
 	// Close the txpool's main loop
 	s.txpool.Close()
