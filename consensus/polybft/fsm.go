@@ -605,7 +605,7 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 		syncValidatorsDataTxExists     bool
 	)
 
-	for _, tx := range transactions {
+	for i, tx := range transactions {
 		if tx.Type != types.StateTx {
 			continue
 		}
@@ -651,10 +651,6 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 				return errFundRewardWalletTxSingleExpected
 			}
 
-			if !commitEpochTxExists {
-				return errCommitEpochTxRequired
-			}
-
 			fundRewardWalletTxExists = true
 
 			if err := f.verifyRewardWalletFundTx(tx); err != nil {
@@ -666,10 +662,6 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 				// that means someone added more than one distribute rewards tx to block,
 				// which is invalid
 				return errDistributeRewardsTxSingleExpected
-			}
-
-			if !commitEpochTxExists {
-				return errCommitEpochTxRequired
 			}
 
 			if f.isRewardWalletFundTxRequired() && !fundRewardWalletTxExists {
@@ -687,10 +679,6 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 				// that means someone added more than one distribute DAO incentive tx to block,
 				// which is invalid
 				return errDistributeDAOIncentiveTxSingleExpected
-			}
-
-			if !commitEpochTxExists {
-				return errCommitEpochTxRequired
 			}
 
 			if f.isRewardWalletFundTxRequired() && !fundRewardWalletTxExists {
@@ -712,7 +700,7 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 
 			syncValidatorsDataTxExists = true
 
-			if err := f.verifySyncValidatorsDataTx(tx); err != nil {
+			if err := f.verifySyncValidatorsDataTx(tx, i); err != nil {
 				return fmt.Errorf("error while verifying sync validators data transaction. error: %w", err)
 			}
 		default:
@@ -938,8 +926,12 @@ func (f *fsm) verifyDistributeDAOIncentiveTx(distributeDAOIncentiveTx *types.Tra
 
 // verifySyncValidatorsDataTx creates sync validators data transaction
 // and compares its hash with the one extracted from the block.
-func (f *fsm) verifySyncValidatorsDataTx(syncValidatorsDataTx *types.Transaction) error {
+func (f *fsm) verifySyncValidatorsDataTx(syncValidatorsDataTx *types.Transaction, txIndex int) error {
 	if f.isStartOfEpoch {
+		if txIndex != 0 {
+			return fmt.Errorf("invalid transaction index. Expected 0, but got %d", txIndex)
+		}
+
 		localSyncValidatorsDataTx, err := f.createSyncValidatorsDataTx()
 		if err != nil {
 			return err

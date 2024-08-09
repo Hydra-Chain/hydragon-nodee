@@ -752,14 +752,14 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongFundRewardWalletTx(t *testin
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
-	fundRewardWalletInput, err := createTestFundRewardWalletInput(t).EncodeAbi()
+	fundRewardWalletInputEncoded, err := createTestFundRewardWalletInput(t).EncodeAbi()
 	require.NoError(t, err)
 
 	// create invalid fund reward wallet tx
 	fundRewardWalletTx := createStateTransactionWithData(
 		0,
 		contracts.RewardWalletContract,
-		fundRewardWalletInput,
+		fundRewardWalletInputEncoded,
 		big.NewInt(10),
 	)
 
@@ -971,117 +971,6 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 	)
 }
 
-func TestFSM_VerifyStateTransactions_EndOfEpochMissingCommitEpochTxWhenFundRewardWallet(t *testing.T) {
-	t.Parallel()
-
-	validators := validator.NewTestValidators(t, 5)
-	allAccounts := validators.GetPublicIdentities()
-
-	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
-
-	fsm := &fsm{
-		parent:                 &types.Header{Number: 1},
-		isEndOfEpoch:           true,
-		isEndOfSprint:          true,
-		validators:             validatorSet,
-		commitEpochInput:       createTestCommitEpochInput(t, 0, allAccounts, 10),
-		rewardWalletFundAmount: createTestRewardWalletFundAmount(t),
-		fundRewardWalletInput:  createTestFundRewardWalletInput(t),
-		logger:                 hclog.NewNullLogger(),
-	}
-
-	// create fund reward wallet tx and add it to the transactions list
-	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
-	require.NoError(t, err)
-
-	// create commit epoch transaction in order to add it to the transactions list
-	commitEpochTx, err := fsm.createCommitEpochTx()
-	require.NoError(t, err)
-
-	assert.EqualError(
-		t,
-		fsm.VerifyStateTransactions(
-			[]*types.Transaction{fundRewardWalletTx, commitEpochTx},
-		),
-		"the commit epoch transaction must be executed first",
-	)
-}
-
-func TestFSM_VerifyStateTransactions_EndOfEpochMissingCommitEpochTxWhenDistributeRewards(t *testing.T) {
-	t.Parallel()
-
-	validators := validator.NewTestValidators(t, 5)
-	allAccounts := validators.GetPublicIdentities()
-
-	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
-
-	fsm := &fsm{
-		parent:           &types.Header{Number: 1},
-		isEndOfEpoch:     true,
-		isEndOfSprint:    true,
-		validators:       validatorSet,
-		commitEpochInput: createTestCommitEpochInput(t, 0, allAccounts, 10),
-		distributeRewardsInput: createTestDistributeRewardsInput(
-			t,
-			0,
-			allAccounts,
-			10,
-		),
-		logger: hclog.NewNullLogger(),
-	}
-
-	// create distribute rewards transaction in order to add it to the transactions list
-	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
-	require.NoError(t, err)
-
-	// create commit epoch transaction in order to add it to the transactions list
-	commitEpochTx, err := fsm.createCommitEpochTx()
-	require.NoError(t, err)
-
-	assert.EqualError(
-		t,
-		fsm.VerifyStateTransactions(
-			[]*types.Transaction{distributeRewardsTx, commitEpochTx},
-		),
-		"the commit epoch transaction must be executed first",
-	)
-}
-
-func TestFSM_VerifyStateTransactions_EndOfEpochMissingCommitEpochTxWhenDistributeDAOIncentive(t *testing.T) {
-	t.Parallel()
-
-	validators := validator.NewTestValidators(t, 5)
-	allAccounts := validators.GetPublicIdentities()
-
-	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
-
-	fsm := &fsm{
-		parent:                      &types.Header{Number: 1},
-		isEndOfEpoch:                true,
-		isEndOfSprint:               true,
-		validators:                  validatorSet,
-		commitEpochInput:            createTestCommitEpochInput(t, 0, allAccounts, 10),
-		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
-		logger:                      hclog.NewNullLogger(),
-	}
-
-	// create distribute vault funds transaction in order to add it to the transactions list
-	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
-	require.NoError(t, err)
-
-	// create commit epoch transaction in order to add it to the transactions list
-	commitEpochTx, err := fsm.createCommitEpochTx()
-	require.NoError(t, err)
-
-	assert.EqualError(
-		t,
-		fsm.VerifyStateTransactions(
-			[]*types.Transaction{distributeDAOIncentiveTx, commitEpochTx},
-		),
-		"the commit epoch transaction must be executed first",
-	)
-}
-
 func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeRewards(t *testing.T) {
 	t.Parallel()
 
@@ -1278,7 +1167,174 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestFSM_VerifyStateTransaction_MissingSyncValidatorsDataTxOnEpochStart(t *testing.T) {
+func TestFSM_VerifyStateTransaction_StartOfEpochInvalidSyncValidatorsDataTxIndexErr(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	// update the first validator by doubling its voting power
+	newValidatorDelta := generateUpdatedValidatorVotingPower(t, *allAccounts[0])
+
+	fsm := &fsm{
+		parent:                  &types.Header{Number: 1},
+		isEndOfEpoch:            false,
+		isEndOfSprint:           false,
+		isStartOfEpoch:          true,
+		validators:              validatorSet,
+		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, allAccounts),
+		newValidatorsDelta:      newValidatorDelta,
+		logger:                  hclog.NewNullLogger(),
+	}
+
+	// create sync validators data transaction to add it in the list of state transactions to verify
+	syncValidatorsDataTx, err := fsm.createSyncValidatorsDataTx()
+	require.NoError(t, err)
+
+	// create a legacy transaction to add it before the sync validators data transaction
+	stakeInput := &contractsapi.StakeHydraStakingFn{}
+	stakeInputEncoded, err := stakeInput.EncodeAbi()
+	require.NoError(t, err)
+
+	stakeTx := createStateTransactionWithData(
+		0,
+		contracts.HydraStakingContract,
+		stakeInputEncoded,
+		big.NewInt(100),
+	)
+
+	stakeTx.Type = types.LegacyTx
+
+	assert.ErrorContains(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{
+				stakeTx,
+				syncValidatorsDataTx,
+			},
+		),
+		"invalid transaction index",
+	)
+}
+
+func TestFSM_VerifyStateTransaction_StartOfEpochInvalidSyncValidatorsDataTxErr(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	// update the first validator by doubling its voting power
+	newValidatorDelta := generateUpdatedValidatorVotingPower(t, *allAccounts[0])
+
+	fsm := &fsm{
+		parent:                  &types.Header{Number: 1},
+		isEndOfEpoch:            false,
+		isEndOfSprint:           false,
+		isStartOfEpoch:          true,
+		validators:              validatorSet,
+		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, allAccounts),
+		newValidatorsDelta:      newValidatorDelta,
+		logger:                  hclog.NewNullLogger(),
+	}
+
+	syncValidatorsDataInputEncoded, err := fsm.syncValidatorsDataInput.EncodeAbi()
+	require.NoError(t, err)
+
+	// create invalid sync validators data transaction
+	syncValidatorsDataTx := createStateTransactionWithData(
+		0,
+		contracts.HydraChainContract,
+		syncValidatorsDataInputEncoded,
+		big.NewInt(10),
+	)
+
+	assert.ErrorContains(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{
+				syncValidatorsDataTx,
+			},
+		),
+		"invalid sync validators data transaction",
+	)
+}
+
+func TestFSM_VerifyStateTransaction_StartOfEpochSingleSyncValidatorsDataTxRequiredErr(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	// update the first validator by doubling its voting power
+	newValidatorDelta := generateUpdatedValidatorVotingPower(t, *allAccounts[0])
+
+	fsm := &fsm{
+		parent:                  &types.Header{Number: 1},
+		isEndOfEpoch:            false,
+		isEndOfSprint:           false,
+		isStartOfEpoch:          true,
+		validators:              validatorSet,
+		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, allAccounts),
+		newValidatorsDelta:      newValidatorDelta,
+		logger:                  hclog.NewNullLogger(),
+	}
+
+	// create sync validators data transaction to add it in the list of state transactions to verify
+	syncValidatorsDataTx, err := fsm.createSyncValidatorsDataTx()
+	require.NoError(t, err)
+
+	assert.ErrorContains(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{
+				syncValidatorsDataTx,
+				syncValidatorsDataTx,
+			},
+		),
+		"only one sync validators data transaction is allowed in an epoch starting block",
+	)
+}
+
+func TestFSM_VerifyStateTransaction_StartOfEpochUnexpectedSyncValidatorsDataTxErr(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	fsm := &fsm{
+		parent:                  &types.Header{Number: 1},
+		isEndOfEpoch:            false,
+		isEndOfSprint:           false,
+		isStartOfEpoch:          false,
+		validators:              validatorSet,
+		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, allAccounts),
+		logger:                  hclog.NewNullLogger(),
+	}
+
+	// create sync validators data transaction to add it in the list of state transactions to verify
+	syncValidatorsDataTx, err := fsm.createSyncValidatorsDataTx()
+	require.NoError(t, err)
+
+	assert.ErrorContains(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{
+				syncValidatorsDataTx,
+			},
+		),
+		"didn't expect sync validators data transaction in a non epoch starting block",
+	)
+}
+
+func TestFSM_VerifyStateTransaction_StartOfEpochMissingSyncValidatorsDataTx(t *testing.T) {
 	t.Parallel()
 
 	const (
@@ -1338,77 +1394,6 @@ func TestFSM_VerifyStateTransaction_MissingSyncValidatorsDataTxOnEpochStart(t *t
 			[]*types.Transaction{},
 		),
 		"sync validators data transaction is not found in the epoch starting block",
-	)
-}
-
-func TestFSM_VerifyStateTransaction_SingleSyncValidatorsDataTxRequiredErr(t *testing.T) {
-	t.Parallel()
-
-	validators := validator.NewTestValidators(t, 5)
-	allAccounts := validators.GetPublicIdentities()
-
-	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
-
-	// update the first validator by doubling its voting power
-	newValidatorDelta := generateUpdatedValidatorVotingPower(t, *allAccounts[0])
-
-	fsm := &fsm{
-		parent:                  &types.Header{Number: 1},
-		isEndOfEpoch:            false,
-		isEndOfSprint:           false,
-		isStartOfEpoch:          true,
-		validators:              validatorSet,
-		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, allAccounts),
-		newValidatorsDelta:      newValidatorDelta,
-		logger:                  hclog.NewNullLogger(),
-	}
-
-	// create sync validators data transaction to add it in the list of state transactions to verify
-	syncValidatorsDataTx, err := fsm.createSyncValidatorsDataTx()
-	require.NoError(t, err)
-
-	assert.ErrorContains(
-		t,
-		fsm.VerifyStateTransactions(
-			[]*types.Transaction{
-				syncValidatorsDataTx,
-				syncValidatorsDataTx,
-			},
-		),
-		"only one sync validators data transaction is allowed in an epoch starting block",
-	)
-}
-
-func TestFSM_VerifyStateTransaction_UnexpectedSyncValidatorsDataTxErr(t *testing.T) {
-	t.Parallel()
-
-	validators := validator.NewTestValidators(t, 5)
-	allAccounts := validators.GetPublicIdentities()
-
-	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
-
-	fsm := &fsm{
-		parent:                  &types.Header{Number: 1},
-		isEndOfEpoch:            false,
-		isEndOfSprint:           false,
-		isStartOfEpoch:          false,
-		validators:              validatorSet,
-		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, allAccounts),
-		logger:                  hclog.NewNullLogger(),
-	}
-
-	// create sync validators data transaction to add it in the list of state transactions to verify
-	syncValidatorsDataTx, err := fsm.createSyncValidatorsDataTx()
-	require.NoError(t, err)
-
-	assert.ErrorContains(
-		t,
-		fsm.VerifyStateTransactions(
-			[]*types.Transaction{
-				syncValidatorsDataTx,
-			},
-		),
-		"didn't expect sync validators data transaction in a non epoch starting block",
 	)
 }
 
