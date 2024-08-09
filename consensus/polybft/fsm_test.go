@@ -748,7 +748,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongFundRewardWalletTx(t *testin
 		logger:                 hclog.NewNullLogger(),
 	}
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -763,7 +763,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongFundRewardWalletTx(t *testin
 		big.NewInt(10),
 	)
 
-	// create distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards transaction in order to add it to the transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
@@ -799,7 +799,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingFundRewardWalletTx(t *test
 		logger:                 hclog.NewNullLogger(),
 	}
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -841,15 +841,15 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWithoutFundRewardWalletTx(t *test
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
-	// create distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards transaction in order to add it to the transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
-	// create distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	// create distribute vault funds transaction in order to add it to the transactions list
 	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
@@ -885,7 +885,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeDAOIncentiveTx(t *
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -906,7 +906,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongDistributeDAOIncentiveTx(t *
 		big.NewInt(10),
 	)
 
-	// add distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards transaction in order to add it to the transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
@@ -950,7 +950,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -958,7 +958,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
-	// create distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards transaction in order to add it to the transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
@@ -994,7 +994,7 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingCommitEpochTxWhenFundRewar
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -1030,11 +1030,11 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingCommitEpochTxWhenDistribut
 		logger: hclog.NewNullLogger(),
 	}
 
-	// create distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards transaction in order to add it to the transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -1065,11 +1065,11 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingCommitEpochTxWhenDistribut
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// create distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	// create distribute vault funds transaction in order to add it to the transactions list
 	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -1107,15 +1107,15 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDist
 		logger: hclog.NewNullLogger(),
 	}
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
-	// create fund reward wallet tx and add it to the transactions list
+	// create fund reward wallet transaction in order to add it to the transactions list
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
-	// create distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards transaction in order to add it to the transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
@@ -1148,15 +1148,15 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDist
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
-	// create distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	// create distribute vault funds transaction in order to add it to the transactions list
 	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
-	// create fund reward wallet tx and add it to the transactions list
+	// create fund reward wallet transaction in order to add it to the transactions list
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
@@ -1195,7 +1195,7 @@ func TestFSM_VerifyStateTransactions_NonEndOfEpochErrOnCommitEpochTx(t *testing.
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// add commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
@@ -1203,11 +1203,11 @@ func TestFSM_VerifyStateTransactions_NonEndOfEpochErrOnCommitEpochTx(t *testing.
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
-	// add distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards transaction in order to add it to the transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
-	// add distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	// create distribute vault funds transaction in order to add it to the transactions list
 	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
@@ -1251,19 +1251,19 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 		logger:                      hclog.NewNullLogger(),
 	}
 
-	// create commit epoch commitEpochTx to the transactions list
+	// create commit epoch transaction in order to add it to the transactions list
 	commitEpochTx, err := fsm.createCommitEpochTx()
 	require.NoError(t, err)
 
-	// create fund reward wallet tx and add it to the transactions list
+	// create fund reward wallet transaction in order to add it to the transactions list
 	fundRewardWalletTx, err := fsm.createRewardWalletFundTx()
 	require.NoError(t, err)
 
-	// create distribute rewards distributeRewardsTx to the end of transactions list
+	// create distribute rewards transaction in order to add it to the transactions list
 	distributeRewardsTx, err := fsm.createDistributeRewardsTx()
 	require.NoError(t, err)
 
-	// create distribute vault funds distributeDAOIncentiveTx to the end of transactions list
+	// create distribute vault funds transaction in order to add it to the transactions list
 	distributeDAOIncentiveTx, err := fsm.createDistributeDAOIncentiveTx()
 	require.NoError(t, err)
 
@@ -1305,7 +1305,7 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 // 	bridgeCommitmentTx, err := fsm.createBridgeCommitmentTx()
 // 	require.NoError(t, err)
 
-// 	// add commit epoch commitEpochTx to the end of transactions list
+// 	// add commit epoch transaction in order to add it to the transactions list
 // 	commitEpochTx, err := fsm.createCommitEpochTx()
 // 	require.NoError(t, err)
 
@@ -1349,7 +1349,7 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 // 	// bridgeCommitmentTx, err := fsm.createBridgeCommitmentTx()
 // 	require.NoError(t, err)
 
-// 	// add commit epoch commitEpochTx to the end of transactions list
+// 	// add commit epoch transaction in order to add it to the transactions list
 // 	commitEpochTx, err := fsm.createCommitEpochTx()
 // 	require.NoError(t, err)
 
