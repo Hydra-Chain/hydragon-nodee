@@ -1278,6 +1278,174 @@ func TestFSM_VerifyStateTransactions_StateTransactionPass(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestFSM_VerifyStateTransaction_MissingSyncValidatorsDataTxOnEpochStart(t *testing.T) {
+	t.Parallel()
+
+	const (
+		validatorsCount          = 6
+		remainingValidatorsCount = 3
+		signaturesCount          = 4
+		parentBlockNumber        = 49
+	)
+
+	validators := validator.NewTestValidators(t, validatorsCount).GetPublicIdentities()
+	extra := createTestExtraObject(
+		validators,
+		validator.AccountSet{},
+		validatorsCount-1,
+		signaturesCount,
+		signaturesCount,
+	)
+
+	extraData := extra.MarshalRLPTo(nil)
+	parent := &types.Header{Number: parentBlockNumber, ExtraData: extraData}
+	parent.ComputeHash()
+	stateBlock := createDummyStateBlock(parentBlockNumber+1, parent.Hash, extraData)
+
+	blockBuilderMock := newBlockBuilderMock(stateBlock)
+	blockBuilderMock.On("WriteTx", mock.Anything).Return(error(nil))
+
+	addedValidators := validator.NewTestValidators(t, 2).GetPublicIdentities()
+	removedValidators := [3]uint64{3, 4, 5}
+	removedBitmap := &bitmap.Bitmap{}
+
+	for _, i := range removedValidators {
+		removedBitmap.Set(i)
+	}
+
+	newDelta := &validator.ValidatorSetDelta{
+		Added:   addedValidators,
+		Updated: validator.AccountSet{},
+		Removed: *removedBitmap,
+	}
+
+	validatorSet := validator.NewValidatorSet(validators, hclog.NewNullLogger())
+
+	fsm := &fsm{
+		parent:                  parent,
+		isEndOfEpoch:            false,
+		isEndOfSprint:           false,
+		isStartOfEpoch:          true,
+		validators:              validatorSet,
+		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, validators),
+		newValidatorsDelta:      newDelta,
+		logger:                  hclog.NewNullLogger(),
+	}
+
+	assert.ErrorContains(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{},
+		),
+		"sync validators data transaction is not found in the epoch starting block",
+	)
+}
+
+func TestFSM_VerifyStateTransaction_SingleSyncValidatorsDataTxRequiredErr(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	// update the first validator by doubling its voting power
+	newValidatorDelta := generateUpdatedValidatorVotingPower(t, *allAccounts[0])
+
+	fsm := &fsm{
+		parent:                  &types.Header{Number: 1},
+		isEndOfEpoch:            false,
+		isEndOfSprint:           false,
+		isStartOfEpoch:          true,
+		validators:              validatorSet,
+		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, allAccounts),
+		newValidatorsDelta:      newValidatorDelta,
+		logger:                  hclog.NewNullLogger(),
+	}
+
+	// create sync validators data transaction to add it in the list of state transactions to verify
+	syncValidatorsDataTx, err := fsm.createSyncValidatorsDataTx()
+	require.NoError(t, err)
+
+	assert.ErrorContains(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{
+				syncValidatorsDataTx,
+				syncValidatorsDataTx,
+			},
+		),
+		"only one sync validators data transaction is allowed in an epoch starting block",
+	)
+}
+
+func TestFSM_VerifyStateTransaction_UnexpectedSyncValidatorsDataTxErr(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	fsm := &fsm{
+		parent:                  &types.Header{Number: 1},
+		isEndOfEpoch:            false,
+		isEndOfSprint:           false,
+		isStartOfEpoch:          false,
+		validators:              validatorSet,
+		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, allAccounts),
+		logger:                  hclog.NewNullLogger(),
+	}
+
+	// create sync validators data transaction to add it in the list of state transactions to verify
+	syncValidatorsDataTx, err := fsm.createSyncValidatorsDataTx()
+	require.NoError(t, err)
+
+	assert.ErrorContains(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{
+				syncValidatorsDataTx,
+			},
+		),
+		"didn't expect sync validators data transaction in a non epoch starting block",
+	)
+}
+
+func TestFSM_VerifyStateTransaction_SyncValidatorsData(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	// update the first validator by doubling its voting power
+	newValidatorDelta := generateUpdatedValidatorVotingPower(t, *allAccounts[0])
+
+	fsm := &fsm{
+		parent:                  &types.Header{Number: 1},
+		isEndOfEpoch:            false,
+		isEndOfSprint:           false,
+		isStartOfEpoch:          true,
+		validators:              validatorSet,
+		syncValidatorsDataInput: createTestSyncValidatorsDataInput(t, allAccounts),
+		newValidatorsDelta:      newValidatorDelta,
+		logger:                  hclog.NewNullLogger(),
+	}
+
+	// create sync validators data transaction to add it in the list of state transactions to verify
+	syncValidatorsDataTx, err := fsm.createSyncValidatorsDataTx()
+	require.NoError(t, err)
+
+	err = fsm.VerifyStateTransactions(
+		[]*types.Transaction{
+			syncValidatorsDataTx,
+		},
+	)
+	require.NoError(t, err)
+}
+
 // H_MODIFY: Commitment is not used in our implementation
 // func TestFSM_VerifyStateTransactions_StateTransactionQuorumNotReached(t *testing.T) {
 // 	t.Parallel()

@@ -243,7 +243,7 @@ func (c *consensusRuntime) initStakeManager(logger hcf.Logger, dbTx *bolt.Tx) er
 		logger.Named("stake-manager"),
 		c.state,
 		wallet.NewEcdsaSigner(c.config.Key),
-		contracts.HydraChainContract,
+		contracts.HydraStakingContract,
 		int(c.config.PolyBFTConfig.MaxValidatorSetSize),
 		c.config.polybftBackend,
 		dbTx,
@@ -436,9 +436,11 @@ func (c *consensusRuntime) FSM() error {
 	}
 
 	pendingBlockNumber := parent.Number + 1
+
 	// calculation of epoch and sprint end does not consider slashing currently
 	isEndOfSprint := c.isFixedSizeOfSprintMet(pendingBlockNumber, epoch)
 	isEndOfEpoch := c.isFixedSizeOfEpochMet(pendingBlockNumber, epoch)
+	isStartOfEpoch := c.isStartOfEpochMet(pendingBlockNumber, epoch)
 
 	valSet := validator.NewValidatorSet(epoch.Validators, c.logger)
 
@@ -458,6 +460,7 @@ func (c *consensusRuntime) FSM() error {
 		validators:        valSet,
 		isEndOfEpoch:      isEndOfEpoch,
 		isEndOfSprint:     isEndOfSprint,
+		isStartOfEpoch:    isStartOfEpoch,
 		proposerSnapshot:  proposerSnapshot,
 		logger:            c.logger.Named("fsm"),
 	}
@@ -491,6 +494,13 @@ func (c *consensusRuntime) FSM() error {
 		)
 		if err != nil {
 			return fmt.Errorf("cannot update validator set on epoch ending: %w", err)
+		}
+	}
+
+	if isStartOfEpoch {
+		ff.syncValidatorsDataInput, err = c.generateSyncValidatorsDataTxInput(parent, ff.validators.Accounts())
+		if err != nil {
+			return fmt.Errorf("cannot generate sync validators data tx input: %w", err)
 		}
 	}
 
@@ -594,7 +604,8 @@ func (c *consensusRuntime) calculateStateTxsInput(
 ) (*contractsapi.CommitEpochHydraChainFn,
 	*contractsapi.FundRewardWalletFn,
 	*contractsapi.DistributeRewardsForHydraStakingFn,
-	*contractsapi.DistributeDAOIncentiveHydraChainFn, error) {
+	*contractsapi.DistributeDAOIncentiveHydraChainFn, error,
+) {
 	uptimeCounter := map[types.Address]int64{}
 	blockHeader := currentBlock
 	epochID := epoch.Number
@@ -696,6 +707,31 @@ func (c *consensusRuntime) calculateStateTxsInput(
 	return commitEpoch, fundRewardWallet, distributeRewards, distributeVaultFunds, nil
 }
 
+// generateSyncValidatorsDataTxInput generates the syncValidatorsData tx input data which
+// contains the updated validators data from the parent header (previous epoch-ending block)
+func (c *consensusRuntime) generateSyncValidatorsDataTxInput(
+	parent *types.Header,
+	accSet validator.AccountSet,
+) (*contractsapi.SyncValidatorsDataHydraChainFn, error) {
+	parentIbftExtraData, err := GetIbftExtra(parent.ExtraData)
+	if parentIbftExtraData.Validators.IsEmpty() {
+		return nil, nil
+	}
+
+	updatedValidatorsVotingPower, err := accSet.ExtractUpdatedValidatorsVotingPower(
+		parentIbftExtraData.Validators,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	syncValidatorsData := &contractsapi.SyncValidatorsDataHydraChainFn{
+		ValidatorsPower: updatedValidatorsVotingPower,
+	}
+
+	return syncValidatorsData, nil
+}
+
 // GenerateExitProof generates proof of exit and is a bridge endpoint store function
 func (c *consensusRuntime) GenerateExitProof(exitID uint64) (types.Proof, error) {
 	return c.checkpointManager.GenerateExitProof(exitID)
@@ -725,6 +761,11 @@ func (c *consensusRuntime) isFixedSizeOfEpochMet(blockNumber uint64, epoch *epoc
 // isFixedSizeOfSprintMet checks if an end of an sprint is reached with the current block
 func (c *consensusRuntime) isFixedSizeOfSprintMet(blockNumber uint64, epoch *epochMetadata) bool {
 	return (blockNumber-epoch.FirstBlockInEpoch+1)%c.config.PolyBFTConfig.SprintSize == 0
+}
+
+// isStartOfEpochMet checks if current block is the start of a new epoch
+func (c *consensusRuntime) isStartOfEpochMet(blockNumber uint64, epoch *epochMetadata) bool {
+	return blockNumber == epoch.FirstBlockInEpoch
 }
 
 // getSystemState builds SystemState instance for the most current block header

@@ -51,6 +51,7 @@ func main() {
 				"addToWhitelist",
 				"register",
 				"distributeDAOIncentive",
+				"syncValidatorsData",
 			},
 			[]string{
 				"NewValidator",

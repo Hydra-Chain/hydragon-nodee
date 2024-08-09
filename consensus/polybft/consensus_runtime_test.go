@@ -176,6 +176,78 @@ func TestConsensusRuntime_isFixedSizeOfSprintMet_ReachedEnd(t *testing.T) {
 	}
 }
 
+func TestConsensusRuntime_isStartOfEpochMet_NotReachedStart(t *testing.T) {
+	t.Parallel()
+
+	// because of slashing, we can assume some epochs started at random numbers
+	var cases = []struct {
+		epochSize, firstBlockInEpoch, parentBlockNumber uint64
+	}{
+		{4, 1, 2},
+		{5, 1, 3},
+		{8, 0, 5},
+		{9, 4, 5},
+		{10, 1, 1},
+	}
+
+	runtime := &consensusRuntime{
+		config: &runtimeConfig{
+			PolyBFTConfig: &PolyBFTConfig{},
+		},
+		lastBuiltBlock: &types.Header{},
+		epoch:          &epochMetadata{},
+	}
+
+	for _, c := range cases {
+		runtime.config.PolyBFTConfig.EpochSize = c.epochSize
+		runtime.epoch.FirstBlockInEpoch = c.firstBlockInEpoch
+		assert.False(
+			t,
+			runtime.isStartOfEpochMet(c.parentBlockNumber+1, runtime.epoch),
+			fmt.Sprintf(
+				"Not expected start of epoch for epoch size=%v and parent block number=%v",
+				c.epochSize,
+				c.parentBlockNumber),
+		)
+	}
+}
+
+func TestConsensusRuntime_isStartOfEpochMet_ReachedEnd(t *testing.T) {
+	t.Parallel()
+
+	// because of slashing, we can assume some epochs started at random numbers
+	var cases = []struct {
+		epochSize, firstBlockInEpoch, blockNumber uint64
+	}{
+		{4, 2, 1},
+		{5, 5, 4},
+		{6, 1, 0},
+		{9, 4, 3},
+		{10, 6, 5},
+	}
+
+	runtime := &consensusRuntime{
+		config: &runtimeConfig{
+			PolyBFTConfig: &PolyBFTConfig{},
+		},
+		epoch: &epochMetadata{},
+	}
+
+	for _, c := range cases {
+		runtime.config.PolyBFTConfig.EpochSize = c.epochSize
+		runtime.epoch.FirstBlockInEpoch = c.firstBlockInEpoch
+		assert.True(
+			t,
+			// return blockNumber == epoch.FirstBlockInEpoch
+			runtime.isStartOfEpochMet(c.blockNumber+1, runtime.epoch),
+			fmt.Sprintf(
+				"Not expected start of epoch for epoch size=%v and parent block number=%v",
+				c.epochSize,
+				c.blockNumber),
+		)
+	}
+}
+
 func TestConsensusRuntime_OnBlockInserted_EndOfEpoch(t *testing.T) {
 	t.Parallel()
 
@@ -601,6 +673,8 @@ func TestConsensusRuntime_calculateRewardWalletFundTxValue(t *testing.T) {
 	block := &types.Header{}
 
 	t.Run("return err of inner call", func(t *testing.T) {
+		t.Parallel()
+
 		blockchainMock := new(blockchainMock)
 		blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
 			Return(big.NewInt(0), assert.AnError)
@@ -619,6 +693,8 @@ func TestConsensusRuntime_calculateRewardWalletFundTxValue(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
 		blockchainMock := new(blockchainMock)
 
 		blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).

@@ -139,6 +139,28 @@ func createTestDistributeDAOIncentiveInput(
 	return &contractsapi.DistributeDAOIncentiveHydraChainFn{}
 }
 
+func createTestSyncValidatorsDataInput(
+	t *testing.T,
+	validatorSet validator.AccountSet,
+) *contractsapi.SyncValidatorsDataHydraChainFn {
+	t.Helper()
+
+	if validatorSet == nil {
+		validatorSet = validator.NewTestValidators(t, 5).GetPublicIdentities()
+	}
+
+	validatorsVotingPowerData := make([]*contractsapi.ValidatorPower, len(validatorSet))
+
+	for i, v := range validatorSet {
+		validatorsVotingPowerData[i] = &contractsapi.ValidatorPower{
+			Validator:   v.Address,
+			VotingPower: new(big.Int).SetUint64(15000),
+		}
+	}
+
+	return &contractsapi.SyncValidatorsDataHydraChainFn{ValidatorsPower: validatorsVotingPowerData}
+}
+
 func generateStateSyncEvents(
 	t *testing.T,
 	eventsCount int,
@@ -257,4 +279,20 @@ func generateValidatorsUpTime(
 	}
 
 	return uptime
+}
+
+func generateUpdatedValidatorVotingPower(
+	t *testing.T,
+	currValidator validator.ValidatorMetadata,
+) *validator.ValidatorSetDelta {
+	t.Helper()
+
+	return &validator.ValidatorSetDelta{
+		Updated: validator.AccountSet{&validator.ValidatorMetadata{
+			Address:     currValidator.Address,
+			BlsKey:      currValidator.BlsKey,
+			VotingPower: new(big.Int).Mul(currValidator.VotingPower, big.NewInt(2)),
+			IsActive:    true,
+		}},
+	}
 }

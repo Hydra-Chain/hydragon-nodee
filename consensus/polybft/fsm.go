@@ -66,6 +66,15 @@ var (
 		"only one distribute DAO incentive transaction is " +
 			"allowed in an epoch ending block",
 	)
+	errSyncValidatorsDataTxDoesNotExist = errors.New(
+		"sync validators data transaction is not found in the epoch starting block",
+	)
+	errSyncValidatorsDataTxSingleExpected = errors.New("only one sync validators data transaction is allowed " +
+		"in an epoch starting block")
+	errSyncValidatorsDataTxNotExpected = errors.New(
+		"didn't expect sync validators data transaction " +
+			"in a non epoch starting block",
+	)
 	errProposalDontMatch = errors.New("failed to insert proposal, because the validated proposal " +
 		"is either nil or it does not match the received one")
 	errValidatorSetDeltaMismatch        = errors.New("validator set delta mismatch")
@@ -129,11 +138,18 @@ type fsm struct {
 	// distributeDAOIncentiveInputs will be used to distribute DAO incentive at the end of each epoch
 	distributeDAOIncentiveInput *contractsapi.DistributeDAOIncentiveHydraChainFn
 
+	// syncValidatorsDataInput holds info about the updated validators' voting power
+	// It is populated only for epoch-starting blocks.
+	syncValidatorsDataInput *contractsapi.SyncValidatorsDataHydraChainFn
+
 	// isEndOfEpoch indicates if epoch reached its end
 	isEndOfEpoch bool
 
 	// isEndOfSprint indicates if sprint reached its end
 	isEndOfSprint bool
+
+	// isStartOfEpoch indicates if epoch has started in the current block
+	isStartOfEpoch bool
 
 	// proposerCommitmentToRegister is a commitment that is registered via state transaction by proposer
 	proposerCommitmentToRegister *CommitmentMessageSigned
@@ -235,6 +251,18 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 		}
 
 		extra.Validators = f.newValidatorsDelta
+	} else if f.isStartOfEpoch && f.syncValidatorsDataInput != nil {
+		tx, err := f.createSyncValidatorsDataTx()
+		if err != nil {
+			return nil, err
+		}
+
+		if err := f.blockBuilder.WriteTx(tx); err != nil {
+			return nil, fmt.Errorf(
+				"failed to apply sync validators data transaction: %w",
+				err,
+			)
+		}
 	}
 
 	currentValidatorsHash, err := f.validators.Accounts().Hash()
@@ -382,6 +410,22 @@ func (f *fsm) createRewardWalletFundTx() (*types.Transaction, error) {
 // and sends all the necessary metadata to it.
 func (f *fsm) createDistributeDAOIncentiveTx() (*types.Transaction, error) {
 	input, err := f.distributeDAOIncentiveInput.EncodeAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	return createStateTransactionWithData(
+		f.Height(),
+		contracts.HydraChainContract,
+		input,
+		nil,
+	), nil
+}
+
+// createSyncValidatorsDataTx create a StateTransaction, which invokes HydraChain smart contract
+// and sends all the necessary metadata to it.
+func (f *fsm) createSyncValidatorsDataTx() (*types.Transaction, error) {
+	input, err := f.syncValidatorsDataInput.EncodeAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -558,6 +602,7 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 		fundRewardWalletTxExists       bool
 		distributeRewardsTxExists      bool
 		distributeDAOIncentiveTxExists bool
+		syncValidatorsDataTxExists     bool
 	)
 
 	for _, tx := range transactions {
@@ -657,6 +702,19 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			if err := f.verifyDistributeDAOIncentiveTx(tx); err != nil {
 				return fmt.Errorf("error while verifying distribute DAO incentive rewards transaction. error: %w", err)
 			}
+		case *contractsapi.SyncValidatorsDataHydraChainFn:
+			if syncValidatorsDataTxExists {
+				// if we already validated sync validators data tx,
+				// that means someone added more than one sync validators data tx to block,
+				// which is invalid
+				return errSyncValidatorsDataTxSingleExpected
+			}
+
+			syncValidatorsDataTxExists = true
+
+			if err := f.verifySyncValidatorsDataTx(tx); err != nil {
+				return fmt.Errorf("error while verifying sync validators data transaction. error: %w", err)
+			}
 		default:
 			return fmt.Errorf("invalid state transaction data type: %v", stateTxData)
 		}
@@ -685,6 +743,14 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			// this is a check if distribute DAO incentive rewards tx is not in the list of transactions at all
 			// but it should be
 			return errDistributeDAOIncentiveTxDoesNotExist
+		}
+	}
+
+	if f.isStartOfEpoch {
+		if f.isSyncValidatorsDataTxRequired() && !syncValidatorsDataTxExists {
+			// this is a check if sync validators data transaction is not in the list of transactions
+			// at all, but it should be
+			return errSyncValidatorsDataTxDoesNotExist
 		}
 	}
 
@@ -849,9 +915,7 @@ func (f *fsm) verifyDistributeRewardsTx(distributeRewardsTx *types.Transaction) 
 
 // verifyDistributeDAOIncentiveTx creates distribute vault rewards transaction
 // and compares its hash with the one extracted from the block.
-func (f *fsm) verifyDistributeDAOIncentiveTx(
-	distributeDAOIncentiveTx *types.Transaction,
-) error {
+func (f *fsm) verifyDistributeDAOIncentiveTx(distributeDAOIncentiveTx *types.Transaction) error {
 	if f.isEndOfEpoch {
 		localDistributeDAOIncentiveTx, err := f.createDistributeDAOIncentiveTx()
 		if err != nil {
@@ -870,6 +934,29 @@ func (f *fsm) verifyDistributeDAOIncentiveTx(
 	}
 
 	return errDistributeDAOIncentiveTxNotExpected
+}
+
+// verifySyncValidatorsDataTx creates sync validators data transaction
+// and compares its hash with the one extracted from the block.
+func (f *fsm) verifySyncValidatorsDataTx(syncValidatorsDataTx *types.Transaction) error {
+	if f.isStartOfEpoch {
+		localSyncValidatorsDataTx, err := f.createSyncValidatorsDataTx()
+		if err != nil {
+			return err
+		}
+
+		if syncValidatorsDataTx.Hash != localSyncValidatorsDataTx.Hash {
+			return fmt.Errorf(
+				"invalid sync validators data transaction. Expected '%s', but got '%s' sync validators data hash",
+				localSyncValidatorsDataTx.Hash,
+				syncValidatorsDataTx.Hash,
+			)
+		}
+
+		return nil
+	}
+
+	return errSyncValidatorsDataTxNotExpected
 }
 
 // verifyBridgeCommitmentTx validates bridge commitment transaction
@@ -987,6 +1074,15 @@ func createStateTransactionWithData(
 
 func (f *fsm) isRewardWalletFundTxRequired() bool {
 	return f.rewardWalletFundAmount.Cmp(big.NewInt(0)) != 0
+}
+
+func (f *fsm) isSyncValidatorsDataTxRequired() bool {
+	parentIbftExtraData, err := GetIbftExtra(f.parent.ExtraData)
+	if err != nil {
+		return false
+	}
+
+	return !parentIbftExtraData.Validators.IsEmpty()
 }
 
 // func isCommitEpochTx(tx *types.Transaction) bool {

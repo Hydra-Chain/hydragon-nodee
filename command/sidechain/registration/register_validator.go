@@ -97,12 +97,19 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	secretsManager, err := polybftsecrets.GetSecretsManager(params.accountDir, params.accountConfig, params.insecureLocalStore)
+	secretsManager, err := polybftsecrets.GetSecretsManager(
+		params.accountDir,
+		params.accountConfig,
+		params.insecureLocalStore,
+	)
 	if err != nil {
 		return err
 	}
 
-	txRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(params.jsonRPC), txrelayer.WithReceiptTimeout(150*time.Millisecond))
+	txRelayer, err := txrelayer.NewTxRelayer(
+		txrelayer.WithIPAddress(params.jsonRPC),
+		txrelayer.WithReceiptTimeout(150*time.Millisecond),
+	)
 	if err != nil {
 		return err
 	}
@@ -236,8 +243,8 @@ func registerValidator(sender txrelayer.TxRelayer, account *wallet.Account,
 	}
 
 	registerFn := &contractsapi.RegisterHydraChainFn{
-		Signature:  sigMarshal,
-		Pubkey:     account.Bls.PublicKey().ToBigInt(),
+		Signature: sigMarshal,
+		Pubkey:    account.Bls.PublicKey().ToBigInt(),
 	}
 
 	input, err := registerFn.EncodeAbi()
@@ -247,7 +254,7 @@ func registerValidator(sender txrelayer.TxRelayer, account *wallet.Account,
 
 	txn := &ethgo.Transaction{
 		Input: input,
-		To:    (*ethgo.Address)(&stakeManager),
+		To:    (*ethgo.Address)(&hydraChain),
 	}
 
 	return sender.SendTransaction(txn, account.Ecdsa)
