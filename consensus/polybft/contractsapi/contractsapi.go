@@ -26,14 +26,14 @@ func (v *ValidatorInit) DecodeAbi(buf []byte) error {
 }
 
 type InitializeHydraChainFn struct {
-	NewValidators       []*ValidatorInit `abi:"newValidators"`
-	Governance          types.Address    `abi:"governance"`
-	HydraStakingAddr    types.Address    `abi:"hydraStakingAddr"`
-	HydraDelegationAddr types.Address    `abi:"hydraDelegationAddr"`
-	AprCalculatorAddr   types.Address    `abi:"aprCalculatorAddr"`
-	RewardWalletAddr    types.Address    `abi:"rewardWalletAddr"`
-	HydraVaultAddr      types.Address    `abi:"hydraVaultAddr"`
-	NewBls              types.Address    `abi:"newBls"`
+	NewValidators         []*ValidatorInit `abi:"newValidators"`
+	Governance            types.Address    `abi:"governance"`
+	HydraStakingAddr      types.Address    `abi:"hydraStakingAddr"`
+	HydraDelegationAddr   types.Address    `abi:"hydraDelegationAddr"`
+	AprCalculatorAddr     types.Address    `abi:"aprCalculatorAddr"`
+	RewardWalletAddr      types.Address    `abi:"rewardWalletAddr"`
+	DaoIncentiveVaultAddr types.Address    `abi:"daoIncentiveVaultAddr"`
+	NewBls                types.Address    `abi:"newBls"`
 }
 
 func (i *InitializeHydraChainFn) Sig() []byte {
@@ -131,19 +131,19 @@ func (r *RegisterHydraChainFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraChain.Abi.Methods["register"], buf, r)
 }
 
-type DistributeVaultFundsHydraChainFn struct {
+type DistributeDAOIncentiveHydraChainFn struct {
 }
 
-func (d *DistributeVaultFundsHydraChainFn) Sig() []byte {
-	return HydraChain.Abi.Methods["distributeVaultFunds"].ID()
+func (d *DistributeDAOIncentiveHydraChainFn) Sig() []byte {
+	return HydraChain.Abi.Methods["distributeDAOIncentive"].ID()
 }
 
-func (d *DistributeVaultFundsHydraChainFn) EncodeAbi() ([]byte, error) {
-	return HydraChain.Abi.Methods["distributeVaultFunds"].Encode(d)
+func (d *DistributeDAOIncentiveHydraChainFn) EncodeAbi() ([]byte, error) {
+	return HydraChain.Abi.Methods["distributeDAOIncentive"].Encode(d)
 }
 
-func (d *DistributeVaultFundsHydraChainFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(HydraChain.Abi.Methods["distributeVaultFunds"], buf, d)
+func (d *DistributeDAOIncentiveHydraChainFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraChain.Abi.Methods["distributeDAOIncentive"], buf, d)
 }
 
 type NewValidatorEvent struct {
@@ -770,9 +770,9 @@ func (n *NewVestingManagerEvent) Decode(input []byte) error {
 }
 
 type InitializeAPRCalculatorFn struct {
-	Manager        types.Address `abi:"manager"`
+	Governance     types.Address `abi:"governance"`
 	HydraChainAddr types.Address `abi:"hydraChainAddr"`
-	InitialPrice   *big.Int      `abi:"initialPrice"`
+	Prices         [310]*big.Int `abi:"prices"`
 }
 
 func (i *InitializeAPRCalculatorFn) Sig() []byte {
@@ -821,7 +821,7 @@ func (f *FundRewardWalletFn) DecodeAbi(buf []byte) error {
 type InitializeLiquidityTokenFn struct {
 	Name_               string        `abi:"name_"`
 	Symbol_             string        `abi:"symbol_"`
-	Governer            types.Address `abi:"governer"`
+	Governance          types.Address `abi:"governance"`
 	HydraStakingAddr    types.Address `abi:"hydraStakingAddr"`
 	HydraDelegationAddr types.Address `abi:"hydraDelegationAddr"`
 }
@@ -839,7 +839,7 @@ func (i *InitializeLiquidityTokenFn) DecodeAbi(buf []byte) error {
 }
 
 type InitializeHydraVaultFn struct {
-	Governer types.Address `abi:"governer"`
+	Governance types.Address `abi:"governance"`
 }
 
 func (i *InitializeHydraVaultFn) Sig() []byte {

@@ -594,7 +594,7 @@ func (c *consensusRuntime) calculateStateTxsInput(
 ) (*contractsapi.CommitEpochHydraChainFn,
 	*contractsapi.FundRewardWalletFn,
 	*contractsapi.DistributeRewardsForHydraStakingFn,
-	*contractsapi.DistributeVaultFundsHydraChainFn, error) {
+	*contractsapi.DistributeDAOIncentiveHydraChainFn, error) {
 	uptimeCounter := map[types.Address]int64{}
 	blockHeader := currentBlock
 	epochID := epoch.Number
@@ -691,7 +691,7 @@ func (c *consensusRuntime) calculateStateTxsInput(
 		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
 	}
 
-	distributeVaultFunds := &contractsapi.DistributeVaultFundsHydraChainFn{}
+	distributeVaultFunds := &contractsapi.DistributeDAOIncentiveHydraChainFn{}
 
 	return commitEpoch, fundRewardWallet, distributeRewards, distributeVaultFunds, nil
 }
