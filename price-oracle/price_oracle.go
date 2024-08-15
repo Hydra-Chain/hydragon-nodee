@@ -20,7 +20,10 @@ import (
 	"github.com/umbracle/ethgo/contract"
 )
 
-var alreadyVotedMapping = make(map[uint64]bool)
+var (
+	alreadyVotedMapping = make(map[uint64]bool)
+	txRelayer           txrelayer.TxRelayer
+)
 
 type blockchainBackend interface {
 	// CurrentHeader returns the header of blockchain block head
@@ -52,6 +55,35 @@ type PriceOracle struct {
 	jsonRPC   string
 	priceFeed PriceFeed
 }
+
+type PriceDataCoinGecko struct {
+	// Prices [][2]float64 `json:"prices"` // vito
+	ID         string `json:"id"`
+	Symbol     string `json:"symbol"`
+	Name       string `json:"name"`
+	MarketData struct {
+		CurrentPrice struct {
+			USD float64 `json:"usd"`
+		} `json:"current_price"`
+	} `json:"market_data"`
+}
+
+type PriceDataCoinMarketCap struct {
+	Data map[string]struct {
+		Quote struct {
+			USD struct {
+				Price float64 `json:"price"`
+			} `json:"USD"`
+		} `json:"quote"`
+	} `json:"data"`
+}
+
+type ThirdPartyService string
+
+const (
+	CoingeGecko   ThirdPartyService = "coingecko"
+	CoinMarketCap ThirdPartyService = "coinmarketcap"
+)
 
 func NewPriceOracle(
 	logger hclog.Logger,
@@ -161,6 +193,13 @@ func (p *PriceOracle) handleNewBlock(header *types.Header) error {
 	// keep info if already voted or consensus already made about specific date
 	// so you don't have to continue trying to process in such case
 
+	// vito
+	// 1. Check if the proper decision is made - call a contract function that returns bool or make the same checks
+	// 	that are made in the vote() func in the contracts
+	// 2. Check if it is already voted, keep the info somewhere (check if we keep some extra data, e.g., ./state.go)
+	// 3. Check if consensus has already been made about a specific date, so, keep this info, too
+	// 4. Don't continue processing if the above checks are not okay
+
 	return nil
 }
 
@@ -177,7 +216,12 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 		return false, fmt.Errorf("get system state: %w", err)
 	}
 
-	shouldVote, falseReason, err := state.shouldVote(p.account.Address().String(), calcDayNumber(header.Timestamp))
+	// vito - shouldVote must make the checks described in the other comments above
+	shouldVote, falseReason, err := state.shouldVote(
+		p.account.Address().String(),
+		calcDayNumber(header.Timestamp),
+		p.jsonRPC,
+	)
 	if err != nil {
 		return false, err
 	}
@@ -208,7 +252,7 @@ func (p *PriceOracle) alreadyVoted(header *types.Header) bool {
 
 // getSystemState builds SystemState instance for the given header
 func (p *PriceOracle) executeVote(header *types.Header) error {
-	price, err := p.priceFeed.GetPrice(header.Timestamp)
+	price, err := p.priceFeed.GetPrice(header)
 	if err != nil {
 		return fmt.Errorf("get price: %w", err)
 	}
@@ -228,15 +272,22 @@ func (p *PriceOracle) getState(header *types.Header) (PriceOracleState, error) {
 		return nil, err
 	}
 
-	return newPriceOracleState(p.blockchain.GetSystemState(provider)), nil
+	newRelayer, err := NewTxRelayer(p.jsonRPC)
+	if err != nil {
+		return nil, err
+	}
+
+	return newPriceOracleState(p.blockchain.GetSystemState(provider), newRelayer), nil
 }
 
 func (p *PriceOracle) vote(price *big.Int) error {
-	txRelayer, err := txrelayer.NewTxRelayer(
-		txrelayer.WithIPAddress(p.jsonRPC), txrelayer.WithReceiptTimeout(150*time.Millisecond))
-	if err != nil {
-		return err
-	}
+	// txRelayer, err := txrelayer.NewTxRelayer(
+	// 	txrelayer.WithIPAddress(p.jsonRPC), txrelayer.WithReceiptTimeout(150*time.Millisecond))
+	// if err != nil {
+	// 	return err
+	// }
+
+	// vito
 
 	// registerFn := &contractsapi.RegisterHydraChainFn{
 	// 	Signature: sigMarshal,
@@ -284,6 +335,16 @@ func (p *PriceOracle) vote(price *big.Int) error {
 	// }
 
 	return nil
+}
+
+func NewTxRelayer(jsoNRPC string) (txrelayer.TxRelayer, error) {
+	txRelayer, err := txrelayer.NewTxRelayer(
+		txrelayer.WithIPAddress(jsoNRPC), txrelayer.WithReceiptTimeout(150*time.Millisecond))
+	if err != nil {
+		return nil, err
+	}
+
+	return txRelayer, nil
 }
 
 const (

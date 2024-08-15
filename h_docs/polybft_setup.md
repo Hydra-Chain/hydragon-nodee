@@ -22,10 +22,15 @@ I am describing our custom process, because it is different.
 ./hydra secrets init --chain-id 8844 --data-dir test-chain-3 --insecure /
 ./hydra secrets init --chain-id 8844 --data-dir test-chain-4 --insecure /
 ./hydra secrets init --chain-id 8844 --data-dir test-chain-5 --insecure
-
 ```
 
-2. Generate genesis file
+2. Generate third party secrets (CoinGecko and CoinMarketCap). You can retrieve free keys from the corresponding websites.
+
+```
+./hydra secrets generate --type local --name node --extra "coingecko-api-key=<key>,coinmarketcap-api-key=<key>"
+```
+
+3. Generate genesis file
 
 We need to set native token to be mintable, so we can premine balances to different addresses
 
@@ -33,7 +38,7 @@ We need to set native token to be mintable, so we can premine balances to differ
 ./hydra genesis --block-gas-limit 10000000 --epoch-size 10 --validators-path ./ --validators-prefix test-chain- --consensus polybft --native-token-config Hydra:HDR:18:true:0x211881Bb4893dd733825A2D97e48bFc38cc70a0c --premine 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c:70000000000000000000000 --premine 0xdC3312E368A178e24850C6dAC169646c5fD14b93:30000000000000000000000 --proxy-contracts-admin 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c --chain-id 8844
 ```
 
-3. Run the chain
+4. Run the chain
 
 ```
 ./hydra server --data-dir ./test-chain-1 --chain genesis.json --grpc-address :5001 --libp2p :30301 --jsonrpc :10001 --log-level DEBUG --log-to ./log
@@ -45,7 +50,6 @@ We need to set native token to be mintable, so we can premine balances to differ
 ./hydra server --data-dir ./test-chain-4 --chain genesis.json --grpc-address :5004 --libp2p :30304 --jsonrpc :10004 --log-level DEBUG --log-to ./log-4
 
 ./hydra server --data-dir ./test-chain-5 --chain genesis.json --grpc-address :5005 --libp2p :30305 --jsonrpc :10005 --log-level DEBUG --log-to ./log-5
-
 ```
 
 #### Add more validators
@@ -54,14 +58,12 @@ We need to set native token to be mintable, so we can premine balances to differ
 
 ```
 ./hydra secrets init --chain-id 8844 --data-dir test-add-chain-1 --insecure
-
 ```
 
 2. Use the governer (first validator by default) to whitelist the new account
 
 ```
 ./hydra hydragon whitelist-validator --data-dir ./test-chain-1 --address 0x7A94400e0d33B79B6C69979df3f7a46CF1963c69 --jsonrpc http://127.0.0.1:10001 --insecure
-
 ```
 
 3. Register account
@@ -70,17 +72,13 @@ We need to set native token to be mintable, so we can premine balances to differ
 Stake tx is made in this step as well
 
 ```
-
 ./hydra hydragon register-validator --data-dir ./test-add-chain-1 --stake 15000000000000000000000 --chain-id 8844 --jsonrpc http://127.0.0.1:10001 --insecure
-
 ```
 
 4. Run new validator
 
 ```
-
 ./hydra server --data-dir ./test-add-chain-1 --chain genesis.json --grpc-address :5006 --libp2p :30306 --jsonrpc :10006 --log-level DEBUG --log-to ./log-6
-
 ```
 
 ### LEGACY local setup
