@@ -209,6 +209,7 @@ func (p *blockchainWrapper) GetSystemState(provider contract.Provider) SystemSta
 		contracts.VestingManagerFactoryContract,
 		contracts.APRCalculatorContract,
 		contracts.RewardWalletContract,
+		contracts.PriceOracleContract,
 		contracts.StateReceiverContract,
 		provider,
 	)

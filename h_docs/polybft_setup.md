@@ -32,7 +32,7 @@ I am describing our custom process, because it is different.
 
 3. Generate genesis file
 
-We need to set native token to be mintable, so we can premine balances to different addresses
+We need to set native token to be mintable, so we can premine balances to different addresses. Keep in mind that the validators need some premined coins, so, add it before generating the genesis. They are needed in order validators to feed the Price Oracle (executing transactions).
 
 ```
 ./hydra genesis --block-gas-limit 10000000 --epoch-size 10 --validators-path ./ --validators-prefix test-chain- --consensus polybft --native-token-config Hydra:HDR:18:true:0x211881Bb4893dd733825A2D97e48bFc38cc70a0c --premine 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c:70000000000000000000000 --premine 0xdC3312E368A178e24850C6dAC169646c5fD14b93:30000000000000000000000 --proxy-contracts-admin 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c --chain-id 8844
@@ -92,7 +92,7 @@ Stake tx is made in this step as well
 ```
 
 2. Create manifest file
-   This is the first version of edge that needs a manifest file. It contains information about the initial validators.
+  This is the first version of edge that needs a manifest file. It contains information about the initial validators.
 
 ```
 ./hydra manifest --validators-prefix test-chain-

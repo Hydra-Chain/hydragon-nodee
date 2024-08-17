@@ -215,6 +215,11 @@ func GenesisPostHookFactory(
 			return err
 		}
 
+		// initialize PriceOracle SC
+		if err = initPriceOracle(polyBFTConfig, transition); err != nil {
+			return err
+		}
+
 		// check if there are Bridge Allow List Admins and Bridge Block List Admins
 		// and if there are, get the first address as the Admin
 		// bridgeAllowListAdmin := types.ZeroAddress

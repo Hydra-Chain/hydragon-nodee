@@ -4,13 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"net"
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
 	"github.com/0xPolygon/polygon-edge/consensus"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
+	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/secrets"
 	"github.com/0xPolygon/polygon-edge/state"
 	"github.com/0xPolygon/polygon-edge/txrelayer"
@@ -23,6 +26,7 @@ import (
 var (
 	alreadyVotedMapping = make(map[uint64]bool)
 	txRelayer           txrelayer.TxRelayer
+	priceVotedEventABI  = contractsapi.PriceOracle.Abi.Events["PriceVoted"]
 )
 
 type blockchainBackend interface {
@@ -57,7 +61,6 @@ type PriceOracle struct {
 }
 
 type PriceDataCoinGecko struct {
-	// Prices [][2]float64 `json:"prices"` // vito
 	ID         string `json:"id"`
 	Symbol     string `json:"symbol"`
 	Name       string `json:"name"`
@@ -78,12 +81,20 @@ type PriceDataCoinMarketCap struct {
 	} `json:"data"`
 }
 
-type ThirdPartyService string
+// emit PriceVoted(_price, msg.sender, day);
+type voteResult struct {
+	price            string
+	validatorAddress string
+	day              uint64
+}
 
-const (
-	CoingeGecko   ThirdPartyService = "coingecko"
-	CoinMarketCap ThirdPartyService = "coinmarketcap"
-)
+func (vr voteResult) PrintOutput() {
+	fmt.Printf("\n[VOTE]\n")
+	fmt.Println("Validator Address: ", vr.validatorAddress)
+	fmt.Println("Voted Price: ", vr.price)
+	fmt.Println("Day: ", vr.day)
+	fmt.Printf("\n")
+}
 
 func NewPriceOracle(
 	logger hclog.Logger,
@@ -105,12 +116,17 @@ func NewPriceOracle(
 		return nil, fmt.Errorf("failed to read account data. Error: %w", err)
 	}
 
+	formattedURL, err := formatJSONRPCURL(jsonRPC)
+	if err != nil {
+		return nil, err
+	}
+
 	return &PriceOracle{
 		logger:         logger.Named("price-oracle"),
 		blockchain:     polybft.NewBlockchainBackend(executor, blockchain),
 		priceFeed:      priceFeed,
 		polybftBackend: polybftConsensus,
-		jsonRPC:        jsonRPC,
+		jsonRPC:        formattedURL,
 		account:        account,
 	}, nil
 }
@@ -189,37 +205,25 @@ func (p *PriceOracle) handleNewBlock(header *types.Header) error {
 		return p.executeVote(header)
 	}
 
-	// Continue: Make a contract check to ensure it is a proper decision to vote,
-	// keep info if already voted or consensus already made about specific date
-	// so you don't have to continue trying to process in such case
-
-	// vito
-	// 1. Check if the proper decision is made - call a contract function that returns bool or make the same checks
-	// 	that are made in the vote() func in the contracts
-	// 2. Check if it is already voted, keep the info somewhere (check if we keep some extra data, e.g., ./state.go)
-	// 3. Check if consensus has already been made about a specific date, so, keep this info, too
-	// 4. Don't continue processing if the above checks are not okay
-
 	return nil
 }
 
-// getSystemState builds SystemState instance for the given header
+// shouldExecuteVote verifies that the validator should vote
 func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 	// first check is voting already made for the current day
 	if p.alreadyVoted(header) {
 		return false, nil
 	}
 
-	// then check if the contract is in a proper state to vote
+	// initialize the system state for the given header
 	state, err := p.getState(header)
 	if err != nil {
 		return false, fmt.Errorf("get system state: %w", err)
 	}
 
-	// vito - shouldVote must make the checks described in the other comments above
+	// then check if the contract is in a proper state to vote
 	shouldVote, falseReason, err := state.shouldVote(
-		p.account.Address().String(),
-		calcDayNumber(header.Timestamp),
+		p.account,
 		p.jsonRPC,
 	)
 	if err != nil {
@@ -250,7 +254,7 @@ func (p *PriceOracle) alreadyVoted(header *types.Header) bool {
 	return alreadyVotedMapping[calcDayNumber(header.Timestamp)]
 }
 
-// getSystemState builds SystemState instance for the given header
+// executeVote get the price from the price feed and votes
 func (p *PriceOracle) executeVote(header *types.Header) error {
 	price, err := p.priceFeed.GetPrice(header)
 	if err != nil {
@@ -262,46 +266,39 @@ func (p *PriceOracle) executeVote(header *types.Header) error {
 		return fmt.Errorf("vote: failed %w", err)
 	}
 
+	alreadyVotedMapping[calcDayNumber(header.Timestamp)] = true
+
 	return nil
 }
 
-// getSystemState builds SystemState instance for the given header
+// getState builds SystemState instance for the given header
 func (p *PriceOracle) getState(header *types.Header) (PriceOracleState, error) {
 	provider, err := p.blockchain.GetStateProviderForBlock(header)
 	if err != nil {
 		return nil, err
 	}
 
-	newRelayer, err := NewTxRelayer(p.jsonRPC)
-	if err != nil {
-		return nil, err
-	}
-
-	return newPriceOracleState(p.blockchain.GetSystemState(provider), newRelayer), nil
+	return newPriceOracleState(p.blockchain.GetSystemState(provider)), nil
 }
 
 func (p *PriceOracle) vote(price *big.Int) error {
-	// txRelayer, err := txrelayer.NewTxRelayer(
-	// 	txrelayer.WithIPAddress(p.jsonRPC), txrelayer.WithReceiptTimeout(150*time.Millisecond))
-	// if err != nil {
-	// 	return err
-	// }
+	txRelayer, err := NewTxRelayer(p.jsonRPC)
+	if err != nil {
+		return err
+	}
 
-	// vito
-
-	// registerFn := &contractsapi.RegisterHydraChainFn{
-	// 	Signature: sigMarshal,
-	// 	Pubkey:    account.Bls.PublicKey().ToBigInt(),
-	// }
-
-	// input, err := registerFn.EncodeAbi()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("register validator failed: %w", err)
-	// }
+	voteFn := &contractsapi.VotePriceOracleFn{
+		Price: price,
+	}
+	input, err := voteFn.EncodeAbi()
+	if err != nil {
+		return err
+	}
 
 	txn := &ethgo.Transaction{
-		Input: []byte{},
-		To:    nil,
+		From:  p.account.Ecdsa.Address(),
+		Input: input,
+		To:    (*ethgo.Address)(&contracts.PriceOracleContract),
 	}
 
 	receipt, err := txRelayer.SendTransaction(txn, p.account.Ecdsa)
@@ -310,29 +307,32 @@ func (p *PriceOracle) vote(price *big.Int) error {
 	}
 
 	if receipt.Status != uint64(types.ReceiptSuccess) {
-		return errors.New("register validator transaction failed")
+		return errors.New("vote transaction failed")
 	}
 
-	// result := &registerResult{}
-	// foundNewValidatorLog := false
+	result := &voteResult{}
+	foundVoteLog := false
 
-	// for _, log := range receipt.Logs {
-	// 	if newValidatorEventABI.Match(log) {
-	// 		event, err := newValidatorEventABI.ParseLog(log)
-	// 		if err != nil {
-	// 			return err
-	// 		}
+	for _, log := range receipt.Logs {
+		if priceVotedEventABI.Match(log) {
+			event, err := priceVotedEventABI.ParseLog(log)
+			if err != nil {
+				return err
+			}
 
-	// 		result.validatorAddress = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
-	// 		result.stakeResult = "No stake parameters have been submitted"
-	// 		result.amount = "0"
-	// 		foundNewValidatorLog = true
-	// 	}
-	// }
+			result.price = event["price"].(*big.Int).String()                     //nolint:forcetypeassert
+			result.validatorAddress = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
+			result.day = event["day"].(*big.Int).Uint64()                         //nolint:forcetypeassert
 
-	// if !foundNewValidatorLog {
-	// 	return fmt.Errorf("could not find an appropriate log in the receipt that validates the registration has happened")
-	// }
+			foundVoteLog = true
+		}
+	}
+
+	if !foundVoteLog {
+		return fmt.Errorf("could not find an appropriate log in the receipt that validates the vote has happened")
+	}
+
+	result.PrintOutput()
 
 	return nil
 }
@@ -347,9 +347,22 @@ func NewTxRelayer(jsoNRPC string) (txrelayer.TxRelayer, error) {
 	return txRelayer, nil
 }
 
+func formatJSONRPCURL(jsonRPC string) (string, error) {
+	_, port, err := net.SplitHostPort(jsonRPC)
+	if err != nil {
+		return "", err
+	}
+
+	formattedURL := fmt.Sprintf("http://127.0.0.1:%s", port)
+
+	return formattedURL, nil
+}
+
 const (
-	dailyVotingStartTime = uint64(0)        // in seconds
-	dailyVotingEndTime   = uint64(3 * 3600) // in seconds
+	// APIs will give the price for the previous day 35 mins after midnight.
+	// So, we configure the vote to start 36 mins after midnight
+	dailyVotingStartTime = uint64(36 * 60)                       // in seconds
+	dailyVotingEndTime   = dailyVotingStartTime + uint64(3*3600) // in seconds
 )
 
 func isVotingTime(timestamp uint64) bool {

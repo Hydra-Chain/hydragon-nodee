@@ -801,9 +801,10 @@ func (n *NewVestingManagerEvent) Decode(input []byte) error {
 }
 
 type InitializeAPRCalculatorFn struct {
-	Governance     types.Address `abi:"governance"`
-	HydraChainAddr types.Address `abi:"hydraChainAddr"`
-	Prices         [310]*big.Int `abi:"prices"`
+	Governance      types.Address `abi:"governance"`
+	HydraChainAddr  types.Address `abi:"hydraChainAddr"`
+	PriceOracleAddr types.Address `abi:"priceOracleAddr"`
+	Prices          [310]*big.Int `abi:"prices"`
 }
 
 func (i *InitializeAPRCalculatorFn) Sig() []byte {
@@ -883,6 +884,80 @@ func (i *InitializeHydraVaultFn) EncodeAbi() ([]byte, error) {
 
 func (i *InitializeHydraVaultFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraVault.Abi.Methods["initialize"], buf, i)
+}
+
+type InitializePriceOracleFn struct {
+	HydraChainAddr    types.Address `abi:"_hydraChainAddr"`
+	AprCalculatorAddr types.Address `abi:"_aprCalculatorAddr"`
+}
+
+func (i *InitializePriceOracleFn) Sig() []byte {
+	return PriceOracle.Abi.Methods["initialize"].ID()
+}
+
+func (i *InitializePriceOracleFn) EncodeAbi() ([]byte, error) {
+	return PriceOracle.Abi.Methods["initialize"].Encode(i)
+}
+
+func (i *InitializePriceOracleFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(PriceOracle.Abi.Methods["initialize"], buf, i)
+}
+
+type VotePriceOracleFn struct {
+	Price *big.Int `abi:"_price"`
+}
+
+func (v *VotePriceOracleFn) Sig() []byte {
+	return PriceOracle.Abi.Methods["vote"].ID()
+}
+
+func (v *VotePriceOracleFn) EncodeAbi() ([]byte, error) {
+	return PriceOracle.Abi.Methods["vote"].Encode(v)
+}
+
+func (v *VotePriceOracleFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(PriceOracle.Abi.Methods["vote"], buf, v)
+}
+
+type IsValidValidatorVotePriceOracleFn struct {
+}
+
+func (i *IsValidValidatorVotePriceOracleFn) Sig() []byte {
+	return PriceOracle.Abi.Methods["isValidValidatorVote"].ID()
+}
+
+func (i *IsValidValidatorVotePriceOracleFn) EncodeAbi() ([]byte, error) {
+	return PriceOracle.Abi.Methods["isValidValidatorVote"].Encode(i)
+}
+
+func (i *IsValidValidatorVotePriceOracleFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(PriceOracle.Abi.Methods["isValidValidatorVote"], buf, i)
+}
+
+type PriceVotedEvent struct {
+	Price     *big.Int      `abi:"price"`
+	Validator types.Address `abi:"validator"`
+	Day       *big.Int      `abi:"day"`
+}
+
+func (*PriceVotedEvent) Sig() ethgo.Hash {
+	return PriceOracle.Abi.Events["PriceVoted"].ID()
+}
+
+func (p *PriceVotedEvent) Encode() ([]byte, error) {
+	return PriceOracle.Abi.Events["PriceVoted"].Inputs.Encode(p)
+}
+
+func (p *PriceVotedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !PriceOracle.Abi.Events["PriceVoted"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(PriceOracle.Abi.Events["PriceVoted"], log, p)
+}
+
+func (p *PriceVotedEvent) Decode(input []byte) error {
+	return PriceOracle.Abi.Events["PriceVoted"].Inputs.DecodeStruct(input, &p)
 }
 
 type ProtectSetUpProxyGenesisProxyFn struct {

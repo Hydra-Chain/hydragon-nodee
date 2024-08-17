@@ -107,6 +107,7 @@ func TestSystemState_GetEpoch(t *testing.T) {
 		contracts.VestingManagerFactoryContract,
 		contracts.APRCalculatorContract,
 		contracts.RewardWalletContract,
+		contracts.PriceOracleContract,
 		contracts.StateReceiverContract,
 		provider,
 	)

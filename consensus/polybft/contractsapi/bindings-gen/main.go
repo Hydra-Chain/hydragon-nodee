@@ -99,7 +99,6 @@ func main() {
 				"DelegatorRewardsClaimed",
 			},
 		},
-
 		{
 			"VestingManagerFactory",
 			gensc.VestingManagerFactory,
@@ -148,6 +147,19 @@ func main() {
 				"initialize",
 			},
 			[]string{},
+		},
+		{
+			"PriceOracle",
+			gensc.PriceOracle,
+			false,
+			[]string{
+				"initialize",
+				"vote",
+				"isValidValidatorVote",
+			},
+			[]string{
+				"PriceVoted",
+			},
 		},
 		{
 			"GenesisProxy",

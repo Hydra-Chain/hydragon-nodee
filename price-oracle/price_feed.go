@@ -38,17 +38,21 @@ func (d *dummyPriceFeed) GetPrice(header *types.Header) (*big.Int, error) {
 	}
 
 	price, err := getCoingeckoPrice(2, apiKey)
-	if err != nil || price.Cmp(big.NewInt(0)) == 0 {
-		apiKey, ok = secretsManagerConfig.Extra[secrets.CoinMarketCapAPIKey].(string)
-		if !ok {
-			return nil, fmt.Errorf(secrets.CoinMarketCapAPIKey + " is not a string")
-		}
-
-		price, err = getCMCPrice(2, apiKey)
-		if err != nil {
-			return nil, fmt.Errorf("get price from third parties failed: %w", err)
-		}
+	if err != nil {
+		return nil, fmt.Errorf("get price from CoinGecko failed: %w", err)
 	}
+	// ? Keep this one until we decide to include or not the CMC
+	// if err != nil || price.Cmp(big.NewInt(0)) == 0 {
+	// 	apiKey, ok = secretsManagerConfig.Extra[secrets.CoinMarketCapAPIKey].(string)
+	// 	if !ok {
+	// 		return nil, fmt.Errorf(secrets.CoinMarketCapAPIKey + " is not a string")
+	// 	}
+
+	// 	price, err = getCMCPrice(2, apiKey)
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("get price from third parties failed: %w", err)
+	// 	}
+	// }
 
 	return price, nil
 }
@@ -161,36 +165,6 @@ func fetchPriceData(req *http.Request) ([]byte, error) {
 	data, _ := io.ReadAll(res.Body)
 
 	return data, nil
-}
-
-// getPreviousDayTimestamps returns the start and end timestamps for the previous day.
-// It takes the current time as input and calculates the start and end timestamps
-// for the previous day (00:00:00 to 23:59:59 of the previous day).
-// vito - delete if not used
-func getPreviousDayTimestamps(currentTime time.Time) (uint64, uint64) {
-	// Get the previous day
-	previousDay := currentTime.AddDate(0, 0, -1)
-
-	// Set to start of the previous day (00:00:00)
-	startOfPreviousDay := time.Date(
-		previousDay.Year(),
-		previousDay.Month(),
-		previousDay.Day(),
-		0,
-		0,
-		0,
-		0,
-		previousDay.Location(),
-	)
-
-	// Set to end of the previous day (23:59:59)
-	endOfPreviousDay := startOfPreviousDay.Add(24*time.Hour - time.Second)
-
-	// Convert back to uint64 timestamps
-	startTimestamp := uint64(startOfPreviousDay.Unix())
-	endTimestamp := uint64(endOfPreviousDay.Unix())
-
-	return startTimestamp, endTimestamp
 }
 
 // getYesterdayFormatted returns the date in the format dd-mm-yyyy for the previous day.

@@ -231,6 +231,27 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 	)
 }
 
+// initPriceOracle initializes PriceOracle SC
+func initPriceOracle(polybftConfig PolyBFTConfig, transition *state.Transition) error {
+	initFn := &contractsapi.InitializePriceOracleFn{
+		HydraChainAddr:    contracts.HydraChainContract,
+		AprCalculatorAddr: contracts.APRCalculatorContract,
+	}
+
+	input, err := initFn.EncodeAbi()
+	if err != nil {
+		return fmt.Errorf("PriceOracle.initialize params encoding failed: %w", err)
+	}
+
+	return callContract(
+		contracts.SystemCaller,
+		contracts.PriceOracleContract,
+		input,
+		"PriceOracle.initialize",
+		transition,
+	)
+}
+
 // // getInitERC20PredicateInput builds initialization input parameters for child chain ERC20Predicate SC
 // func getInitERC20PredicateInput(config *BridgeConfig, childChainMintable bool) ([]byte, error) {
 // 	var params contractsapi.StateTransactionInput

@@ -2,43 +2,55 @@ package priceoracle
 
 import (
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"
-	"github.com/0xPolygon/polygon-edge/txrelayer"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
+	"github.com/0xPolygon/polygon-edge/contracts"
+	"github.com/umbracle/ethgo"
 )
 
 // PriceOracleState is an interface to interact with the price oracle contract in the chain
 type PriceOracleState interface {
 	// shouldVote returns does the given address should vote for the given day's price
 	shouldVote(
-		address string,
-		dayNumber uint64,
+		validatorAccount *wallet.Account,
 		jsonRPC string,
 	) (shouldVote bool, falseReason string, err error)
 }
 
 type priceOracleState struct {
 	polybft.SystemState
-	txRelayer txrelayer.TxRelayer
 }
 
 func newPriceOracleState(
 	systemState polybft.SystemState,
-	txRelayer txrelayer.TxRelayer,
 ) PriceOracleState {
-	return &priceOracleState{systemState, txRelayer}
+	return &priceOracleState{systemState}
 }
 
 func (p priceOracleState) shouldVote(
-	address string,
-	dayNumber uint64,
+	validatorAccount *wallet.Account,
 	jsonRPC string,
 ) (bool, string, error) {
-	if p.txRelayer == nil {
-		newRelayer, err := NewTxRelayer(jsonRPC)
-		if err != nil {
-			return false, "", err
-		}
+	txRelayer, err := NewTxRelayer(jsonRPC)
+	if err != nil {
+		return false, "", err
+	}
 
-		p.txRelayer = newRelayer
+	isValidValidatorVoteFn := &contractsapi.IsValidValidatorVotePriceOracleFn{}
+	input, err := isValidValidatorVoteFn.EncodeAbi()
+	if err != nil {
+		return false, "", err
+	}
+
+	txn := &ethgo.Transaction{
+		From:  validatorAccount.Ecdsa.Address(),
+		Input: input,
+		To:    (*ethgo.Address)(&contracts.PriceOracleContract),
+	}
+
+	_, err = txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
+	if err != nil {
+		return false, "validator is not active or already voted", nil
 	}
 
 	return true, "", nil

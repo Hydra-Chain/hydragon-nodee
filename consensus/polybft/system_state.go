@@ -49,6 +49,7 @@ type SystemStateImpl struct {
 	vestingManagerFactoryContract *contract.Contract
 	aprCalculatorContract         *contract.Contract
 	rewardWalletContract          *contract.Contract
+	priceOracleContract           *contract.Contract
 	sidechainBridgeContract       *contract.Contract
 }
 
@@ -60,6 +61,7 @@ func NewSystemState(
 	vestingManagerFactoryAddr types.Address,
 	aprCalculatorAddr types.Address,
 	rewardWalletAddr types.Address,
+	priceOracleAddr types.Address,
 	stateRcvAddr types.Address,
 	provider contract.Provider,
 ) *SystemStateImpl {
@@ -92,6 +94,11 @@ func NewSystemState(
 	s.rewardWalletContract = contract.NewContract(
 		ethgo.Address(rewardWalletAddr),
 		contractsapi.RewardWallet.Abi, contract.WithProvider(provider),
+	)
+
+	s.priceOracleContract = contract.NewContract(
+		ethgo.Address(priceOracleAddr),
+		contractsapi.PriceOracle.Abi, contract.WithProvider(provider),
 	)
 
 	// Hydra modification: StateReceiver contract is not used

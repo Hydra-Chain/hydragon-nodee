@@ -339,6 +339,10 @@ func (p *genesisParams) deployContracts(totalStake *big.Int) (map[types.Address]
 			artifact: contractsapi.HydraVault,
 			address:  contracts.DAOIncentiveVaultContractV1,
 		},
+		{
+			artifact: contractsapi.PriceOracle,
+			address:  contracts.PriceOracleContractV1,
+		},
 	}
 
 	// if !params.nativeTokenConfig.IsMintable {
