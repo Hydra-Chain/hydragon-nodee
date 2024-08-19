@@ -21,6 +21,7 @@ func decodeStateTransaction(txData []byte) (contractsapi.StateTransactionInput, 
 		fundRewardWalletFn     contractsapi.FundRewardWalletFn
 		distributeRewardsFn    contractsapi.DistributeRewardsForHydraStakingFn
 		distributeVaultFundsFn contractsapi.DistributeDAOIncentiveHydraChainFn
+		SyncValidatorsDataFn   contractsapi.SyncValidatorsDataHydraChainFn
 		obj                    contractsapi.StateTransactionInput
 	)
 
@@ -36,6 +37,9 @@ func decodeStateTransaction(txData []byte) (contractsapi.StateTransactionInput, 
 	} else if bytes.Equal(sig, distributeVaultFundsFn.Sig()) {
 		// distribute vault funds
 		obj = &contractsapi.DistributeDAOIncentiveHydraChainFn{}
+	} else if bytes.Equal(sig, SyncValidatorsDataFn.Sig()) {
+		// sync the validators voting power data
+		obj = &contractsapi.SyncValidatorsDataHydraChainFn{}
 	} else {
 		return nil, fmt.Errorf("unknown state transaction")
 	}

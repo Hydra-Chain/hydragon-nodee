@@ -375,6 +375,7 @@ func (s *stakeManager) getSystemStateForBlock(block *types.Header) (SystemState,
 	}
 
 	systemState := s.blockchain.GetSystemState(provider)
+
 	return systemState, nil
 }
 
@@ -430,8 +431,8 @@ func (vs validatorSetState) Marshal() ([]byte, error) {
 	return json.Marshal(vs)
 }
 
-func (hc *validatorSetState) Unmarshal(b []byte) error {
-	return json.Unmarshal(b, hc)
+func (vs *validatorSetState) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, vs)
 }
 
 // validatorStakeMap holds ValidatorMetadata for each validator address

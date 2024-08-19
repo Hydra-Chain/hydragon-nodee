@@ -146,6 +146,37 @@ func (d *DistributeDAOIncentiveHydraChainFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraChain.Abi.Methods["distributeDAOIncentive"], buf, d)
 }
 
+type ValidatorPower struct {
+	Validator   types.Address `abi:"validator"`
+	VotingPower *big.Int      `abi:"votingPower"`
+}
+
+var ValidatorPowerABIType = abi.MustNewType("tuple(address validator,uint256 votingPower)")
+
+func (v *ValidatorPower) EncodeAbi() ([]byte, error) {
+	return ValidatorPowerABIType.Encode(v)
+}
+
+func (v *ValidatorPower) DecodeAbi(buf []byte) error {
+	return decodeStruct(ValidatorPowerABIType, buf, &v)
+}
+
+type SyncValidatorsDataHydraChainFn struct {
+	ValidatorsPower []*ValidatorPower `abi:"validatorsPower"`
+}
+
+func (s *SyncValidatorsDataHydraChainFn) Sig() []byte {
+	return HydraChain.Abi.Methods["syncValidatorsData"].ID()
+}
+
+func (s *SyncValidatorsDataHydraChainFn) EncodeAbi() ([]byte, error) {
+	return HydraChain.Abi.Methods["syncValidatorsData"].Encode(s)
+}
+
+func (s *SyncValidatorsDataHydraChainFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraChain.Abi.Methods["syncValidatorsData"], buf, s)
+}
+
 type NewValidatorEvent struct {
 	Validator types.Address `abi:"validator"`
 	BlsKey    [4]*big.Int   `abi:"blsKey"`

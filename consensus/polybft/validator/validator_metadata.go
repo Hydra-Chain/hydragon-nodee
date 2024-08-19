@@ -20,7 +20,9 @@ import (
 	"github.com/umbracle/fastrlp"
 )
 
-var accountSetABIType = abi.MustNewType(`tuple(tuple(address _address, uint256[4] blsKey, uint256 votingPower)[])`)
+var accountSetABIType = abi.MustNewType(
+	`tuple(tuple(address _address, uint256[4] blsKey, uint256 votingPower)[])`,
+)
 
 // ValidatorMetadata represents a validator metadata (its public identity)
 type ValidatorMetadata struct {
@@ -86,7 +88,10 @@ func (v *ValidatorMetadata) UnmarshalRLPWith(val *fastrlp.Value) error {
 	}
 
 	if num := len(elems); num != 4 {
-		return fmt.Errorf("incorrect elements count to decode validator account, expected 4 but found %d", num)
+		return fmt.Errorf(
+			"incorrect elements count to decode validator account, expected 4 but found %d",
+			num,
+		)
 	}
 
 	// Address
@@ -135,9 +140,16 @@ func (v *ValidatorMetadata) String() string {
 		v.Address.String(), v.IsActive, v.VotingPower, hex.EncodeToString(v.BlsKey.Marshal()))
 }
 
-func CalculateVPower(stakedBalance *big.Int, expNominator *big.Int, expDenominator *big.Int) *big.Int {
+func CalculateVPower(
+	stakedBalance *big.Int,
+	expNominator *big.Int,
+	expDenominator *big.Int,
+) *big.Int {
 	stakedH := big.NewInt(0).Div(stakedBalance, big.NewInt(1e18))
-	vpower := math.Pow(float64(stakedH.Uint64()), float64(expNominator.Uint64())/float64(expDenominator.Uint64()))
+	vpower := math.Pow(
+		float64(stakedH.Uint64()),
+		float64(expNominator.Uint64())/float64(expDenominator.Uint64()),
+	)
 	res := big.NewInt(int64(vpower))
 
 	return res
@@ -330,7 +342,10 @@ func (as AccountSet) ApplyDelta(validatorsDelta *ValidatorSetDelta) (AccountSet,
 	// Append added validators
 	for _, addedValidator := range validatorsDelta.Added {
 		if validators.ContainsAddress(addedValidator.Address) {
-			return nil, fmt.Errorf("validator %v is already present in the validators snapshot", addedValidator.Address.String())
+			return nil, fmt.Errorf(
+				"validator %v is already present in the validators snapshot",
+				addedValidator.Address.String(),
+			)
 		}
 
 		validators = append(validators, addedValidator)
@@ -340,14 +355,39 @@ func (as AccountSet) ApplyDelta(validatorsDelta *ValidatorSetDelta) (AccountSet,
 	for _, updatedValidator := range validatorsDelta.Updated {
 		validatorIndex := validators.Index(updatedValidator.Address)
 		if validatorIndex == -1 {
-			return nil, fmt.Errorf("incorrect delta provided: validator %s is marked as updated but not found in the validators",
-				updatedValidator.Address)
+			return nil, fmt.Errorf(
+				"incorrect delta provided: validator %s is marked as updated but not found in the validators",
+				updatedValidator.Address,
+			)
 		}
 
 		validators[validatorIndex] = updatedValidator
 	}
 
 	return validators, nil
+}
+
+// ExtractUpdatedValidatorsVotingPower receives ValidatorSetDelta and extracts the changed
+// validators (added, updated and removed)
+func (as AccountSet) ExtractUpdatedValidatorsVotingPower(
+	validatorsDelta *ValidatorSetDelta,
+) ([]*contractsapi.ValidatorPower, error) {
+	// Figure out which validators from the existing set are updated.
+	updatedValidatorsPower := make([]*contractsapi.ValidatorPower, 0)
+
+	for i, validator := range as {
+		// If a validator is removed, then append it.
+		// Otherwise, check if the validator is in the added or updated list
+		// because we are looking only for the updated ones.
+		if validatorsDelta.Removed.IsSet(uint64(i)) {
+			updatedValidatorsPower = append(updatedValidatorsPower, formatValidatorPower(validator))
+		} else if validatorsDelta.Added.ContainsAddress(validator.Address) ||
+			validatorsDelta.Updated.ContainsAddress(validator.Address) {
+			updatedValidatorsPower = append(updatedValidatorsPower, formatValidatorPower(validator))
+		}
+	}
+
+	return updatedValidatorsPower, nil
 }
 
 // Marshal marshals AccountSet to JSON
@@ -368,4 +408,12 @@ func (as *AccountSet) GetTotalVotingPower() *big.Int {
 	}
 
 	return totalVotingPower
+}
+
+// Function to help shorten the validator's metadata
+func formatValidatorPower(validatorMetaData *ValidatorMetadata) *contractsapi.ValidatorPower {
+	return &contractsapi.ValidatorPower{
+		Validator:   validatorMetaData.Address,
+		VotingPower: validatorMetaData.VotingPower,
+	}
 }
