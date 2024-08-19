@@ -616,26 +616,17 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 		}
 
 		switch stateTxData := decodedStateTx.(type) {
-		// case *CommitmentMessageSigned:
-		// 	if !f.isEndOfSprint {
-		// 		return fmt.Errorf("found commitment tx in block which should not contain it (tx hash=%s)", tx.Hash)
-		// 	}
-
-		// 	if commitmentTxExists {
-		// 		return fmt.Errorf("only one commitment tx is allowed per block (tx hash=%s)", tx.Hash)
-		// 	}
-
-		// 	commitmentTxExists = true
-
-		// if err = verifyBridgeCommitmentTx(f.Height(), tx.Hash, stateTxData, f.validators); err != nil {
-		// 	return err
-		// }
 		case *contractsapi.CommitEpochHydraChainFn:
 			if commitEpochTxExists {
 				// if we already validated commit epoch tx,
 				// that means someone added more than one commit epoch tx to block,
 				// which is invalid
 				return errCommitEpochTxSingleExpected
+			}
+
+			expectedIndex := 0
+			if i != expectedIndex {
+				return InvalidTxIndexErr(expectedIndex, i)
 			}
 
 			commitEpochTxExists = true
@@ -928,8 +919,9 @@ func (f *fsm) verifyDistributeDAOIncentiveTx(distributeDAOIncentiveTx *types.Tra
 // and compares its hash with the one extracted from the block.
 func (f *fsm) verifySyncValidatorsDataTx(syncValidatorsDataTx *types.Transaction, txIndex int) error {
 	if f.isStartOfEpoch {
-		if txIndex != 0 {
-			return fmt.Errorf("invalid transaction index. Expected 0, but got %d", txIndex)
+		expectedTxIndex := 0
+		if txIndex != expectedTxIndex {
+			return InvalidTxIndexErr(expectedTxIndex, txIndex)
 		}
 
 		localSyncValidatorsDataTx, err := f.createSyncValidatorsDataTx()
@@ -1092,3 +1084,7 @@ func (f *fsm) isSyncValidatorsDataTxRequired() bool {
 
 // 	return bytes.Equal(tx.Input[:4], commitEpochFn.Sig())
 // }
+
+func InvalidTxIndexErr(expected int, actual int) error {
+	return fmt.Errorf("invalid transaction index. Expected %d, but got %d", expected, actual)
+}

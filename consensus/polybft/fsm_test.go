@@ -635,6 +635,55 @@ func TestFSM_VerifyStateTransactions_EndOfEpochWrongCommitEpochTx(t *testing.T) 
 	)
 }
 
+func TestFSM_VerifyStateTransaction_InvalidCommitEpochSystemTxsIndex(t *testing.T) {
+	t.Parallel()
+
+	validators := validator.NewTestValidators(t, 5)
+	allAccounts := validators.GetPublicIdentities()
+
+	validatorSet := validator.NewValidatorSet(allAccounts, hclog.NewNullLogger())
+
+	fsm := &fsm{
+		parent:                      &types.Header{Number: 1},
+		isEndOfEpoch:                true,
+		isEndOfSprint:               false,
+		isStartOfEpoch:              false,
+		validators:                  validatorSet,
+		commitEpochInput:            createTestCommitEpochInput(t, 0, allAccounts, 10),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		logger:                      hclog.NewNullLogger(),
+	}
+
+	// create commit epoch transaction in order to add it to the transactions list
+	commitEpochTx, err := fsm.createCommitEpochTx()
+	require.NoError(t, err)
+
+	// create a legacy transaction to add it before the sync validators data transaction
+	stakeInput := &contractsapi.StakeHydraStakingFn{}
+	stakeInputEncoded, err := stakeInput.EncodeAbi()
+	require.NoError(t, err)
+
+	stakeTx := createStateTransactionWithData(
+		0,
+		contracts.HydraStakingContract,
+		stakeInputEncoded,
+		big.NewInt(100),
+	)
+
+	stakeTx.Type = types.LegacyTx
+
+	assert.ErrorContains(
+		t,
+		fsm.VerifyStateTransactions(
+			[]*types.Transaction{
+				stakeTx,
+				commitEpochTx,
+			},
+		),
+		"invalid transaction index",
+	)
+}
+
 // H_MODIFY: Removed because test is not valid anymore
 // H: TODO: Check is the test fixed and if still irrelevant - remove
 // func TestFSM_BuildProposal_EpochEndingBlock_FailToCreateValidatorsDelta(t *testing.T) {
