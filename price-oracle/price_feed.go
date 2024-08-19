@@ -1,7 +1,6 @@
 package priceoracle
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,11 +21,19 @@ type PriceFeed interface {
 
 type dummyPriceFeed struct{}
 
-func NewDummyPriceFeed() PriceFeed {
-	return &dummyPriceFeed{}
+func NewDummyPriceFeed() (PriceFeed, error) {
+	return &dummyPriceFeed{}, nil
 }
 
 func (d *dummyPriceFeed) GetPrice(header *types.Header) (*big.Int, error) {
+	return nil, nil
+}
+
+type priceFeed struct {
+	coinGeckoAPIKey string
+}
+
+func NewPriceFeed() (PriceFeed, error) {
 	secretsManagerConfig, err := secrets.ReadConfig("./secretsManagerConfig.json")
 	if err != nil {
 		return nil, err
@@ -37,34 +44,47 @@ func (d *dummyPriceFeed) GetPrice(header *types.Header) (*big.Int, error) {
 		return nil, fmt.Errorf(secrets.CoinGeckoAPIKey + " is not a string")
 	}
 
-	price, err := getCoingeckoPrice(2, apiKey)
+	return &priceFeed{coinGeckoAPIKey: apiKey}, nil
+}
+
+func (p *priceFeed) GetPrice(header *types.Header) (*big.Int, error) {
+	price, err := getCoingeckoPrice(p.coinGeckoAPIKey)
 	if err != nil {
 		return nil, fmt.Errorf("get price from CoinGecko failed: %w", err)
 	}
-	// ? Keep this one until we decide to include or not the CMC
-	// if err != nil || price.Cmp(big.NewInt(0)) == 0 {
-	// 	apiKey, ok = secretsManagerConfig.Extra[secrets.CoinMarketCapAPIKey].(string)
-	// 	if !ok {
-	// 		return nil, fmt.Errorf(secrets.CoinMarketCapAPIKey + " is not a string")
-	// 	}
-
-	// 	price, err = getCMCPrice(2, apiKey)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("get price from third parties failed: %w", err)
-	// 	}
-	// }
 
 	return price, nil
+}
+
+type PriceDataCoinGecko struct {
+	ID         string `json:"id"`
+	Symbol     string `json:"symbol"`
+	Name       string `json:"name"`
+	MarketData struct {
+		CurrentPrice struct {
+			USD float64 `json:"usd"`
+		} `json:"current_price"`
+	} `json:"market_data"`
+}
+
+type PriceDataCoinMarketCap struct {
+	Data map[string]struct {
+		Quote struct {
+			USD struct {
+				Price float64 `json:"price"`
+			} `json:"USD"`
+		} `json:"quote"`
+	} `json:"data"`
 }
 
 // getCoingeckoPrice fetches the current price of the Hydra cryptocurrency from the CoinGecko API.
 // It takes a timeout as input to wait for the request, in minutes.
 // It returns a big.Int representing the average price for the previous day.
-func getCoingeckoPrice(timeoutInMinutes int, apiKey string) (*big.Int, error) {
+func getCoingeckoPrice(apiKey string) (*big.Int, error) {
 	yesterday := getYesterdayFormatted()
 	apiURL := fmt.Sprintf(`https://api.coingecko.com/api/v3/coins/hydra/history?date=%s`, yesterday)
 
-	req, err := generateThirdPartyJSONRequest(apiURL, timeoutInMinutes)
+	req, err := generateThirdPartyJSONRequest(apiURL)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +92,6 @@ func getCoingeckoPrice(timeoutInMinutes int, apiKey string) (*big.Int, error) {
 	// Add the key in the header
 	req.Header.Add("x-cg-demo-api-key", apiKey)
 
-	// price := float64(0)
 	body, err := fetchPriceData(req)
 	if err != nil {
 		return nil, err
@@ -92,10 +111,10 @@ func getCoingeckoPrice(timeoutInMinutes int, apiKey string) (*big.Int, error) {
 // getCMCPrice fetches the current price of the Hydra cryptocurrency from the CoinMarketCap API.
 // It takes a timeout as input to wait for the request, in minutes.
 // It returns a big.Int representing the current price.
-func getCMCPrice(timeoutInMinutes int, apiKey string) (*big.Int, error) {
+func getCMCPrice(apiKey string) (*big.Int, error) {
 	apiURL := "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest"
 
-	req, err := generateThirdPartyJSONRequest(apiURL, timeoutInMinutes)
+	req, err := generateThirdPartyJSONRequest(apiURL)
 	if err != nil {
 		return nil, err
 	}
@@ -131,14 +150,8 @@ func getCMCPrice(timeoutInMinutes int, apiKey string) (*big.Int, error) {
 // It takes url which is the URL of the third-party API endpoint and timeoutInMinutes
 // which is the duration in minutes for the request.
 // Returns: The created HTTP request and any error that occurred.
-func generateThirdPartyJSONRequest(url string, timeoutInMinutes int) (*http.Request, error) {
-	// Discard the cancel function, because the context will be cleaned later
-	ctx, _ := context.WithTimeout(
-		context.Background(),
-		time.Duration(timeoutInMinutes)*time.Minute,
-	)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+func generateThirdPartyJSONRequest(url string) (*http.Request, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +165,9 @@ func generateThirdPartyJSONRequest(url string, timeoutInMinutes int) (*http.Requ
 // It takes the HTTP request to make as an input.
 // Returns: The response body as a byte slice, or an error if the request failed.
 func fetchPriceData(req *http.Request) ([]byte, error) {
-	httpClient := &http.Client{}
+	httpClient := &http.Client{
+		Timeout: time.Minute * time.Duration(2),
+	}
 
 	res, err := httpClient.Do(req)
 	if err != nil {
@@ -160,9 +175,11 @@ func fetchPriceData(req *http.Request) ([]byte, error) {
 	}
 
 	// Close the request when finish, too
-	defer req.Context().Done()
 	defer res.Body.Close()
-	data, _ := io.ReadAll(res.Body)
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	return data, nil
 }

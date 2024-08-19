@@ -29,6 +29,21 @@ var (
 	priceVotedEventABI  = contractsapi.PriceOracle.Abi.Events["PriceVoted"]
 )
 
+// emit PriceVoted(_price, msg.sender, day);
+type voteResult struct {
+	price            string
+	validatorAddress string
+	day              uint64
+}
+
+func (vr voteResult) PrintOutput() {
+	fmt.Printf("\n[VOTE]\n")
+	fmt.Println("Validator Address: ", vr.validatorAddress)
+	fmt.Println("Voted Price: ", vr.price)
+	fmt.Println("Day: ", vr.day)
+	fmt.Printf("\n")
+}
+
 type blockchainBackend interface {
 	// CurrentHeader returns the header of blockchain block head
 	CurrentHeader() *types.Header
@@ -60,42 +75,6 @@ type PriceOracle struct {
 	priceFeed PriceFeed
 }
 
-type PriceDataCoinGecko struct {
-	ID         string `json:"id"`
-	Symbol     string `json:"symbol"`
-	Name       string `json:"name"`
-	MarketData struct {
-		CurrentPrice struct {
-			USD float64 `json:"usd"`
-		} `json:"current_price"`
-	} `json:"market_data"`
-}
-
-type PriceDataCoinMarketCap struct {
-	Data map[string]struct {
-		Quote struct {
-			USD struct {
-				Price float64 `json:"price"`
-			} `json:"USD"`
-		} `json:"quote"`
-	} `json:"data"`
-}
-
-// emit PriceVoted(_price, msg.sender, day);
-type voteResult struct {
-	price            string
-	validatorAddress string
-	day              uint64
-}
-
-func (vr voteResult) PrintOutput() {
-	fmt.Printf("\n[VOTE]\n")
-	fmt.Println("Validator Address: ", vr.validatorAddress)
-	fmt.Println("Voted Price: ", vr.price)
-	fmt.Println("Day: ", vr.day)
-	fmt.Printf("\n")
-}
-
 func NewPriceOracle(
 	logger hclog.Logger,
 	blockchain *blockchain.Blockchain,
@@ -104,7 +83,11 @@ func NewPriceOracle(
 	jsonRPC string,
 	secretsManager secrets.SecretsManager,
 ) (*PriceOracle, error) {
-	priceFeed := NewDummyPriceFeed()
+	priceFeed, err := NewPriceFeed()
+	if err != nil {
+		return nil, err
+	}
+
 	polybftConsensus, ok := consensus.(polybftBackend)
 	if !ok {
 		return nil, fmt.Errorf("consensus must be hydragon")
@@ -278,7 +261,7 @@ func (p *PriceOracle) getState(header *types.Header) (PriceOracleState, error) {
 		return nil, err
 	}
 
-	return newPriceOracleState(p.blockchain.GetSystemState(provider)), nil
+	return newPriceOracleState(p.blockchain.GetSystemState(provider), contracts.PriceOracleContract, provider), nil
 }
 
 func (p *PriceOracle) vote(price *big.Int) error {
