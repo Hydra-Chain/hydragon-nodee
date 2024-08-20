@@ -14,6 +14,25 @@ import (
 	"github.com/umbracle/ethgo/jsonrpc"
 )
 
+type MockPriceOracle struct {
+	PriceOracle
+	MockAlreadyVotedMapping map[uint64]bool
+}
+
+var _ contract.Provider = (*stateProviderMock)(nil)
+
+type stateProviderMock struct {
+	mock.Mock
+}
+
+func (s *stateProviderMock) Call(ethgo.Address, []byte, *contract.CallOpts) ([]byte, error) {
+	return nil, nil
+}
+
+func (s *stateProviderMock) Txn(ethgo.Address, ethgo.Key, []byte) (contract.Txn, error) {
+	return nil, nil
+}
+
 type MockBlockchainBackend struct {
 	mock.Mock
 }
