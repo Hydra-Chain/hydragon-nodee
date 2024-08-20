@@ -37,9 +37,6 @@ const (
 
 	// CoinGeckoAPIKey is the API key for the coingecko endpoints
 	CoinGeckoAPIKey = "coingecko-api-key"
-
-	// CoinMarketCapAPIKey is the API key for the coinmarketcap endpoints
-	CoinMarketCapAPIKey = "coinmarketcap-api-key"
 )
 
 // Define constant file names for the local StorageManager

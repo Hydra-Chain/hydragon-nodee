@@ -24,10 +24,10 @@ I am describing our custom process, because it is different.
 ./hydra secrets init --chain-id 8844 --data-dir test-chain-5 --insecure
 ```
 
-2. Generate third party secrets (CoinGecko and CoinMarketCap). You can retrieve free keys from the corresponding websites.
+1. Generate third party secrets (CoinGecko). You can retrieve free keys from the corresponding website.
 
 ```
-./hydra secrets generate --type local --name node --extra "coingecko-api-key=<key>,coinmarketcap-api-key=<key>"
+./hydra secrets generate --type local --name node --extra "coingecko-api-key=<key>"
 ```
 
 3. Generate genesis file

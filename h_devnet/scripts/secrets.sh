@@ -12,12 +12,12 @@ write_secret() {
   echo -n "${secret}" >"$1"
 }
 
-# Check if the CoinGecko and CoinMarketCap API keys are set
-if [ -z "${CG_KEY}" ] || [ -z "${CMC_KEY}" ]; then
-  echo "ERROR: The CoinGecko and CoinMarketCap API keys must be set."
+# Check if the CoinGecko API key is set
+if [ -z "${CG_KEY}" ]; then
+  echo "ERROR: The CoinGecko API key must be set."
 else
-  # Generate the secrets config file in order to set the API keys
-  hydra secrets generate --type local --name node --extra "coingecko-api-key=${CG_KEY},coinmarketcap-api-key=${CMC_KEY}"
+  # Generate the secrets config file in order to set the API secrets
+  hydra secrets generate --type local --name node --extra "coingecko-api-key=${CG_KEY}"
 
 # Check if the secrets setup has already been done
 if [ -f "${FLAG_FILE}" ]; then

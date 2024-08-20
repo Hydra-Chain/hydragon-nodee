@@ -6,7 +6,6 @@ import (
 	"io"
 	"math/big"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
@@ -67,16 +66,6 @@ type PriceDataCoinGecko struct {
 	} `json:"market_data"`
 }
 
-type PriceDataCoinMarketCap struct {
-	Data map[string]struct {
-		Quote struct {
-			USD struct {
-				Price float64 `json:"price"`
-			} `json:"USD"`
-		} `json:"quote"`
-	} `json:"data"`
-}
-
 // getCoingeckoPrice fetches the current price of the Hydra cryptocurrency from the CoinGecko API.
 // It takes a timeout as input to wait for the request, in minutes.
 // It returns a big.Int representing the average price for the previous day.
@@ -104,43 +93,6 @@ func getCoingeckoPrice(apiKey string) (*big.Int, error) {
 	}
 
 	price := priceData.MarketData.CurrentPrice.USD
-
-	return common.ConvertFloatToBigInt(price, 18)
-}
-
-// getCMCPrice fetches the current price of the Hydra cryptocurrency from the CoinMarketCap API.
-// It takes a timeout as input to wait for the request, in minutes.
-// It returns a big.Int representing the current price.
-func getCMCPrice(apiKey string) (*big.Int, error) {
-	apiURL := "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest"
-
-	req, err := generateThirdPartyJSONRequest(apiURL)
-	if err != nil {
-		return nil, err
-	}
-
-	q := url.Values{}
-	q.Add("slug", "hydra")
-	q.Add("convert", "USD")
-
-	req.Header.Add("X-CMC_PRO_API_KEY", apiKey)
-	req.URL.RawQuery = q.Encode()
-
-	price := float64(0)
-	body, err := fetchPriceData(req)
-	if err != nil {
-		return nil, err
-	}
-
-	var priceData PriceDataCoinMarketCap
-	err = json.Unmarshal(body, &priceData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
-	for _, data := range priceData.Data {
-		price = data.Quote.USD.Price
-	}
 
 	return common.ConvertFloatToBigInt(price, 18)
 }
