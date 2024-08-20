@@ -156,6 +156,7 @@ func (p *PriceOracle) handleEvent(ev *blockchain.Event) {
 	isValidator, err := p.isValidator(block)
 	if err != nil {
 		p.logger.Error("failed to check if node is validator", "err", err)
+
 		return
 	}
 
@@ -166,6 +167,7 @@ func (p *PriceOracle) handleEvent(ev *blockchain.Event) {
 	should, err := p.shouldExecuteVote(block)
 	if err != nil {
 		p.logger.Error("failed to check if vote must be executed:", "error", err)
+
 		return
 	}
 
@@ -262,16 +264,6 @@ func (p *PriceOracle) executeVote(header *types.Header) error {
 	return nil
 }
 
-// getState builds SystemState instance for the given header
-func (p *PriceOracle) getState(header *types.Header) (PriceOracleState, error) {
-	provider, err := p.blockchain.GetStateProviderForBlock(header)
-	if err != nil {
-		return nil, err
-	}
-
-	return newPriceOracleState(p.blockchain.GetSystemState(provider), contracts.PriceOracleContract, provider), nil
-}
-
 func (p *PriceOracle) vote(price *big.Int) error {
 	voteFn := &contractsapi.VotePriceOracleFn{
 		Price: price,
@@ -304,7 +296,7 @@ func (p *PriceOracle) vote(price *big.Int) error {
 		if priceVotedEventABI.Match(log) {
 			event, err := priceVotedEventABI.ParseLog(log)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to parse log: %w", err)
 			}
 
 			result.price = event["price"].(*big.Int).String()                     //nolint:forcetypeassert

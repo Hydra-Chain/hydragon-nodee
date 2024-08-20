@@ -3,16 +3,19 @@ package priceoracle
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"testing"
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/umbracle/ethgo"
 )
 
 func TestBlockMustBeProcessed(t *testing.T) {
@@ -400,4 +403,287 @@ func TestShouldExecuteVote(t *testing.T) {
 			mockState.AssertExpectations(t)
 		})
 	}
+}
+
+func TestVote(t *testing.T) {
+	mockTxRelayer := new(MockTxRelayer)
+	account := validator.NewTestValidator(t, "X", 1000).Account
+	priceOracle := &PriceOracle{
+		account:   account,
+		txRelayer: mockTxRelayer,
+	}
+
+	expectedPrice := big.NewInt(1000)
+	logData := contractsapi.PriceVotedEvent{
+		Price:     expectedPrice,
+		Validator: account.Address(),
+		Day:       big.NewInt(1),
+	}
+
+	// Mock the ParseLog to ensure it is called and returns the expected log
+	logDataBytes, err := logData.Encode()
+	require.NoError(t, err)
+
+	// Mock a successful receipt with the expected log
+	receipt := &ethgo.Receipt{
+		Status: uint64(types.ReceiptSuccess),
+		Logs: []*ethgo.Log{
+			{
+				Address: ethgo.Address{}, // Mock address
+				Data:    logDataBytes,    // Mock log data
+				Topics: []ethgo.Hash{
+					logData.Sig(), // Mock topics
+				},
+			},
+		},
+	}
+	mockTxRelayer.On("SendTransaction", mock.Anything, account.Ecdsa).Return(receipt, nil)
+
+	// Call the vote function
+	err = priceOracle.vote(expectedPrice)
+
+	// Assert that no error occurred
+	require.NoError(t, err)
+
+	// Assert that the transaction was sent as expected
+	mockTxRelayer.AssertCalled(t, "SendTransaction", mock.Anything, account.Ecdsa)
+
+	// Validate that the logs were parsed correctly (you might need to mock ParseLog if it's more complex)
+	// Ensure that log parsing logic works correctly
+	foundVoteLog := false
+
+	for _, log := range receipt.Logs {
+		if priceVotedEventABI.Match(log) {
+			event, err := priceVotedEventABI.ParseLog(log)
+			require.NoError(t, err)
+			require.Equal(t, expectedPrice.String(), event["price"].(*big.Int).String())                    //nolint:forcetypeassert
+			require.Equal(t, account.Ecdsa.Address().String(), event["validator"].(ethgo.Address).String()) //nolint:forcetypeassert
+			require.Equal(t, big.NewInt(1), event["day"].(*big.Int))                                        //nolint:forcetypeassert
+			foundVoteLog = true
+		}
+	}
+
+	// Assert that the appropriate log was found
+	require.True(t, foundVoteLog)
+
+	// Assert that the mocks were called as expected
+	mockTxRelayer.AssertExpectations(t)
+}
+
+func TestVote_NegativeScenarios(t *testing.T) {
+	mockTxRelayer := new(MockTxRelayer)
+	account := validator.NewTestValidator(t, "X", 1000).Account
+	priceOracle := &PriceOracle{
+		account:   account,
+		txRelayer: mockTxRelayer,
+	}
+
+	expectedPrice := big.NewInt(1000)
+
+	logData := contractsapi.PriceVotedEvent{
+		Price:     expectedPrice,
+		Validator: account.Address(),
+		Day:       big.NewInt(1),
+	}
+
+	tests := []struct {
+		name          string
+		mockReceipt   *ethgo.Receipt
+		mockError     error
+		expectedError string
+	}{
+		{
+			name: "Transaction fails with non-success status",
+			mockReceipt: &ethgo.Receipt{
+				Status: uint64(types.ReceiptFailed), // Non-successful status
+				Logs:   []*ethgo.Log{},
+			},
+			mockError:     nil,
+			expectedError: "vote transaction failed",
+		},
+		{
+			name: "Log parsing fails",
+			mockReceipt: &ethgo.Receipt{
+				Status: uint64(types.ReceiptSuccess),
+				Logs: []*ethgo.Log{{
+					Address: ethgo.Address{},        // Mock address
+					Data:    []byte("invalid data"), // Invalid data that will cause parsing to fail
+					Topics: []ethgo.Hash{
+						logData.Sig(),
+					},
+				},
+				},
+			},
+			mockError:     nil,
+			expectedError: "failed to parse log: ",
+		},
+		{
+			name: "Missing expected log",
+			mockReceipt: &ethgo.Receipt{
+				Status: uint64(types.ReceiptSuccess),
+				Logs:   []*ethgo.Log{}, // No logs at all
+			},
+			mockError:     nil,
+			expectedError: "could not find an appropriate log in the receipt that validates the vote has happened",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Mock the SendTransaction to return the mock receipt and error
+			mockTxRelayer.On("SendTransaction", mock.Anything, account.Ecdsa).Return(tt.mockReceipt, tt.mockError).Once()
+
+			// Call the vote function
+			err := priceOracle.vote(expectedPrice)
+
+			// Assert that the expected error occurred
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tt.expectedError)
+
+			// Assert that the transaction was sent as expected
+			mockTxRelayer.AssertCalled(t, "SendTransaction", mock.Anything, account.Ecdsa)
+
+			// Assert that the mocks were called as expected
+			mockTxRelayer.AssertExpectations(t)
+		})
+	}
+}
+
+func TestExecuteVote(t *testing.T) {
+	mockPriceFeed := new(MockPriceFeed)
+	mockTxRelayer := new(MockTxRelayer)
+	account := validator.NewTestValidator(t, "X", 1000).Account
+	priceOracle := &PriceOracle{
+		account:   account,
+		txRelayer: mockTxRelayer,
+		priceFeed: mockPriceFeed,
+	}
+
+	header := &types.Header{Timestamp: 100000}
+	expectedPrice := big.NewInt(1000)
+	logData := contractsapi.PriceVotedEvent{
+		Price:     expectedPrice,
+		Validator: account.Address(),
+		Day:       big.NewInt(1),
+	}
+
+	// Mock the GetPrice to return the expected price
+	mockPriceFeed.On("GetPrice", header).Return(expectedPrice, nil)
+
+	// Mock the ParseLog to ensure it is called and returns the expected log
+	logDataBytes, err := logData.Encode()
+	require.NoError(t, err)
+
+	// Mock a successful receipt with the expected log
+	receipt := &ethgo.Receipt{
+		Status: uint64(types.ReceiptSuccess),
+		Logs: []*ethgo.Log{
+			{
+				Address: ethgo.Address{}, // Mock address
+				Data:    logDataBytes,    // Mock log data
+				Topics: []ethgo.Hash{
+					logData.Sig(), // Mock topics
+				},
+			},
+		},
+	}
+	mockTxRelayer.On("SendTransaction", mock.Anything, account.Ecdsa).Return(receipt, nil)
+
+	// Call the executeVote method
+	err = priceOracle.executeVote(header)
+
+	// Assert that no error occurred
+	require.NoError(t, err)
+
+	// Assert that the transaction was sent as expected
+	mockTxRelayer.AssertCalled(t, "SendTransaction", mock.Anything, account.Ecdsa)
+
+	foundVoteLog := false
+	// Validate that the logs were parsed correctly (using the conversion)
+	for _, log := range receipt.Logs {
+		if priceVotedEventABI.Match(log) {
+			event, err := priceVotedEventABI.ParseLog(log)
+			require.NoError(t, err)
+			require.Equal(t, expectedPrice.String(), event["price"].(*big.Int).String())                    //nolint:forcetypeassert
+			require.Equal(t, account.Ecdsa.Address().String(), event["validator"].(ethgo.Address).String()) //nolint:forcetypeassert
+			require.Equal(t, big.NewInt(1), event["day"].(*big.Int))                                        //nolint:forcetypeassert
+			foundVoteLog = true
+		}
+	}
+
+	// Assert that the appropriate log was found
+	require.True(t, foundVoteLog)
+
+	// Check if the alreadyVotedMapping was updated
+	dayNumber := calcDayNumber(header.Timestamp)
+	require.True(t, alreadyVotedMapping[dayNumber])
+
+	// Assert that the mocks were called as expected
+	mockPriceFeed.AssertExpectations(t)
+	mockTxRelayer.AssertExpectations(t)
+}
+
+func TestExecuteVote_PriceFeedError(t *testing.T) {
+	header := &types.Header{Timestamp: 100000}
+	dayNumber := calcDayNumber(header.Timestamp)
+	alreadyVotedMapping[dayNumber] = false
+
+	mockPriceFeed := new(MockPriceFeed)
+	account := validator.NewTestValidator(t, "X", 1000).Account
+	priceOracle := &PriceOracle{
+		account:   account,
+		txRelayer: new(MockTxRelayer), // No need to mock TxRelayer for this test
+		priceFeed: mockPriceFeed,
+	}
+
+	// Mock the GetPrice to return an error
+	mockPriceFeed.On("GetPrice", header).Return((*big.Int)(nil), errors.New("price feed error"))
+
+	// Call the executeVote method
+	err := priceOracle.executeVote(header)
+
+	// Assert that an error occurred
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "price feed error")
+
+	// Check if the alreadyVotedMapping was not updated
+	require.False(t, alreadyVotedMapping[dayNumber])
+
+	// Assert that the mocks were called as expected
+	mockPriceFeed.AssertExpectations(t)
+}
+
+func TestExecuteVote_VoteError(t *testing.T) {
+	mockPriceFeed := new(MockPriceFeed)
+	mockTxRelayer := new(MockTxRelayer)
+	account := validator.NewTestValidator(t, "X", 1000).Account
+	priceOracle := &PriceOracle{
+		account:   account,
+		txRelayer: mockTxRelayer,
+		priceFeed: mockPriceFeed,
+	}
+
+	header := &types.Header{Timestamp: 100000}
+	expectedPrice := big.NewInt(1000)
+
+	// Mock the GetPrice to return the expected price
+	mockPriceFeed.On("GetPrice", header).Return(expectedPrice, nil)
+
+	// Mock the SendTransaction to return an error
+	mockTxRelayer.On("SendTransaction", mock.Anything, account.Ecdsa).Return((*ethgo.Receipt)(nil), errors.New("vote error"))
+
+	// Call the executeVote method
+	err := priceOracle.executeVote(header)
+
+	// Assert that an error occurred
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "vote: failed vote error")
+
+	// Check if the alreadyVotedMapping was not updated
+	dayNumber := calcDayNumber(header.Timestamp)
+	require.False(t, alreadyVotedMapping[dayNumber])
+
+	// Assert that the mocks were called as expected
+	mockPriceFeed.AssertExpectations(t)
+	mockTxRelayer.AssertExpectations(t)
 }
