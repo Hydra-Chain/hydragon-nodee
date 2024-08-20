@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
@@ -25,7 +26,6 @@ import (
 
 var (
 	alreadyVotedMapping = make(map[uint64]bool)
-	txRelayer           txrelayer.TxRelayer
 	priceVotedEventABI  = contractsapi.PriceOracle.Abi.Events["PriceVoted"]
 )
 
@@ -69,10 +69,11 @@ type PriceOracle struct {
 	closeCh        chan struct{}
 	blockchain     blockchainBackend
 	polybftBackend polybftBackend
+	stateProvider  PriceOracleStateProvider
 	// key encapsulates ECDSA signing account
 	account   *wallet.Account
-	jsonRPC   string
 	priceFeed PriceFeed
+	txRelayer txrelayer.TxRelayer
 }
 
 func NewPriceOracle(
@@ -99,17 +100,20 @@ func NewPriceOracle(
 		return nil, fmt.Errorf("failed to read account data. Error: %w", err)
 	}
 
-	formattedURL, err := formatJSONRPCURL(jsonRPC)
+	blockchainBackend := polybft.NewBlockchainBackend(executor, blockchain)
+
+	txRelayer, err := getVoteTxRelayer(jsonRPC)
 	if err != nil {
 		return nil, err
 	}
 
 	return &PriceOracle{
 		logger:         logger.Named("price-oracle"),
-		blockchain:     polybft.NewBlockchainBackend(executor, blockchain),
+		blockchain:     blockchainBackend,
+		stateProvider:  NewPriceOracleStateProvider(blockchainBackend),
 		priceFeed:      priceFeed,
 		polybftBackend: polybftConsensus,
-		jsonRPC:        formattedURL,
+		txRelayer:      txRelayer,
 		account:        account,
 	}, nil
 }
@@ -133,40 +137,7 @@ func (p *PriceOracle) StartOracleProcess() {
 		case <-p.closeCh:
 			return
 		case ev := <-eventCh:
-			block := ev.NewChain[0]
-			p.logger.Debug("received new block notification", "block", block.Number)
-
-			isValidator, err := p.isValidator(block)
-			if err != nil {
-				p.logger.Error("failed to check if node is validator", "err", err)
-
-				continue
-			}
-
-			if !isValidator {
-				continue
-			}
-
-			if !p.blockMustBeProcessed(ev) {
-				continue
-			}
-
-			should, err := p.shouldExecuteVote(block)
-			if err != nil {
-				p.logger.Error("failed to check if vote must be executed:", "error", err)
-
-				continue
-			}
-
-			if should {
-				if err := p.executeVote(block); err != nil {
-					p.logger.Error("failed to execute vote", "err", err)
-
-					return
-				}
-
-				p.logger.Info("vote executed successfully")
-			}
+			p.handleEvent(ev)
 		}
 	}
 }
@@ -176,6 +147,37 @@ func (p *PriceOracle) Close() error {
 	p.logger.Info("price oracle stopped")
 
 	return nil
+}
+
+func (p *PriceOracle) handleEvent(ev *blockchain.Event) {
+	block := ev.NewChain[0]
+	p.logger.Debug("received new block notification", "block", block.Number)
+
+	isValidator, err := p.isValidator(block)
+	if err != nil {
+		p.logger.Error("failed to check if node is validator", "err", err)
+		return
+	}
+
+	if !isValidator || !p.blockMustBeProcessed(ev) {
+		return
+	}
+
+	should, err := p.shouldExecuteVote(block)
+	if err != nil {
+		p.logger.Error("failed to check if vote must be executed:", "error", err)
+		return
+	}
+
+	if should {
+		if err := p.executeVote(block); err != nil {
+			p.logger.Error("failed to execute vote", "err", err)
+
+			return
+		}
+
+		p.logger.Info("vote executed successfully")
+	}
 }
 
 // shouldExecuteVote verifies that the validator should vote
@@ -193,7 +195,7 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 	}
 
 	// initialize the system state for the given header
-	state, err := p.getState(header)
+	state, err := p.stateProvider.GetPriceOracleState(header)
 	if err != nil {
 		return false, fmt.Errorf("get system state: %w", err)
 	}
@@ -201,7 +203,6 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 	// then check if the contract is in a proper state to vote
 	shouldVote, falseReason, err := state.shouldVote(
 		p.account,
-		p.jsonRPC,
 	)
 	if err != nil {
 		return false, err
@@ -272,14 +273,10 @@ func (p *PriceOracle) getState(header *types.Header) (PriceOracleState, error) {
 }
 
 func (p *PriceOracle) vote(price *big.Int) error {
-	txRelayer, err := NewTxRelayer(p.jsonRPC)
-	if err != nil {
-		return err
-	}
-
 	voteFn := &contractsapi.VotePriceOracleFn{
 		Price: price,
 	}
+
 	input, err := voteFn.EncodeAbi()
 	if err != nil {
 		return err
@@ -291,7 +288,7 @@ func (p *PriceOracle) vote(price *big.Int) error {
 		To:    (*ethgo.Address)(&contracts.PriceOracleContract),
 	}
 
-	receipt, err := txRelayer.SendTransaction(txn, p.account.Ecdsa)
+	receipt, err := p.txRelayer.SendTransaction(txn, p.account.Ecdsa)
 	if err != nil {
 		return err
 	}
@@ -327,27 +324,6 @@ func (p *PriceOracle) vote(price *big.Int) error {
 	return nil
 }
 
-func NewTxRelayer(jsoNRPC string) (txrelayer.TxRelayer, error) {
-	txRelayer, err := txrelayer.NewTxRelayer(
-		txrelayer.WithIPAddress(jsoNRPC), txrelayer.WithReceiptTimeout(150*time.Millisecond))
-	if err != nil {
-		return nil, err
-	}
-
-	return txRelayer, nil
-}
-
-func formatJSONRPCURL(jsonRPC string) (string, error) {
-	_, port, err := net.SplitHostPort(jsonRPC)
-	if err != nil {
-		return "", err
-	}
-
-	formattedURL := fmt.Sprintf("http://127.0.0.1:%s", port)
-
-	return formattedURL, nil
-}
-
 const (
 	// APIs will give the price for the previous day 35 mins after midnight.
 	// So, we configure the vote to start 36 mins after midnight
@@ -374,4 +350,18 @@ func calcDayNumber(timestamp uint64) uint64 {
 
 	// Calculate the current day number
 	return timestamp / secondsInADay
+}
+
+func getVoteTxRelayer(rpcEndpoint string) (txrelayer.TxRelayer, error) {
+	if rpcEndpoint == "" || strings.Contains(rpcEndpoint, "0.0.0.0") {
+		_, port, err := net.SplitHostPort(rpcEndpoint)
+		if err == nil {
+			rpcEndpoint = fmt.Sprintf("http://%s:%s", "127.0.0.1", port)
+		} else {
+			rpcEndpoint = txrelayer.DefaultRPCAddress
+		}
+	}
+
+	return txrelayer.NewTxRelayer(
+		txrelayer.WithIPAddress(rpcEndpoint), txrelayer.WithReceiptTimeout(150*time.Millisecond))
 }
