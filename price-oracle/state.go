@@ -6,6 +6,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
+	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/umbracle/ethgo"
 	"github.com/umbracle/ethgo/contract"
@@ -16,7 +17,6 @@ type PriceOracleState interface {
 	// shouldVote returns does the given address should vote for the given day's price
 	shouldVote(
 		validatorAccount *wallet.Account,
-		jsonRPC string,
 	) (shouldVote bool, falseReason string, err error)
 }
 
@@ -42,7 +42,6 @@ func newPriceOracleState(
 
 func (p priceOracleState) shouldVote(
 	validatorAccount *wallet.Account,
-	jsonRPC string,
 ) (bool, string, error) {
 	rawOutput, err := p.priceOracleContract.Call("shouldVote", ethgo.Latest)
 	if err != nil {
@@ -64,4 +63,29 @@ func (p priceOracleState) shouldVote(
 	}
 
 	return shouldVote, "", nil
+}
+
+type PriceOracleStateProvider interface {
+	GetPriceOracleState(
+		header *types.Header,
+	) (PriceOracleState, error)
+}
+
+type priceOracleStateProvider struct {
+	blockchain blockchainBackend
+}
+
+func NewPriceOracleStateProvider(blockchain blockchainBackend) PriceOracleStateProvider {
+	return &priceOracleStateProvider{blockchain: blockchain}
+}
+
+func (p priceOracleStateProvider) GetPriceOracleState(
+	header *types.Header,
+) (PriceOracleState, error) {
+	provider, err := p.blockchain.GetStateProviderForBlock(header)
+	if err != nil {
+		return nil, err
+	}
+
+	return newPriceOracleState(p.blockchain.GetSystemState(provider), contracts.PriceOracleContract, provider), nil
 }

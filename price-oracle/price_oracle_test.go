@@ -12,6 +12,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/types"
+	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/umbracle/ethgo"
@@ -448,6 +449,108 @@ func TestGetState(t *testing.T) {
 				require.EqualError(t, err, tt.expectedError.Error())
 			}
 			// mockBlockchainBackend.AssertExpectations(t)
+		})
+	}
+}
+
+func TestShouldExecuteVote(t *testing.T) {
+	mockState := new(MockState)
+	mockStateProvider := new(MockStateProvider)
+	mockAccount := &wallet.Account{}
+
+	txRelayer, _ := getVoteTxRelayer("0.0.0.0:8545")
+
+	priceOracle := &PriceOracle{
+		account:       mockAccount,
+		txRelayer:     txRelayer,
+		logger:        hclog.NewNullLogger(),
+		stateProvider: mockStateProvider, // Inject the mock state provider
+	}
+
+	tests := []struct {
+		name               string
+		header             *types.Header
+		alreadyVoted       bool
+		shouldMockState    bool
+		stateShouldVote    bool
+		stateShouldVoteErr error
+		expectedResult     bool
+		expectedError      error
+	}{
+		{
+			name:            "Not in voting time",
+			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 0, 30, 0, 0, time.UTC).Unix())},
+			alreadyVoted:    false,
+			shouldMockState: false,
+			stateShouldVote: false,
+			expectedResult:  false,
+			expectedError:   nil,
+		},
+		{
+			name:            "Already voted",
+			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			alreadyVoted:    true,
+			shouldMockState: false,
+			stateShouldVote: false,
+			expectedResult:  false,
+			expectedError:   nil,
+		},
+		{
+			name:            "Should not vote based on state",
+			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			alreadyVoted:    false,
+			shouldMockState: true,
+			stateShouldVote: false,
+			expectedResult:  false,
+			expectedError:   nil,
+		},
+		{
+			name:               "Error in shouldVote",
+			header:             &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			alreadyVoted:       false,
+			shouldMockState:    true,
+			stateShouldVote:    false,
+			stateShouldVoteErr: errors.New("should vote error"),
+			expectedResult:     false,
+			expectedError:      errors.New("should vote error"),
+		},
+		{
+			name:            "Should vote",
+			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			alreadyVoted:    false,
+			shouldMockState: true,
+			stateShouldVote: true,
+			expectedResult:  true,
+			expectedError:   nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set the alreadyVotedMapping state
+			dayNumber := calcDayNumber(tt.header.Timestamp)
+			alreadyVotedMapping[dayNumber] = tt.alreadyVoted
+
+			if tt.shouldMockState {
+				// Mock the GetPriceOracleState and shouldVote methods
+				mockStateProvider.On("GetPriceOracleState", tt.header).Return(mockState, nil).Once()
+				mockState.On("shouldVote", mockAccount).Return(tt.stateShouldVote, "", tt.stateShouldVoteErr).Once()
+			}
+
+			// Call the function under test
+			result, err := priceOracle.shouldExecuteVote(tt.header)
+
+			// Assert the results
+			require.Equal(t, tt.expectedResult, result)
+			if tt.expectedError != nil {
+				require.EqualError(t, err, tt.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			// Assert that the mock expectations were met
+			mockStateProvider.AssertExpectations(t)
+			mockState.AssertExpectations(t)
 		})
 	}
 }
