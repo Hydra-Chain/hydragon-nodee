@@ -1,9 +1,11 @@
 package priceoracle
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
+	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
@@ -12,6 +14,82 @@ import (
 	"github.com/umbracle/ethgo"
 	"github.com/umbracle/ethgo/contract"
 )
+
+var _ polybft.SystemState = (*systemStateMock)(nil)
+
+type systemStateMock struct {
+	mock.Mock
+}
+
+func (m *systemStateMock) GetNextCommittedIndex() (uint64, error) {
+	args := m.Called()
+
+	if len(args) == 1 {
+		index, _ := args.Get(0).(uint64)
+
+		return index, nil
+	} else if len(args) == 2 {
+		index, _ := args.Get(0).(uint64)
+
+		return index, args.Error(1)
+	}
+
+	return 0, nil
+}
+
+func (m *systemStateMock) GetEpoch() (uint64, error) {
+	args := m.Called()
+	if len(args) == 1 {
+		epochNumber, _ := args.Get(0).(uint64)
+
+		return epochNumber, nil
+	} else if len(args) == 2 {
+		epochNumber, _ := args.Get(0).(uint64)
+		err, ok := args.Get(1).(error)
+		if ok {
+			return epochNumber, err
+		}
+
+		return epochNumber, nil
+	}
+
+	return 0, nil
+}
+
+func (s *systemStateMock) GetValidatorBlsKey(addr types.Address) (*bls.PublicKey, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *systemStateMock) GetVotingPowerExponent() (*polybft.BigNumDecimal, error) {
+	args := s.Called()
+	exp, _ := args.Get(0).(*polybft.BigNumDecimal)
+	var err error
+	if args.Get(1) != nil {
+		err, _ = args.Get(1).(error)
+	}
+
+	return exp, err
+}
+
+// vito - extract these mocks in a separate file
+type MockPriceOracle struct {
+	PriceOracle
+	MockAlreadyVotedMapping map[uint64]bool
+}
+
+var _ contract.Provider = (*stateProviderMock)(nil)
+
+type stateProviderMock struct {
+	mock.Mock
+}
+
+func (s *stateProviderMock) Call(ethgo.Address, []byte, *contract.CallOpts) ([]byte, error) {
+	return nil, nil
+}
+
+func (s *stateProviderMock) Txn(ethgo.Address, ethgo.Key, []byte) (contract.Txn, error) {
+	return nil, nil
+}
 
 type MockBlockchainBackend struct {
 	mock.Mock

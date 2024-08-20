@@ -188,7 +188,7 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 	}
 
 	// check is voting already made for the current day
-	if p.alreadyVoted(header) {
+	if p.alreadyVoted(header) { // vito
 		return false, nil
 	}
 
