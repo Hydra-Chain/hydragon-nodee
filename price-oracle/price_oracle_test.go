@@ -1,11 +1,16 @@
 package priceoracle
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,7 +32,7 @@ func TestBlockMustBeProcessed(t *testing.T) {
 			event: &blockchain.Event{
 				NewChain: []*types.Header{
 					{
-						Timestamp: uint64(time.Now().Add(-3 * time.Minute).Unix()),
+						Timestamp: uint64(time.Now().UTC().Add(-3 * time.Minute).Unix()),
 						Number:    5,
 					},
 				},
@@ -40,7 +45,7 @@ func TestBlockMustBeProcessed(t *testing.T) {
 			event: &blockchain.Event{
 				NewChain: []*types.Header{
 					{
-						Timestamp: uint64(time.Now().Unix()),
+						Timestamp: uint64(time.Now().UTC().Unix()),
 						Number:    5,
 					},
 				},
@@ -53,7 +58,7 @@ func TestBlockMustBeProcessed(t *testing.T) {
 			event: &blockchain.Event{
 				NewChain: []*types.Header{
 					{
-						Timestamp: uint64(time.Now().Unix()),
+						Timestamp: uint64(time.Now().UTC().Unix()),
 						Number:    7,
 					},
 				},
@@ -67,7 +72,7 @@ func TestBlockMustBeProcessed(t *testing.T) {
 			event: &blockchain.Event{
 				NewChain: []*types.Header{
 					{
-						Timestamp: uint64(time.Now().Unix()),
+						Timestamp: uint64(time.Now().UTC().Unix()),
 						Number:    7,
 					},
 				},
@@ -87,6 +92,208 @@ func TestBlockMustBeProcessed(t *testing.T) {
 			result := priceOracle.blockMustBeProcessed(tt.event)
 
 			// Assert the result
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestIsValidator(t *testing.T) {
+	mockPolybftBackend := new(MockPolybftBackend)
+	validators := validator.NewTestValidatorsWithAliases(
+		t,
+		[]string{"A", "B", "C", "D", "E", "F"},
+	)
+
+	validatorSet := validators.GetPublicIdentities()
+
+	block := &types.Header{
+		Number: 7,
+	}
+
+	tests := []struct {
+		name                string
+		block               *types.Header
+		validators          validator.AccountSet
+		account             *wallet.Account
+		getValidatorsError  error
+		expectedIsValidator bool
+		expectedError       error
+	}{
+		{
+			name:                "valid validator",
+			block:               block,
+			validators:          validatorSet,
+			account:             validators.GetValidator("B").Account,
+			getValidatorsError:  nil,
+			expectedIsValidator: true,
+			expectedError:       nil,
+		},
+		{
+			name:                "not a validator",
+			block:               block,
+			validators:          validatorSet,
+			account:             validator.NewTestValidator(t, "X", 1000).Account,
+			getValidatorsError:  nil,
+			expectedIsValidator: false,
+			expectedError:       nil,
+		},
+		{
+			name:                "error querying validators",
+			block:               block,
+			validators:          nil,
+			getValidatorsError:  errors.New("failed to get validators"),
+			expectedIsValidator: false,
+			expectedError:       fmt.Errorf("failed to query current validator set, block number %d, error %w", block.Number, errors.New("failed to get validators")),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockPolybftBackend.On("GetValidators", tt.block.Number, mock.Anything).Return(tt.validators, tt.getValidatorsError).Once()
+
+			priceOracle := &PriceOracle{
+				polybftBackend: mockPolybftBackend,
+				account:        tt.account,
+			}
+
+			isValidator, err := priceOracle.isValidator(tt.block)
+
+			require.Equal(t, tt.expectedIsValidator, isValidator)
+			if tt.expectedError != nil {
+				require.EqualError(t, err, tt.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestIsVotingTime(t *testing.T) {
+	tests := []struct {
+		name      string
+		timestamp uint64
+		expected  bool
+	}{
+		{
+			name:      "Before voting time",
+			timestamp: uint64(time.Date(2024, 10, 21, 0, 35, 59, 0, time.UTC).Unix()),
+			expected:  false,
+		},
+		{
+			name:      "At the start of voting time",
+			timestamp: uint64(time.Date(2024, 10, 21, 0, 36, 0, 0, time.UTC).Unix()),
+			expected:  true,
+		},
+		{
+			name:      "During voting time",
+			timestamp: uint64(time.Date(2024, 10, 21, 1, 30, 0, 0, time.UTC).Unix()),
+			expected:  true,
+		},
+		{
+			name:      "At the end of voting time",
+			timestamp: uint64(time.Date(2024, 10, 21, 3, 35, 59, 0, time.UTC).Unix()),
+			expected:  true,
+		},
+		{
+			name:      "After voting time",
+			timestamp: uint64(time.Date(2024, 10, 21, 3, 36, 0, 0, time.UTC).Unix()),
+			expected:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the function under test
+			result := isVotingTime(tt.timestamp)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestIsBlockOlderThan(t *testing.T) {
+	now := time.Now().UTC().Unix()
+
+	tests := []struct {
+		name     string
+		header   *types.Header
+		minutes  int64
+		expected bool
+	}{
+		{
+			name: "Block is older than 2 minutes",
+			header: &types.Header{
+				Timestamp: uint64(now - (2*60 + 1)), // more than 2 minutes ago
+			},
+			minutes:  2,
+			expected: true,
+		},
+		{
+			name: "Block is exactly 2 minutes old",
+			header: &types.Header{
+				Timestamp: uint64(now - 2*60), // 2 minutes ago
+			},
+			minutes:  2,
+			expected: false,
+		},
+		{
+			name: "Block is less than 2 minutes old",
+			header: &types.Header{
+				Timestamp: uint64(now - 1*60), // 1 minute ago
+			},
+			minutes:  2,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isBlockOlderThan(tt.header, tt.minutes)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestCalcDayNumber(t *testing.T) {
+	tests := []struct {
+		name      string
+		timestamp uint64
+		expected  uint64
+	}{
+		{
+			name:      "Start of the first day",
+			timestamp: 0,
+			expected:  0,
+		},
+		{
+			name:      "Middle of the first day",
+			timestamp: 43200, // 12 hours
+			expected:  0,
+		},
+		{
+			name:      "Start of the second day",
+			timestamp: 86400, // 24 hours
+			expected:  1,
+		},
+		{
+			name:      "Middle of the second day",
+			timestamp: 86400 + 43200, // 36 hours
+			expected:  1,
+		},
+		{
+			name:      "Start of the third day",
+			timestamp: 2 * 86400, // 48 hours
+			expected:  2,
+		},
+		{
+			name:      "End of the third day",
+			timestamp: 3*86400 - 1, // Just before 72 hours
+			expected:  2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := calcDayNumber(tt.timestamp)
 			require.Equal(t, tt.expected, result)
 		})
 	}

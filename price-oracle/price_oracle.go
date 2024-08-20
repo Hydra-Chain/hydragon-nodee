@@ -133,33 +133,39 @@ func (p *PriceOracle) StartOracleProcess() {
 		case <-p.closeCh:
 			return
 		case ev := <-eventCh:
-			if !p.blockMustBeProcessed(ev) {
-				continue
-			}
-
 			block := ev.NewChain[0]
-			currentValidators, err := p.polybftBackend.GetValidators(block.Number, nil)
+			p.logger.Debug("received new block notification", "block", block.Number)
+
+			isValidator, err := p.isValidator(block)
 			if err != nil {
-				p.logger.Error(
-					"failed to query current validator set",
-					"block number",
-					block.Number,
-					"error",
-					err,
-				)
+				p.logger.Error("failed to check if node is validator", "err", err)
 
 				continue
 			}
 
-			isValidator := currentValidators.ContainsNodeID(p.account.Address().String())
 			if !isValidator {
 				continue
 			}
 
-			p.logger.Debug("received new block notification", "block", block.Number)
+			if !p.blockMustBeProcessed(ev) {
+				continue
+			}
 
-			if err = p.handleNewBlock(block); err != nil {
-				p.logger.Error("failed to handle new block", "err", err)
+			should, err := p.shouldExecuteVote(block)
+			if err != nil {
+				p.logger.Error("failed to check if vote must be executed:", "error", err)
+
+				continue
+			}
+
+			if should {
+				if err := p.executeVote(block); err != nil {
+					p.logger.Error("failed to execute vote", "err", err)
+
+					return
+				}
+
+				p.logger.Info("vote executed successfully")
 			}
 		}
 	}
@@ -172,28 +178,16 @@ func (p *PriceOracle) Close() error {
 	return nil
 }
 
-func (p *PriceOracle) handleNewBlock(header *types.Header) error {
+// shouldExecuteVote verifies that the validator should vote
+func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
+	// check if the current time is in the voting window
 	if !isVotingTime(header.Timestamp) {
 		p.logger.Debug("Not currently in voting time window")
 
-		return nil
+		return false, nil
 	}
 
-	should, err := p.shouldExecuteVote(header)
-	if err != nil {
-		return fmt.Errorf("failed to check if vote must be executed:  error %w", err)
-	}
-
-	if should {
-		return p.executeVote(header)
-	}
-
-	return nil
-}
-
-// shouldExecuteVote verifies that the validator should vote
-func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
-	// first check is voting already made for the current day
+	// check is voting already made for the current day
 	if p.alreadyVoted(header) {
 		return false, nil
 	}
@@ -220,6 +214,19 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (p *PriceOracle) isValidator(block *types.Header) (bool, error) {
+	currentValidators, err := p.polybftBackend.GetValidators(block.Number, nil)
+	if err != nil {
+		return false, fmt.Errorf(
+			"failed to query current validator set, block number %d, error %w",
+			block.Number,
+			err,
+		)
+	}
+
+	return currentValidators.ContainsNodeID(p.account.Address().String()), nil
 }
 
 // 1. Skip checking older blocks to ensure bulk synchronization remains fast.
@@ -344,8 +351,8 @@ func formatJSONRPCURL(jsonRPC string) (string, error) {
 const (
 	// APIs will give the price for the previous day 35 mins after midnight.
 	// So, we configure the vote to start 36 mins after midnight
-	dailyVotingStartTime = uint64(36 * 60)                       // in seconds
-	dailyVotingEndTime   = dailyVotingStartTime + uint64(3*3600) // in seconds
+	dailyVotingStartTime = uint64(36 * 60)                       // 36 minutes in seconds
+	dailyVotingEndTime   = dailyVotingStartTime + uint64(3*3600) // 3 hours in seconds
 )
 
 func isVotingTime(timestamp uint64) bool {
@@ -356,6 +363,7 @@ func isVotingTime(timestamp uint64) bool {
 	return secondsInDay >= dailyVotingStartTime && secondsInDay < dailyVotingEndTime
 }
 
+// isBlockOlderThan checks if the block is older than the given number of minutes
 func isBlockOlderThan(header *types.Header, minutes int64) bool {
 	return time.Now().UTC().Unix()-int64(header.Timestamp) > minutes*60
 }
