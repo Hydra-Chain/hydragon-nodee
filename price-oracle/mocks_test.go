@@ -71,7 +71,6 @@ func (s *systemStateMock) GetVotingPowerExponent() (*polybft.BigNumDecimal, erro
 	return exp, err
 }
 
-// vito - extract these mocks in a separate file
 type MockPriceOracle struct {
 	PriceOracle
 	MockAlreadyVotedMapping map[uint64]bool

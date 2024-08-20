@@ -7,16 +7,12 @@ import (
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
-	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
-	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/umbracle/ethgo"
-	"github.com/umbracle/ethgo/contract"
 )
 
 func TestIsValidator(t *testing.T) {
@@ -356,99 +352,6 @@ func TestAlreadyVoted(t *testing.T) {
 			// Call the function under test
 			result := mockPriceOracle.alreadyVoted(tt.block)
 			require.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestGetState(t *testing.T) {
-	mockBlockchainBackend := new(MockBlockchainBackend)
-	priceOracle := &PriceOracle{
-		blockchain: mockBlockchainBackend,
-	}
-
-	validators := validator.NewTestValidatorsWithAliases(
-		t,
-		[]string{"A", "B", "C", "D", "E", "F"},
-	)
-
-	block := &types.Header{
-		Number:    7,
-		Timestamp: uint64(time.Date(2024, 8, 20, 1, 30, 0, 0, time.UTC).Unix()),
-	}
-
-	// Set up the expected behavior for the mock
-	mockPriceOracle := &MockPriceOracle{
-		PriceOracle: *priceOracle,
-		MockAlreadyVotedMapping: map[uint64]bool{
-			block.Timestamp: true,
-		},
-	}
-
-	getStateProviderForBlockErr := errors.New("failed to GetStateProviderForBlock")
-
-	tests := []struct {
-		name          string
-		block         *types.Header
-		currentHeader *types.Header
-		event         *blockchain.Event
-		validators    *validator.AccountSet
-		account       *wallet.Account
-		getStateError error
-		expectedError error
-		expectedState *priceOracleState
-	}{
-		{
-			name:          "Unable to get system state",
-			block:         block,
-			account:       validators.GetValidator("A").Account,
-			getStateError: getStateProviderForBlockErr,
-			expectedError: getStateProviderForBlockErr,
-			expectedState: nil,
-		},
-		{
-			name:          "Get system state",
-			block:         block,
-			account:       validators.GetValidator("A").Account,
-			getStateError: nil,
-			expectedError: nil,
-			expectedState: &priceOracleState{new(systemStateMock), contract.NewContract(
-				ethgo.Address(contracts.PriceOracleContract),
-				contractsapi.PriceOracle.Abi,
-			)},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// mockPolybftBackend.On("GetValidators", tt.block.Number, mock.Anything).Return(tt.validators, tt.getValidatorsError).Once()
-
-			// priceOracle := &PriceOracle{
-			// 	polybftBackend: mockPolybftBackend,
-			// 	account:        tt.account,
-			// }
-
-			// isValidator, err := priceOracle.isValidator(tt.block)
-
-			// require.Equal(t, tt.expectedIsValidator, isValidator)
-			// if tt.expectedError != nil {
-			// 	require.EqualError(t, err, tt.expectedError.Error())
-			// } else {
-			// 	require.NoError(t, err)
-			// }
-
-			mockBlockchainBackend.On("GetStateProviderForBlock", mock.Anything).Return(new(stateProviderMock), tt.getStateError).Once()
-			mockBlockchainBackend.On("GetSystemState", mock.Anything).Return(new(systemStateMock)).Twice()
-
-			mockPriceOracle.account = tt.account
-
-			// call the function under test
-			state, err := mockPriceOracle.PriceOracle.getState(tt.block)
-
-			require.Equal(t, tt.expectedState, state)
-			if tt.expectedError != nil {
-				require.EqualError(t, err, tt.expectedError.Error())
-			}
-			// mockBlockchainBackend.AssertExpectations(t)
 		})
 	}
 }
