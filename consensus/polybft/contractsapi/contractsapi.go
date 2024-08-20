@@ -904,7 +904,7 @@ func (i *InitializePriceOracleFn) DecodeAbi(buf []byte) error {
 }
 
 type VotePriceOracleFn struct {
-	Price *big.Int `abi:"_price"`
+	Price *big.Int `abi:"price"`
 }
 
 func (v *VotePriceOracleFn) Sig() []byte {
@@ -917,21 +917,6 @@ func (v *VotePriceOracleFn) EncodeAbi() ([]byte, error) {
 
 func (v *VotePriceOracleFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(PriceOracle.Abi.Methods["vote"], buf, v)
-}
-
-type IsValidValidatorVotePriceOracleFn struct {
-}
-
-func (i *IsValidValidatorVotePriceOracleFn) Sig() []byte {
-	return PriceOracle.Abi.Methods["isValidValidatorVote"].ID()
-}
-
-func (i *IsValidValidatorVotePriceOracleFn) EncodeAbi() ([]byte, error) {
-	return PriceOracle.Abi.Methods["isValidValidatorVote"].Encode(i)
-}
-
-func (i *IsValidValidatorVotePriceOracleFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(PriceOracle.Abi.Methods["isValidValidatorVote"], buf, i)
 }
 
 type PriceVotedEvent struct {

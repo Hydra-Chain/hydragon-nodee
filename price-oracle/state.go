@@ -17,6 +17,7 @@ type PriceOracleState interface {
 	// shouldVote returns does the given address should vote for the given day's price
 	shouldVote(
 		validatorAccount *wallet.Account,
+		dayNumber uint64,
 	) (shouldVote bool, falseReason string, err error)
 }
 
@@ -42,8 +43,9 @@ func newPriceOracleState(
 
 func (p priceOracleState) shouldVote(
 	validatorAccount *wallet.Account,
+	dayNumber uint64,
 ) (bool, string, error) {
-	rawOutput, err := p.priceOracleContract.Call("shouldVote", ethgo.Latest)
+	rawOutput, err := p.priceOracleContract.Call("shouldVote", ethgo.Latest, dayNumber)
 	if err != nil {
 		return false, "", err
 	}

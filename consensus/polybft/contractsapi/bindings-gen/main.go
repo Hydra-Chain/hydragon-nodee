@@ -155,7 +155,6 @@ func main() {
 			[]string{
 				"initialize",
 				"vote",
-				"isValidValidatorVote",
 			},
 			[]string{
 				"PriceVoted",

@@ -145,7 +145,7 @@ type MockState struct {
 	mock.Mock
 }
 
-func (m *MockState) shouldVote(account *wallet.Account) (bool, string, error) {
+func (m *MockState) shouldVote(account *wallet.Account, dayNumber uint64) (bool, string, error) {
 	args := m.Called(account)
 
 	return args.Bool(0), args.String(1), args.Error(2)

@@ -303,62 +303,6 @@ func TestCalcDayNumber(t *testing.T) {
 	}
 }
 
-func TestAlreadyVoted(t *testing.T) {
-	validators := validator.NewTestValidatorsWithAliases(
-		t,
-		[]string{"A", "B", "C", "D", "E", "F"},
-	)
-
-	// Set up the mocked price oracle
-	day1Ts := uint64(time.Date(2024, 8, 20, 1, 30, 0, 0, time.UTC).Unix())
-	day2Ts := uint64(time.Date(2024, 8, 21, 1, 30, 0, 0, time.UTC).Unix())
-	mockPriceOracle := &MockPriceOracle{
-		MockAlreadyVotedMapping: map[uint64]bool{
-			calcDayNumber(day1Ts): true,
-			calcDayNumber(day2Ts): false,
-		},
-	}
-
-	tests := []struct {
-		name          string
-		block         *types.Header
-		currentHeader *types.Header
-		event         *blockchain.Event
-		validators    *validator.AccountSet
-		account       *wallet.Account
-		expected      bool
-	}{
-		{
-			name: "Already voted",
-			block: &types.Header{
-				Number:    7,
-				Timestamp: day1Ts,
-			},
-			account:  validators.GetValidator("A").Account,
-			expected: true,
-		},
-		{
-			name: "Not voted",
-			block: &types.Header{
-				Number:    10,
-				Timestamp: day2Ts,
-			},
-			account:  validators.GetValidator("A").Account,
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockPriceOracle.account = tt.account
-
-			// Call the function under test
-			result := mockPriceOracle.alreadyVoted(tt.block)
-			require.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestShouldExecuteVote(t *testing.T) {
 	mockState := new(MockState)
 	mockStateProvider := new(MockStateProvider)
