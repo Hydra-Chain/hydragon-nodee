@@ -26,6 +26,7 @@ import (
 
 var (
 	alreadyVotedMapping = make(map[uint64]bool)
+	calculatedDayNumber = make(map[uint64]uint64)
 	priceVotedEventABI  = contractsapi.PriceOracle.Abi.Events["PriceVoted"]
 )
 
@@ -322,6 +323,7 @@ const (
 	// So, we configure the vote to start 36 mins after midnight
 	dailyVotingStartTime = uint64(36 * 60)                       // 36 minutes in seconds
 	dailyVotingEndTime   = dailyVotingStartTime + uint64(3*3600) // 3 hours in seconds
+	secondsInADay        = uint64(86400)
 )
 
 func isVotingTime(timestamp uint64) bool {
@@ -338,11 +340,15 @@ func isBlockOlderThan(header *types.Header, minutes int64) bool {
 }
 
 func calcDayNumber(timestamp uint64) uint64 {
-	// Number of seconds in a day
-	const secondsInADay uint64 = 86400
+	if calculatedDayNumber[timestamp] != 0 {
+		return calculatedDayNumber[timestamp]
+	}
 
 	// Calculate the current day number
-	return timestamp / secondsInADay
+	dayNumber := timestamp / secondsInADay
+	calculatedDayNumber[timestamp] = dayNumber
+
+	return dayNumber
 }
 
 func getVoteTxRelayer(rpcEndpoint string) (txrelayer.TxRelayer, error) {
