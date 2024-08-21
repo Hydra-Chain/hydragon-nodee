@@ -116,6 +116,7 @@ func NewPriceOracle(
 		polybftBackend: polybftConsensus,
 		txRelayer:      txRelayer,
 		account:        account,
+		closeCh:        make(chan struct{}),
 	}, nil
 }
 
@@ -198,14 +199,13 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 	}
 
 	// initialize the system state for the given header
-	state, err := p.stateProvider.GetPriceOracleState(header)
+	state, err := p.stateProvider.GetPriceOracleState(header, p.account)
 	if err != nil {
 		return false, fmt.Errorf("get system state: %w", err)
 	}
 
 	// then check if the contract is in a proper state to vote
 	shouldVote, falseReason, err := state.shouldVote(
-		p.account,
 		calcDayNumber(header.Timestamp),
 	)
 	if err != nil {

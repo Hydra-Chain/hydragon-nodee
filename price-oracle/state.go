@@ -16,7 +16,6 @@ import (
 type PriceOracleState interface {
 	// shouldVote returns does the given address should vote for the given day's price
 	shouldVote(
-		validatorAccount *wallet.Account,
 		dayNumber uint64,
 	) (shouldVote bool, falseReason string, err error)
 }
@@ -30,19 +29,20 @@ func newPriceOracleState(
 	systemState polybft.SystemState,
 	priceOracleAddr types.Address,
 	provider contract.Provider,
+	validatorAccount *wallet.Account,
 ) PriceOracleState {
 	s := &priceOracleState{systemState, nil}
 
 	s.priceOracleContract = contract.NewContract(
 		ethgo.Address(priceOracleAddr),
 		contractsapi.PriceOracle.Abi, contract.WithProvider(provider),
+		contract.WithSender(validatorAccount.Ecdsa),
 	)
 
 	return s
 }
 
 func (p priceOracleState) shouldVote(
-	validatorAccount *wallet.Account,
 	dayNumber uint64,
 ) (bool, string, error) {
 	rawOutput, err := p.priceOracleContract.Call("shouldVote", ethgo.Latest, dayNumber)
@@ -70,6 +70,7 @@ func (p priceOracleState) shouldVote(
 type PriceOracleStateProvider interface {
 	GetPriceOracleState(
 		header *types.Header,
+		validatorAccount *wallet.Account,
 	) (PriceOracleState, error)
 }
 
@@ -83,11 +84,12 @@ func NewPriceOracleStateProvider(blockchain blockchainBackend) PriceOracleStateP
 
 func (p priceOracleStateProvider) GetPriceOracleState(
 	header *types.Header,
+	validatorAccount *wallet.Account,
 ) (PriceOracleState, error) {
 	provider, err := p.blockchain.GetStateProviderForBlock(header)
 	if err != nil {
 		return nil, err
 	}
 
-	return newPriceOracleState(p.blockchain.GetSystemState(provider), contracts.PriceOracleContract, provider), nil
+	return newPriceOracleState(p.blockchain.GetSystemState(provider), contracts.PriceOracleContract, provider, validatorAccount), nil
 }

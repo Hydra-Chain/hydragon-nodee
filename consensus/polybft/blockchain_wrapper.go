@@ -249,8 +249,13 @@ func (s *stateProvider) Call(
 	input []byte,
 	opts *contract.CallOpts,
 ) ([]byte, error) {
+	from := contracts.SystemCaller
+	if opts.From != ethgo.ZeroAddress {
+		from = types.Address(opts.From)
+	}
+
 	result := s.transition.Call2(
-		contracts.SystemCaller,
+		from,
 		types.Address(addr),
 		input,
 		big.NewInt(0),
