@@ -169,6 +169,11 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	for _, validator := range initialValidators {
 		// increment total stake
 		totalStake.Add(totalStake, validator.Stake)
+
+		premineBalances[validator.Address] = &helper.PremineInfo{
+			Address: validator.Address,
+			Amount:  validator.Stake,
+		}
 	}
 
 	// deploy genesis contracts

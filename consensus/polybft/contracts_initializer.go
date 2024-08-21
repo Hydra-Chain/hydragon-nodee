@@ -153,9 +153,10 @@ func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Tr
 // initAPRCalculator initializes APRCalculator SC
 func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeAPRCalculatorFn{
-		Governance:     polyBFTConfig.Governance,
-		HydraChainAddr: contracts.HydraChainContract,
-		Prices:         [310]*big.Int(NewBigIntSlice(310, 1)),
+		Governance:      polyBFTConfig.Governance,
+		HydraChainAddr:  contracts.HydraChainContract,
+		PriceOracleAddr: contracts.PriceOracleContract,
+		Prices:          [310]*big.Int(NewBigIntSlice(310, 1)),
 	}
 
 	input, err := initFn.EncodeAbi()
