@@ -6,6 +6,8 @@ services:
     image: rsantev/devnet-cluster:latest
     container_name: hydra-bootstrapper
     command: ["init"]
+    environment:
+      - COINGECKO_API_KEY=${COINGECKO_API_KEY}
     volumes:
       - data:/data
     networks:
