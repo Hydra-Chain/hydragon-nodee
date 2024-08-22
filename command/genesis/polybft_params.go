@@ -169,6 +169,11 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	for _, validator := range initialValidators {
 		// increment total stake
 		totalStake.Add(totalStake, validator.Stake)
+
+		premineBalances[validator.Address] = &helper.PremineInfo{
+			Address: validator.Address,
+			Amount:  validator.Stake,
+		}
 	}
 
 	// deploy genesis contracts
@@ -338,6 +343,10 @@ func (p *genesisParams) deployContracts(totalStake *big.Int) (map[types.Address]
 			// DAOIncentiveVault is an instance of the HydraVault contract
 			artifact: contractsapi.HydraVault,
 			address:  contracts.DAOIncentiveVaultContractV1,
+		},
+		{
+			artifact: contractsapi.PriceOracle,
+			address:  contracts.PriceOracleContractV1,
 		},
 	}
 

@@ -90,7 +90,10 @@ func setupGCPSSM(
 // InitECDSAValidatorKey creates new ECDSA key and set as a validator key
 func InitECDSAValidatorKey(secretsManager secrets.SecretsManager) (types.Address, error) {
 	if secretsManager.HasSecret(secrets.ValidatorKey) {
-		return types.ZeroAddress, fmt.Errorf(`secrets "%s" has been already initialized`, secrets.ValidatorKey)
+		return types.ZeroAddress, fmt.Errorf(
+			`secrets "%s" has been already initialized`,
+			secrets.ValidatorKey,
+		)
 	}
 
 	validatorKey, validatorKeyEncoded, err := crypto.GenerateAndEncodeECDSAPrivateKey()
@@ -137,7 +140,10 @@ func InitBLSValidatorKey(secretsManager secrets.SecretsManager) ([]byte, error) 
 	return pubkeyBytes, nil
 }
 
-func InitNetworkingPrivateKey(secretsManager secrets.SecretsManager, predefinedSecret []byte) (libp2pCrypto.PrivKey, error) {
+func InitNetworkingPrivateKey(
+	secretsManager secrets.SecretsManager,
+	predefinedSecret []byte,
+) (libp2pCrypto.PrivKey, error) {
 	if secretsManager.HasSecret(secrets.NetworkKey) {
 		return nil, fmt.Errorf(`secrets "%s" has been already initialized`, secrets.NetworkKey)
 	}
@@ -242,7 +248,9 @@ func LoadNodeID(secretsManager secrets.SecretsManager) (string, error) {
 }
 
 // InitCloudSecretsManager returns the cloud secrets manager from the provided config
-func InitCloudSecretsManager(secretsConfig *secrets.SecretsManagerConfig) (secrets.SecretsManager, error) {
+func InitCloudSecretsManager(
+	secretsConfig *secrets.SecretsManagerConfig,
+) (secrets.SecretsManager, error) {
 	var secretsManager secrets.SecretsManager
 
 	switch secretsConfig.Type {
@@ -278,7 +286,10 @@ func InitCloudSecretsManager(secretsConfig *secrets.SecretsManagerConfig) (secre
 func InitValidatorBLSSignature(
 	secretsManager secrets.SecretsManager, account *wallet.Account, chainID int64) ([]byte, error) {
 	if secretsManager.HasSecret(secrets.ValidatorBLSSignature) {
-		return nil, fmt.Errorf(`secrets "%s" has been already initialized`, secrets.ValidatorBLSSignature)
+		return nil, fmt.Errorf(
+			`secrets "%s" has been already initialized`,
+			secrets.ValidatorBLSSignature,
+		)
 	}
 
 	// Generate the signature

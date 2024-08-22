@@ -153,9 +153,10 @@ func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Tr
 // initAPRCalculator initializes APRCalculator SC
 func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
 	initFn := &contractsapi.InitializeAPRCalculatorFn{
-		Governance:     polyBFTConfig.Governance,
-		HydraChainAddr: contracts.HydraChainContract,
-		Prices:         [310]*big.Int(NewBigIntSlice(310, 1)),
+		Governance:      polyBFTConfig.Governance,
+		HydraChainAddr:  contracts.HydraChainContract,
+		PriceOracleAddr: contracts.PriceOracleContract,
+		Prices:          [310]*big.Int(NewBigIntSlice(310, 1)),
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -227,6 +228,27 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 		contracts.LiquidityTokenContract,
 		input,
 		"LiquidityToken.initialize",
+		transition,
+	)
+}
+
+// initPriceOracle initializes PriceOracle SC
+func initPriceOracle(polybftConfig PolyBFTConfig, transition *state.Transition) error {
+	initFn := &contractsapi.InitializePriceOracleFn{
+		HydraChainAddr:    contracts.HydraChainContract,
+		AprCalculatorAddr: contracts.APRCalculatorContract,
+	}
+
+	input, err := initFn.EncodeAbi()
+	if err != nil {
+		return fmt.Errorf("PriceOracle.initialize params encoding failed: %w", err)
+	}
+
+	return callContract(
+		contracts.SystemCaller,
+		contracts.PriceOracleContract,
+		input,
+		"PriceOracle.initialize",
 		transition,
 	)
 }

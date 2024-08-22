@@ -449,6 +449,9 @@ func getGenesisContractsMappings(t *testing.T) map[types.Address]*chain.GenesisA
 		contracts.DAOIncentiveVaultContract: {
 			Code: contractsapi.HydraVault.DeployedBytecode,
 		},
+		contracts.PriceOracleContract: {
+			Code: contractsapi.PriceOracle.DeployedBytecode,
+		},
 	}
 }
 
@@ -486,6 +489,10 @@ func initGenesisContracts(t *testing.T, transition *state.Transition, polyBFTCon
 
 	// initialize DAOIncentiveVault SC
 	err = initDAOIncentiveVault(polyBFTConfig, transition)
+	require.NoError(t, err)
+
+	// initialize PriceOracle SC
+	err = initPriceOracle(polyBFTConfig, transition)
 	require.NoError(t, err)
 }
 

@@ -18,6 +18,7 @@ import (
 	consensusPolyBFT "github.com/0xPolygon/polygon-edge/consensus/polybft"
 	"github.com/0xPolygon/polygon-edge/forkmanager"
 	"github.com/0xPolygon/polygon-edge/gasprice"
+	priceoracle "github.com/0xPolygon/polygon-edge/price-oracle"
 
 	"github.com/0xPolygon/polygon-edge/archive"
 	"github.com/0xPolygon/polygon-edge/blockchain"
@@ -88,6 +89,9 @@ type Server struct {
 
 	// gasHelper is providing functions regarding gas and fees
 	gasHelper *gasprice.GasHelper
+
+	// core price oracle module
+	priceOracle *priceoracle.PriceOracle
 }
 
 // newFileLogger returns logger instance that writes all logs to a specified file.
@@ -172,7 +176,7 @@ func NewServer(config *Config) (*Server, error) {
 	}
 
 	// Set up datadog profiler
-	if ddErr := m.enableDataDogProfiler(); err != nil {
+	if ddErr := m.enableDataDogProfiler(); ddErr != nil {
 		m.logger.Error("DataDog profiler setup failed", "err", ddErr.Error())
 	}
 
@@ -402,6 +406,19 @@ func NewServer(config *Config) (*Server, error) {
 		return nil, err
 	}
 
+	// create price oracle instance
+	m.priceOracle, err = priceoracle.NewPriceOracle(
+		m.logger,
+		m.blockchain,
+		m.executor,
+		m.consensus,
+		m.config.JSONRPC.JSONRPCAddr.String(),
+		m.secretsManager,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	// start consensus
 	if err := m.consensus.Start(); err != nil {
 		return nil, err
@@ -409,6 +426,11 @@ func NewServer(config *Config) (*Server, error) {
 
 	m.txpool.SetBaseFee(m.blockchain.Header())
 	m.txpool.Start()
+
+	// start price oracle
+	if err := m.priceOracle.Start(); err != nil {
+		return nil, err
+	}
 
 	return m, nil
 }
@@ -943,6 +965,9 @@ func (s *Server) Close() {
 			s.logger.Error("Prometheus server shutdown error", err)
 		}
 	}
+
+	// Close the price oracle
+	s.priceOracle.Close()
 
 	// Close the txpool's main loop
 	s.txpool.Close()

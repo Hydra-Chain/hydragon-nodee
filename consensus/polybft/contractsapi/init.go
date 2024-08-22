@@ -68,6 +68,7 @@ var (
 	TestSimple             *artifact.Artifact
 	LiquidityToken         *artifact.Artifact
 	HydraVault             *artifact.Artifact
+	PriceOracle            *artifact.Artifact
 )
 
 func init() {
@@ -114,6 +115,11 @@ func init() {
 	}
 
 	HydraVault, err = artifact.DecodeArtifact([]byte(HydraVaultArtifact))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	PriceOracle, err = artifact.DecodeArtifact([]byte(PriceOracleArtifact))
 	if err != nil {
 		log.Fatal(err)
 	}

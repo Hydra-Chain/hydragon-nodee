@@ -72,7 +72,7 @@ type stakeManager struct {
 	maxValidatorSetSize  int
 	polybftBackend       polybftBackend
 	// Hydra modify: Gives access to HydraChain contract state at specific block
-	blockchain blockchainBackend
+	blockchain BlockchainBackend
 }
 
 // newStakeManager returns a new instance of stake manager
@@ -84,7 +84,7 @@ func newStakeManager(
 	maxValidatorSetSize int,
 	polybftBackend polybftBackend,
 	dbTx *bolt.Tx,
-	blockchain blockchainBackend,
+	blockchain BlockchainBackend,
 ) (*stakeManager, error) {
 	sm := &stakeManager{
 		logger:               logger,
@@ -534,7 +534,7 @@ func (sc *validatorStakeMap) calcVotingPower(stakedBalance *big.Int, exp *BigNum
 	return res
 }
 
-func getEpochID(blockchain blockchainBackend, header *types.Header) (uint64, error) {
+func getEpochID(blockchain BlockchainBackend, header *types.Header) (uint64, error) {
 	provider, err := blockchain.GetStateProviderForBlock(header)
 	if err != nil {
 		return 0, err

@@ -12,7 +12,7 @@ func isEndOfPeriod(blockNumber, periodSize uint64) bool {
 }
 
 // getBlockData returns block header and extra
-func getBlockData(blockNumber uint64, blockchainBackend blockchainBackend) (*types.Header, *Extra, error) {
+func getBlockData(blockNumber uint64, blockchainBackend BlockchainBackend) (*types.Header, *Extra, error) {
 	blockHeader, found := blockchainBackend.GetHeaderByNumber(blockNumber)
 	if !found {
 		return nil, nil, blockchain.ErrNoBlock
@@ -27,7 +27,7 @@ func getBlockData(blockNumber uint64, blockchainBackend blockchainBackend) (*typ
 }
 
 // isEpochEndingBlock checks if given block is an epoch ending block
-func isEpochEndingBlock(blockNumber uint64, extra *Extra, blockchain blockchainBackend) (bool, error) {
+func isEpochEndingBlock(blockNumber uint64, extra *Extra, blockchain BlockchainBackend) (bool, error) {
 	if extra.Validators == nil {
 		// non epoch ending blocks have validator set delta as nil
 		return false, nil

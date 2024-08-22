@@ -23,7 +23,10 @@ const (
 
 // common errors for all polybft commands
 var (
-	ErrInvalidNum                     = fmt.Errorf("num flag value should be between 1 and %d", maxInitNum)
+	ErrInvalidNum = fmt.Errorf(
+		"num flag value should be between 1 and %d",
+		maxInitNum,
+	)
 	ErrInvalidParams                  = errors.New("no config file or data directory passed in")
 	ErrUnsupportedType                = errors.New("unsupported secrets manager")
 	ErrSecureLocalStoreNotImplemented = errors.New(
@@ -34,7 +37,10 @@ var (
 
 // GetSecretsManager function resolves secrets manager instance based on provided data or config paths.
 // insecureLocalStore defines if utilization of local secrets manager is allowed.
-func GetSecretsManager(dataPath, configPath string, insecureLocalStore bool) (secrets.SecretsManager, error) {
+func GetSecretsManager(
+	dataPath, configPath string,
+	insecureLocalStore bool,
+) (secrets.SecretsManager, error) {
 	if configPath != "" {
 		secretsConfig, readErr := secrets.ReadConfig(configPath)
 		if readErr != nil {

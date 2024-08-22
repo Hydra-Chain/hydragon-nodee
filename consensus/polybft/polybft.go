@@ -96,7 +96,7 @@ type Polybft struct {
 	consensusConfig *PolyBFTConfig
 
 	// blockchain is a reference to the blockchain object
-	blockchain blockchainBackend
+	blockchain BlockchainBackend
 
 	// runtime handles consensus runtime features like epoch, state and event management
 	runtime *consensusRuntime
@@ -212,6 +212,11 @@ func GenesisPostHookFactory(
 
 		// initialize DAOIncentiveVault SC
 		if err = initDAOIncentiveVault(polyBFTConfig, transition); err != nil {
+			return err
+		}
+
+		// initialize PriceOracle SC
+		if err = initPriceOracle(polyBFTConfig, transition); err != nil {
 			return err
 		}
 

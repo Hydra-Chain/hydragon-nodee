@@ -31,14 +31,14 @@ type EventProvider struct {
 
 	subscriberIDCounter uint64
 
-	blockchain blockchainBackend
+	blockchain BlockchainBackend
 
 	subscribers map[uint64]EventSubscriber
 	allFilters  map[types.Address]map[types.Hash][]uint64
 }
 
 // NewEventProvider returns a new instance of eventProvider
-func NewEventProvider(blockchain blockchainBackend) *EventProvider {
+func NewEventProvider(blockchain BlockchainBackend) *EventProvider {
 	return &EventProvider{
 		receiptsGetter: receiptsGetter{
 			blockchain: blockchain,
@@ -234,7 +234,7 @@ func (e *eventsGetter[T]) getEventsFromReceipts(blockHeader *types.Header,
 type receiptsGetter struct {
 	// blockchain is an abstraction of blockchain that provides necessary functions
 	// for querying blockchain data (blocks, receipts, etc.)
-	blockchain blockchainBackend
+	blockchain BlockchainBackend
 }
 
 func (r *receiptsGetter) getReceiptsFromBlocksRange(from, to uint64,

@@ -70,6 +70,10 @@ func main() {
 			"HydraVault",
 		},
 		{
+			"PriceOracle/PriceOracle.sol",
+			"PriceOracle",
+		},
+		{
 			"GenesisProxy/GenesisProxy.sol",
 			"GenesisProxy",
 		},

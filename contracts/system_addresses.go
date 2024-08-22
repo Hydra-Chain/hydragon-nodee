@@ -45,6 +45,10 @@ var (
 	DAOIncentiveVaultContract = types.StringToAddress("0x111")
 	// DAOIncentiveVaultContractV1 is an address of DAO Incentive Vault implementation contract
 	DAOIncentiveVaultContractV1 = types.StringToAddress("0x1111")
+	// PriceOracleContract is an address of the Price Oracle proxy contract
+	PriceOracleContract = types.StringToAddress("0x112")
+	// PriceOracleContractV1 is an address of Price Oracle implementation contract
+	PriceOracleContractV1 = types.StringToAddress("0x1121")
 	// StateReceiverContract is an address of bridge proxy contract on the child chain
 	StateReceiverContract = types.StringToAddress("0x1001")
 	// StateReceiverContractV1 is an address of bridge implementation contract on the child chain
@@ -129,5 +133,6 @@ func GetProxyImplementationMapping() map[types.Address]types.Address {
 		FeeHandlerContract:            FeeHandlerContractV1,
 		RewardWalletContract:          RewardWalletContractV1,
 		DAOIncentiveVaultContract:     DAOIncentiveVaultContractV1,
+		PriceOracleContract:           PriceOracleContractV1,
 	}
 }

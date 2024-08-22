@@ -31,6 +31,10 @@ func TestArtifactNotEmpty(t *testing.T) {
 	require.NotEmpty(t, APRCalculator.DeployedBytecode)
 	require.NotEmpty(t, APRCalculator.Abi)
 
+	require.NotEmpty(t, PriceOracle.Bytecode)
+	require.NotEmpty(t, PriceOracle.DeployedBytecode)
+	require.NotEmpty(t, PriceOracle.Abi)
+
 	require.NotEmpty(t, LiquidityToken.Bytecode)
 	require.NotEmpty(t, LiquidityToken.DeployedBytecode)
 	require.NotEmpty(t, LiquidityToken.Abi)

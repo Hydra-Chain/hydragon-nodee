@@ -12,6 +12,13 @@ write_secret() {
   echo -n "${secret}" >"$1"
 }
 
+# Check if the CoinGecko API key is set
+if [ -z "${CG_KEY}" ]; then
+  echo "ERROR: The CoinGecko API key must be set."
+else
+  # Generate the secrets config file in order to set the API secrets
+  hydra secrets generate --type local --name node --extra "coingecko-api-key=${CG_KEY}"
+
 # Check if the secrets setup has already been done
 if [ -f "${FLAG_FILE}" ]; then
   echo "Secrets setup has already been done. Skipping..."
@@ -20,8 +27,8 @@ else
   if [ -z "${KEY}" ]; then
     hydra secrets init --chain-id 8844 --data-dir node --insecure
   else
-    # Ensure that all four environment variables are set
-    if [ -z "${KEY}" ] || [ -z "${BLS_KEY}" ] || [ -z "${SIG}" ] || [ -z "${P2P_KEY}" ]; then
+    # Ensure that the all environment variables are set
+    if [ -z "${BLS_KEY}" ] || [ -z "${SIG}" ] || [ -z "${P2P_KEY}" ]; then
       echo "ERROR: All four environment variables (KEY, BLS_KEY, SIG, P2P_KEY) must be set."
       exit 1
     fi
