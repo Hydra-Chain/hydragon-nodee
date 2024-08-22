@@ -52,7 +52,6 @@ case "$1" in
     --consensus polybft \
     --validators-path /data \
     --validators-prefix data- \
-    --reward-wallet 0xDEADBEEF:1000000 \
     --native-token-config "Hydra Token:HYDRA:18:true:$(echo "$secrets" | jq -r '.[0] | .address')" \
     --bootnode "/dns4/node-1/tcp/1478/p2p/$(echo "$secrets" | jq -r '.[0] | .node_id')" \
     --bootnode "/dns4/node-2/tcp/1478/p2p/$(echo "$secrets" | jq -r '.[1] | .node_id')" \
