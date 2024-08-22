@@ -280,6 +280,7 @@ func (p *PriceOracle) vote(price *big.Int) error {
 		From:  p.account.Ecdsa.Address(),
 		Input: input,
 		To:    (*ethgo.Address)(&contracts.PriceOracleContract),
+		Gas:   1000000,
 	}
 
 	receipt, err := p.txRelayer.SendTransaction(txn, p.account.Ecdsa)
