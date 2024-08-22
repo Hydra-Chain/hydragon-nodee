@@ -1016,7 +1016,7 @@ func validateHeaderFields(parent *types.Header, header *types.Header, blockTimeD
 		return fmt.Errorf("invalid gas limit: have %v, max %v", header.GasUsed, header.GasLimit)
 	}
 	// verify time has passed
-	if header.Timestamp <= parent.Timestamp {
+	if header.Timestamp < parent.Timestamp {
 		return fmt.Errorf("timestamp older than parent")
 	}
 	// verify mix digest

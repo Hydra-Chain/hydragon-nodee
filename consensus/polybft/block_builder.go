@@ -70,7 +70,7 @@ type BlockBuilder struct {
 func (b *BlockBuilder) Reset() error {
 	// set the timestamp
 	parentTime := time.Unix(int64(b.params.Parent.Timestamp), 0)
-	headerTime := parentTime.Add(b.params.BlockTime)
+	headerTime := parentTime.Add(time.Millisecond * 200)
 
 	if headerTime.Before(time.Now().UTC()) {
 		headerTime = time.Now().UTC()
@@ -157,13 +157,14 @@ func (b *BlockBuilder) WriteTx(tx *types.Transaction) error {
 
 // Fill fills the block with transactions from the txpool
 func (b *BlockBuilder) Fill() {
-	blockTimer := time.NewTimer(b.params.BlockTime)
+	minBlockTimer := time.NewTimer(time.Millisecond * 200)
+	maxBlockTimer := time.NewTimer(b.params.BlockTime)
 
 	b.params.TxPool.Prepare()
 write:
 	for {
 		select {
-		case <-blockTimer.C:
+		case <-maxBlockTimer.C:
 			return
 		default:
 			tx := b.params.TxPool.Peek()
@@ -181,7 +182,7 @@ write:
 	}
 
 	//	wait for the timer to expire
-	<-blockTimer.C
+	<-minBlockTimer.C
 }
 
 // Receipts returns the collection of transaction receipts for given block
