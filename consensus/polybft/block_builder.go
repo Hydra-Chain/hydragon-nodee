@@ -70,7 +70,7 @@ type BlockBuilder struct {
 func (b *BlockBuilder) Reset() error {
 	// set the timestamp
 	parentTime := time.Unix(int64(b.params.Parent.Timestamp), 0)
-	headerTime := parentTime.Add(b.params.BlockTime)
+	headerTime := parentTime.Add(time.Millisecond * 200)
 
 	if headerTime.Before(time.Now().UTC()) {
 		headerTime = time.Now().UTC()
