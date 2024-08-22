@@ -37,13 +37,6 @@ type voteResult struct {
 	day              uint64
 }
 
-func (p *PriceOracle) PrintOutput(vr *voteResult) {
-	p.logger.Info("[VOTE]")
-	p.logger.Info("Validator Address: ", vr.validatorAddress)
-	p.logger.Info("Voted Price: ", vr.price)
-	p.logger.Info("Day: ", vr.day)
-}
-
 type blockchainBackend interface {
 	// CurrentHeader returns the header of blockchain block head
 	CurrentHeader() *types.Header
@@ -310,10 +303,17 @@ func (p *PriceOracle) vote(price *big.Int) error {
 	}
 
 	if !foundVoteLog {
-		return fmt.Errorf("could not find an appropriate log in the receipt that validates the vote has happened")
+		return fmt.Errorf(
+			"could not find an appropriate log in the receipt that validates the vote has happened",
+		)
 	}
 
-	p.PrintOutput(result)
+	p.logger.Info(
+		"[VOTE INFO] Validator address: %s, voted price: %s, day: %d",
+		result.validatorAddress,
+		result.price,
+		result.day,
+	)
 
 	return nil
 }
