@@ -37,12 +37,11 @@ type voteResult struct {
 	day              uint64
 }
 
-func (vr voteResult) PrintOutput() {
-	fmt.Printf("\n[VOTE]\n")
-	fmt.Println("Validator Address: ", vr.validatorAddress)
-	fmt.Println("Voted Price: ", vr.price)
-	fmt.Println("Day: ", vr.day)
-	fmt.Printf("\n")
+func (p *PriceOracle) PrintOutput(vr *voteResult) {
+	p.logger.Info("[VOTE]")
+	p.logger.Info("Validator Address: ", vr.validatorAddress)
+	p.logger.Info("Voted Price: ", vr.price)
+	p.logger.Info("Day: ", vr.day)
 }
 
 type blockchainBackend interface {
@@ -314,7 +313,7 @@ func (p *PriceOracle) vote(price *big.Int) error {
 		return fmt.Errorf("could not find an appropriate log in the receipt that validates the vote has happened")
 	}
 
-	result.PrintOutput()
+	p.PrintOutput(result)
 
 	return nil
 }
