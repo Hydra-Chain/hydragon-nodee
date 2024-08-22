@@ -320,7 +320,7 @@ func (p *PriceOracle) vote(price *big.Int) error {
 
 const (
 	// APIs will give the price for the previous day 35 mins after midnight.
-	// So, we configure the vote to start 36 mins after midnight
+	// So, we configure the vote to start 36 mins after midnight to give it 1 min margin
 	dailyVotingStartTime = uint64(36 * 60)                       // 36 minutes in seconds
 	dailyVotingEndTime   = dailyVotingStartTime + uint64(3*3600) // 3 hours in seconds
 	secondsInADay        = uint64(86400)
