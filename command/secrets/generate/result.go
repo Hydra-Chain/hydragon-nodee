@@ -14,6 +14,7 @@ type SecretsGenerateResult struct {
 	NodeName    string `json:"node_name"`
 	Namespace   string `json:"namespace"`
 	Extra       string `json:"extra"`
+	FilePath    string `json:"file_path"`
 }
 
 func (r *SecretsGenerateResult) GetOutput() string {
@@ -29,6 +30,7 @@ func (r *SecretsGenerateResult) GetOutput() string {
 		fmt.Sprintf("Extra|%s", r.Extra),
 	}))
 	buffer.WriteString("\n")
+	buffer.WriteString(fmt.Sprintf("\nSecrets config written to %s\n", r.FilePath))
 
 	return buffer.String()
 }

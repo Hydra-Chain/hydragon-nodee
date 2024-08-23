@@ -99,5 +99,6 @@ func (p *generateParams) getResult() command.CommandResult {
 		NodeName:    p.name,
 		Namespace:   p.namespace,
 		Extra:       p.extra,
+		FilePath:    p.dir,
 	}
 }
