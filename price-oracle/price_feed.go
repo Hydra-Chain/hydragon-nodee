@@ -3,9 +3,7 @@ package priceoracle
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/big"
-	"net/http"
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/helper/common"
@@ -73,7 +71,7 @@ func getCoingeckoPrice(apiKey string) (*big.Int, error) {
 	yesterday := getYesterdayFormatted()
 	apiURL := fmt.Sprintf(`https://api.coingecko.com/api/v3/coins/hydra/history?date=%s`, yesterday)
 
-	req, err := generateThirdPartyJSONRequest(apiURL)
+	req, err := common.GenerateThirdPartyJSONRequest(apiURL)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +79,7 @@ func getCoingeckoPrice(apiKey string) (*big.Int, error) {
 	// Add the key in the header
 	req.Header.Add("x-cg-demo-api-key", apiKey)
 
-	body, err := fetchPriceData(req)
+	body, err := common.FetchData(req)
 	if err != nil {
 		return nil, err
 	}
@@ -95,45 +93,6 @@ func getCoingeckoPrice(apiKey string) (*big.Int, error) {
 	price := priceData.MarketData.CurrentPrice.USD
 
 	return common.ConvertFloatToBigInt(price, 18)
-}
-
-// generateThirdPartyJSONRequest creates a new HTTP request with a context that has a timeout
-// for fetching data from a third-party API. The request is configured to accept JSON responses.
-// It takes url which is the URL of the third-party API endpoint and timeoutInMinutes
-// which is the duration in minutes for the request.
-// Returns: The created HTTP request and any error that occurred.
-func generateThirdPartyJSONRequest(url string) (*http.Request, error) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("accept", "application/json")
-
-	return req, nil
-}
-
-// fetchPriceData makes an HTTP request to fetch price data and returns the response body.
-// It takes the HTTP request to make as an input.
-// Returns: The response body as a byte slice, or an error if the request failed.
-func fetchPriceData(req *http.Request) ([]byte, error) {
-	httpClient := &http.Client{
-		Timeout: time.Minute * time.Duration(2),
-	}
-
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	// Close the request when finish, too
-	defer res.Body.Close()
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
 }
 
 // getYesterdayFormatted returns the date in the format dd-mm-yyyy for the previous day.

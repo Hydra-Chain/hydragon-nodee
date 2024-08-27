@@ -405,7 +405,7 @@ func GetTwoThirdOfMaxUint256() *big.Int {
 	return requiredAmount.Mul(maxUint256, two).Div(requiredAmount, three)
 }
 
-// ConvertFloatToBigInt converts a float64 value to a big.Int, scaling the value by the provided number of decimal places.
+// ConvertFloatToBigInt converts a float64 value to big.Int, scaling the value by the provided number of decimal places.
 // If the input decimal is negative, an error is returned.
 func ConvertFloatToBigInt(decimal float64, decimals int) (*big.Int, error) {
 	if decimal < 0 {
@@ -434,10 +434,9 @@ func GenerateThirdPartyJSONRequest(url string) (*http.Request, error) {
 	return req, nil
 }
 
-// FetchPriceData makes an HTTP request to fetch price data and returns the response body.
-// It takes the HTTP request to make as an input.
+// FetchData configures an HTTP client, executes a given request and fetches the body data.
 // Returns: The response body as a byte slice, or an error if the request failed.
-func FetchPriceData(req *http.Request) ([]byte, error) {
+func FetchData(req *http.Request) ([]byte, error) {
 	httpClient := &http.Client{
 		Timeout: time.Minute * time.Duration(2),
 	}

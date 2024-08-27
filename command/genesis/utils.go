@@ -308,7 +308,7 @@ func GenerateExtraDataPolyBft(validators []*validator.ValidatorMetadata) ([]byte
 }
 
 // getPricesData fetches the prices for the last 310 days from CoinGecko and unmarshal it
-func getPricesData() (*PricesDataCoinGecko, error) {
+func getCGPricesData() (*PricesDataCoinGecko, error) {
 	now := time.Now().UTC()
 	from := now.AddDate(0, 0, -310)
 	apiURL := fmt.Sprintf(
@@ -325,7 +325,7 @@ func getPricesData() (*PricesDataCoinGecko, error) {
 	// Add the key in the header
 	req.Header.Add("x-cg-demo-api-key", "CG-M6fdZBrNeR3njQQtBmkUBhkg")
 
-	body, err := common.FetchPriceData(req)
+	body, err := common.FetchData(req)
 	if err != nil {
 		return nil, err
 	}
@@ -334,6 +334,10 @@ func getPricesData() (*PricesDataCoinGecko, error) {
 	err = json.Unmarshal(body, &pricesData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if len(pricesData.Prices) != 310 {
+		return nil, fmt.Errorf("failed to fetch prices data: expected 310 prices, got %d", len(pricesData.Prices))
 	}
 
 	return pricesData, nil

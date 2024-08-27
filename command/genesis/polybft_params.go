@@ -128,6 +128,11 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		ProxyContractsAdmin:      types.StringToAddress(p.proxyContractsAdmin),
 	}
 
+	polyBftConfig.InitialPrices, err = getInitialPrices()
+	if err != nil {
+		return err
+	}
+
 	// Disable london hardfork if burn contract address is not provided
 	enabledForks := chain.AllForksEnabled
 	// Hydra modification: london hardfork is enabled no matter the burn contract state
@@ -292,19 +297,6 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	chainConfig.Genesis.BaseFee = p.parsedBaseFeeConfig.baseFee
 	chainConfig.Genesis.BaseFeeEM = p.parsedBaseFeeConfig.baseFeeEM
 	chainConfig.Genesis.BaseFeeChangeDenom = p.parsedBaseFeeConfig.baseFeeChangeDenom
-
-	// get the prices data and populate the initial prices in the genesis
-	priceData, err := getPricesData()
-	if err != nil {
-		return err
-	}
-
-	for i, price := range priceData.Prices {
-		chainConfig.Genesis.InitialPrices[i], err = common.ConvertFloatToBigInt(price[1], 18)
-		if err != nil {
-			return err
-		}
-	}
 
 	return helper.WriteGenesisConfigToDisk(chainConfig, params.genesisPath)
 }
@@ -492,4 +484,26 @@ func getProxyContractsInfo(addresses []types.Address) []*contractInfo {
 	}
 
 	return result
+}
+
+// getInitialPrices returns an array of 310 *big.Int representing the initial prices to be used in the genesis.
+// The prices are retrieved from a third party API and converted to *big.Int with 18 decimal places.
+// If there is an error retrieving or converting the prices, the function returns the error.
+func getInitialPrices() ([310]*big.Int, error) {
+	convertedPrices := [310]*big.Int{}
+
+	// get the prices data and populate the initial prices in the genesis
+	priceData, err := getCGPricesData()
+	if err != nil {
+		return convertedPrices, err
+	}
+
+	for i, price := range priceData.Prices {
+		convertedPrices[i], err = common.ConvertFloatToBigInt(price[1], 18)
+		if err != nil {
+			return convertedPrices, err
+		}
+	}
+
+	return convertedPrices, nil
 }

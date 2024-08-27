@@ -363,8 +363,10 @@ func Test_GenesisPostHookFactory(t *testing.T) {
 			},
 		},
 		{
-			name:   "missing bridge configuration",
-			config: &PolyBFTConfig{},
+			name: "missing bridge configuration",
+			config: &PolyBFTConfig{
+				InitialPrices: generateRandomPrices(t),
+			},
 			// Hydra modification: We don't need a bridge config
 			// expectedErr: errMissingBridgeConfig,
 		},
@@ -382,8 +384,7 @@ func Test_GenesisPostHookFactory(t *testing.T) {
 			chainConfig := &chain.Chain{
 				Params: params,
 				Genesis: &chain.Genesis{
-					Alloc:         make(map[types.Address]*chain.GenesisAccount),
-					InitialPrices: generateRandomPrices(t),
+					Alloc: make(map[types.Address]*chain.GenesisAccount),
 				},
 			}
 			initHandler := GenesisPostHookFactory(chainConfig, ConsensusName)

@@ -134,17 +134,12 @@ func TestIntegration_DistributeDAOIncentive(t *testing.T) {
 		SprintSize:          5,
 		EpochReward:         reward.Uint64(),
 		// use 1st account as governance address
-		Governance: validatorSet.ToValidatorSet().Accounts().GetAddresses()[0],
-	}
-
-	chainConfig := &chain.Chain{
-		Genesis: &chain.Genesis{
-			InitialPrices: generateRandomPrices(t),
-		},
+		Governance:    validatorSet.ToValidatorSet().Accounts().GetAddresses()[0],
+		InitialPrices: generateRandomPrices(t),
 	}
 
 	// init all genesis contracts
-	initGenesisContracts(t, transition, polyBFTConfig, chainConfig)
+	initGenesisContracts(t, transition, polyBFTConfig)
 
 	commitEpochInput := createTestCommitEpochInput(t, 1, accSet, polyBFTConfig.EpochSize)
 	input, err := commitEpochInput.EncodeAbi()
@@ -316,17 +311,12 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 			SprintSize:          5,
 			EpochReward:         reward.Uint64(),
 			// use 1st account as governance address
-			Governance: currentValidators.ToValidatorSet().Accounts().GetAddresses()[0],
-		}
-
-		chainConfig := &chain.Chain{
-			Genesis: &chain.Genesis{
-				InitialPrices: generateRandomPrices(t),
-			},
+			Governance:    currentValidators.ToValidatorSet().Accounts().GetAddresses()[0],
+			InitialPrices: generateRandomPrices(t),
 		}
 
 		// init all genesis contracts
-		initGenesisContracts(t, transition, polyBFTConfig, chainConfig)
+		initGenesisContracts(t, transition, polyBFTConfig)
 
 		// delegate amounts to validators
 		for valAddress, delegators := range valid2deleg {
@@ -491,7 +481,6 @@ func initGenesisContracts(
 	t *testing.T,
 	transition *state.Transition,
 	polyBFTConfig PolyBFTConfig,
-	chainConfig *chain.Chain,
 ) {
 	t.Helper()
 
@@ -516,7 +505,7 @@ func initGenesisContracts(
 	require.NoError(t, err)
 
 	// init APRCalculator
-	err = initAPRCalculator(polyBFTConfig, transition, chainConfig)
+	err = initAPRCalculator(polyBFTConfig, transition)
 	require.NoError(t, err)
 
 	// initialize RewardWallet SC

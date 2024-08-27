@@ -55,9 +55,6 @@ type Genesis struct {
 	BaseFee    uint64                            `json:"baseFee"`
 	BaseFeeEM  uint64                            `json:"baseFeeEM"`
 
-	// The initial prices to be set for the Price module
-	InitialPrices [310]*big.Int `json:"initialPrices"`
-
 	// BaseFeeChangeDenom is the value to bound the amount the base fee can change between blocks
 	BaseFeeChangeDenom uint64 `json:"baseFeeChangeDenom,omitempty"`
 
@@ -133,7 +130,6 @@ func (g *Genesis) MarshalJSON() ([]byte, error) {
 		BaseFee            *string                     `json:"baseFee"`
 		BaseFeeEM          *string                     `json:"baseFeeEM"`
 		BaseFeeChangeDenom *string                     `json:"baseFeeChangeDenom"`
-		InitialPrices      [310]*big.Int               `json:"initialPrices"`
 	}
 
 	var enc Genesis
@@ -163,7 +159,6 @@ func (g *Genesis) MarshalJSON() ([]byte, error) {
 	enc.Number = common.EncodeUint64(g.Number)
 	enc.GasUsed = common.EncodeUint64(g.GasUsed)
 	enc.ParentHash = g.ParentHash
-	enc.InitialPrices = g.InitialPrices
 
 	return json.Marshal(&enc)
 }
@@ -185,7 +180,6 @@ func (g *Genesis) UnmarshalJSON(data []byte) error {
 		BaseFee            *string                    `json:"baseFee"`
 		BaseFeeEM          *string                    `json:"baseFeeEM"`
 		BaseFeeChangeDenom *string                    `json:"baseFeeChangeDenom"`
-		InitialPrices      [310]*big.Int              `json:"initialPrices"`
 	}
 
 	var dec Genesis
@@ -275,8 +269,6 @@ func (g *Genesis) UnmarshalJSON(data []byte) error {
 	if dec.ParentHash != nil {
 		g.ParentHash = *dec.ParentHash
 	}
-
-	g.InitialPrices = dec.InitialPrices
 
 	return err
 }
