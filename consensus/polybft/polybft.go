@@ -196,7 +196,7 @@ func GenesisPostHookFactory(
 		}
 
 		// initialize APRCalculator SC
-		if err = initAPRCalculator(polyBFTConfig, transition); err != nil {
+		if err = initAPRCalculator(polyBFTConfig, transition, config); err != nil {
 			return err
 		}
 

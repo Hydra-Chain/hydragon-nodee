@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/contracts"
@@ -151,12 +152,12 @@ func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Tr
 }
 
 // initAPRCalculator initializes APRCalculator SC
-func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
+func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition, chainConfig *chain.Chain) error {
 	initFn := &contractsapi.InitializeAPRCalculatorFn{
 		Governance:      polyBFTConfig.Governance,
 		HydraChainAddr:  contracts.HydraChainContract,
 		PriceOracleAddr: contracts.PriceOracleContract,
-		Prices:          [310]*big.Int(NewBigIntSlice(310, 1)),
+		Prices:          chainConfig.Genesis.InitialPrices,
 	}
 
 	input, err := initFn.EncodeAbi()

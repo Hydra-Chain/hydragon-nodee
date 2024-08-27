@@ -137,8 +137,14 @@ func TestIntegration_DistributeDAOIncentive(t *testing.T) {
 		Governance: validatorSet.ToValidatorSet().Accounts().GetAddresses()[0],
 	}
 
+	chainConfig := &chain.Chain{
+		Genesis: &chain.Genesis{
+			InitialPrices: generateRandomPrices(t),
+		},
+	}
+
 	// init all genesis contracts
-	initGenesisContracts(t, transition, polyBFTConfig)
+	initGenesisContracts(t, transition, polyBFTConfig, chainConfig)
 
 	commitEpochInput := createTestCommitEpochInput(t, 1, accSet, polyBFTConfig.EpochSize)
 	input, err := commitEpochInput.EncodeAbi()
@@ -153,11 +159,18 @@ func TestIntegration_DistributeDAOIncentive(t *testing.T) {
 	)
 
 	// create the input that will be used to fetch the vault distribution amount from the contract
-	vaultDistributionInput, err := contractsapi.HydraChain.Abi.Methods["vaultDistribution"].Encode(&VaultDistributionHydraChainFn{})
+	vaultDistributionInput, err := contractsapi.HydraChain.Abi.Methods["vaultDistribution"].Encode(
+		&VaultDistributionHydraChainFn{},
+	)
 	require.NoError(t, err)
 
 	// make a call to fetch the distribution amount and ensure it is initially 0
-	vaultDistributionAmountRes := systemCallResult(t, transition, contracts.HydraChainContract, vaultDistributionInput)
+	vaultDistributionAmountRes := systemCallResult(
+		t,
+		transition,
+		contracts.HydraChainContract,
+		vaultDistributionInput,
+	)
 	valueDistributionAmount := new(big.Int).SetBytes(vaultDistributionAmountRes.ReturnValue)
 	require.Equal(t, new(big.Int).Cmp(valueDistributionAmount), 0)
 
@@ -180,16 +193,28 @@ func TestIntegration_DistributeDAOIncentive(t *testing.T) {
 	require.NoError(t, err)
 
 	// create input to get the total staked balance
-	totalBalanceInput, err := contractsapi.HydraStaking.Abi.Methods["totalBalance"].Encode(&TotalBalanceHydraStakingFn{})
+	totalBalanceInput, err := contractsapi.HydraStaking.Abi.Methods["totalBalance"].Encode(
+		&TotalBalanceHydraStakingFn{},
+	)
 	require.NoError(t, err)
 
 	// call the total balance method
-	totalBalanceRes := systemCallResult(t, transition, contracts.HydraStakingContract, totalBalanceInput)
+	totalBalanceRes := systemCallResult(
+		t,
+		transition,
+		contracts.HydraStakingContract,
+		totalBalanceInput,
+	)
 	totalBalance := new(big.Int).SetBytes(totalBalanceRes.ReturnValue)
 	daoIncentiveRewards := calcDAORewards(totalBalance)
 
 	// make a call to fetch the distribution amount after the distribution
-	vaultDistributionAmountRes = systemCallResult(t, transition, contracts.HydraChainContract, vaultDistributionInput)
+	vaultDistributionAmountRes = systemCallResult(
+		t,
+		transition,
+		contracts.HydraChainContract,
+		vaultDistributionInput,
+	)
 	valueDistributionAmount = new(big.Int).SetBytes(vaultDistributionAmountRes.ReturnValue)
 
 	// Vault distribution amount must increase 2% of the total staked amount
@@ -294,8 +319,14 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 			Governance: currentValidators.ToValidatorSet().Accounts().GetAddresses()[0],
 		}
 
+		chainConfig := &chain.Chain{
+			Genesis: &chain.Genesis{
+				InitialPrices: generateRandomPrices(t),
+			},
+		}
+
 		// init all genesis contracts
-		initGenesisContracts(t, transition, polyBFTConfig)
+		initGenesisContracts(t, transition, polyBFTConfig, chainConfig)
 
 		// delegate amounts to validators
 		for valAddress, delegators := range valid2deleg {
@@ -456,7 +487,12 @@ func getGenesisContractsMappings(t *testing.T) map[types.Address]*chain.GenesisA
 }
 
 // Internal function to init the genesis contracts
-func initGenesisContracts(t *testing.T, transition *state.Transition, polyBFTConfig PolyBFTConfig) {
+func initGenesisContracts(
+	t *testing.T,
+	transition *state.Transition,
+	polyBFTConfig PolyBFTConfig,
+	chainConfig *chain.Chain,
+) {
 	t.Helper()
 
 	// init LiquidityToken
@@ -480,7 +516,7 @@ func initGenesisContracts(t *testing.T, transition *state.Transition, polyBFTCon
 	require.NoError(t, err)
 
 	// init APRCalculator
-	err = initAPRCalculator(polyBFTConfig, transition)
+	err = initAPRCalculator(polyBFTConfig, transition, chainConfig)
 	require.NoError(t, err)
 
 	// initialize RewardWallet SC
@@ -497,7 +533,12 @@ func initGenesisContracts(t *testing.T, transition *state.Transition, polyBFTCon
 }
 
 // Function to create a system call and return the result
-func systemCallResult(t *testing.T, transition *state.Transition, to types.Address, input []byte) *runtime.ExecutionResult {
+func systemCallResult(
+	t *testing.T,
+	transition *state.Transition,
+	to types.Address,
+	input []byte,
+) *runtime.ExecutionResult {
 	t.Helper()
 
 	result := transition.Call2(

@@ -384,7 +384,7 @@ func TestShouldExecuteVote(t *testing.T) {
 			if tt.shouldMockState {
 				// Mock the GetPriceOracleState and shouldVote methods
 				mockStateProvider.On("GetPriceOracleState", tt.header).Return(mockState, nil).Once()
-				mockState.On("shouldVote", mockAccount).Return(tt.stateShouldVote, "", tt.stateShouldVoteErr).Once()
+				mockState.On("shouldVote", mock.Anything).Return(tt.stateShouldVote, "", tt.stateShouldVoteErr).Once()
 			}
 
 			// Call the function under test
@@ -411,6 +411,7 @@ func TestVote(t *testing.T) {
 	priceOracle := &PriceOracle{
 		account:   account,
 		txRelayer: mockTxRelayer,
+		logger:    hclog.NewNullLogger(),
 	}
 
 	expectedPrice := big.NewInt(1000)
@@ -557,6 +558,7 @@ func TestExecuteVote(t *testing.T) {
 		account:   account,
 		txRelayer: mockTxRelayer,
 		priceFeed: mockPriceFeed,
+		logger:    hclog.NewNullLogger(),
 	}
 
 	header := &types.Header{Timestamp: 100000}

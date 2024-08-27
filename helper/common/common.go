@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"math"
 	"math/big"
+	"net/http"
 	"os"
 	"os/signal"
 	"os/user"
@@ -412,5 +414,45 @@ func ConvertFloatToBigInt(decimal float64, decimals int) (*big.Int, error) {
 
 	// Convert the float64 to a big.Int
 	scaledValue := decimal * math.Pow10(decimals)
+
 	return new(big.Int).SetInt64(int64(scaledValue)), nil
+}
+
+// GenerateThirdPartyJSONRequest creates a new HTTP request with a context that has a timeout
+// for fetching data from a third-party API. The request is configured to accept JSON responses.
+// It takes url which is the URL of the third-party API endpoint and timeoutInMinutes
+// which is the duration in minutes for the request.
+// Returns: The created HTTP request and any error that occurred.
+func GenerateThirdPartyJSONRequest(url string) (*http.Request, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("accept", "application/json")
+
+	return req, nil
+}
+
+// FetchPriceData makes an HTTP request to fetch price data and returns the response body.
+// It takes the HTTP request to make as an input.
+// Returns: The response body as a byte slice, or an error if the request failed.
+func FetchPriceData(req *http.Request) ([]byte, error) {
+	httpClient := &http.Client{
+		Timeout: time.Minute * time.Duration(2),
+	}
+
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	// Close the request when finish, too
+	defer res.Body.Close()
+
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

@@ -2,6 +2,7 @@ package genesis
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"
@@ -73,7 +75,10 @@ func parseTrackerStartBlocks(trackerStartBlocksRaw []string) (map[types.Address]
 	for _, startBlockRaw := range trackerStartBlocksRaw {
 		delimiterIdx := strings.Index(startBlockRaw, ":")
 		if delimiterIdx == -1 {
-			return nil, fmt.Errorf("invalid event tracker start block configuration provided: %s", trackerStartBlocksRaw)
+			return nil, fmt.Errorf(
+				"invalid event tracker start block configuration provided: %s",
+				trackerStartBlocksRaw,
+			)
 		}
 
 		// <contractAddress>:<startBlock>
@@ -82,7 +87,11 @@ func parseTrackerStartBlocks(trackerStartBlocksRaw []string) (map[types.Address]
 
 		startBlock, err := strconv.ParseUint(startBlockRaw, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse provided start block %s: %w", startBlockRaw, err)
+			return nil, fmt.Errorf(
+				"failed to parse provided start block %s: %w",
+				startBlockRaw,
+				err,
+			)
 		}
 
 		trackerStartBlocksConfig[address] = startBlock
@@ -121,7 +130,11 @@ func parseBurnContractInfo(burnContractInfoRaw string) (*polybft.BurnContractInf
 
 	destinationAddress := burnContractParts[2]
 	if err = types.IsValidAddress(destinationAddress); err != nil {
-		return nil, fmt.Errorf("failed to parse burn destination address %s: %w", destinationAddress, err)
+		return nil, fmt.Errorf(
+			"failed to parse burn destination address %s: %w",
+			destinationAddress,
+			err,
+		)
 	}
 
 	return &polybft.BurnContractInfo{
@@ -239,7 +252,12 @@ func ReadValidatorsByPrefix(dir, prefix string) ([]*validator.GenesisValidator, 
 			BlsSignature:  blsSignature,
 			BlsPrivateKey: account.Bls,
 			BlsKey:        hex.EncodeToString(account.Bls.PublicKey().Marshal()),
-			MultiAddr:     fmt.Sprintf("/ip4/%s/tcp/%d/p2p/%s", "127.0.0.1", bootnodePortStart+int64(i), nodeID),
+			MultiAddr: fmt.Sprintf(
+				"/ip4/%s/tcp/%d/p2p/%s",
+				"127.0.0.1",
+				bootnodePortStart+int64(i),
+				nodeID,
+			),
 		}
 	}
 
@@ -287,4 +305,36 @@ func GenerateExtraDataPolyBft(validators []*validator.ValidatorMetadata) ([]byte
 	extra := polybft.Extra{Validators: delta, Checkpoint: &polybft.CheckpointData{}}
 
 	return extra.MarshalRLPTo(nil), nil
+}
+
+// getPricesData fetches the prices for the last 310 days from CoinGecko and unmarshal it
+func getPricesData() (*PricesDataCoinGecko, error) {
+	now := time.Now().UTC()
+	from := now.AddDate(0, 0, -310)
+	apiURL := fmt.Sprintf(
+		`https://api.coingecko.com/api/v3/coins/hydra/market_chart/range?vs_currency=usd&from=%d&to=%d`,
+		from.Unix(),
+		now.Unix(),
+	)
+
+	req, err := common.GenerateThirdPartyJSONRequest(apiURL)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add the key in the header
+	req.Header.Add("x-cg-demo-api-key", "CG-M6fdZBrNeR3njQQtBmkUBhkg")
+
+	body, err := common.FetchPriceData(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var pricesData *PricesDataCoinGecko
+	err = json.Unmarshal(body, &pricesData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return pricesData, nil
 }

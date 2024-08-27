@@ -296,3 +296,15 @@ func generateUpdatedValidatorVotingPower(
 		}},
 	}
 }
+
+func generateRandomPrices(t *testing.T) [310]*big.Int {
+	t.Helper()
+
+	result := [310]*big.Int{}
+
+	for i := 0; i < 310; i++ {
+		result[i], _ = rand.Int(rand.Reader, big.NewInt(1000000000000000000))
+	}
+
+	return result
+}

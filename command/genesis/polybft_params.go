@@ -69,6 +69,10 @@ type contractInfo struct {
 	address  types.Address
 }
 
+type PricesDataCoinGecko struct {
+	Prices [][]float64 `json:"prices"`
+}
+
 // generatePolyBftChainConfig creates and persists polybft chain configuration to the provided file path
 func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) error {
 	// populate premine balance map
@@ -288,6 +292,19 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	chainConfig.Genesis.BaseFee = p.parsedBaseFeeConfig.baseFee
 	chainConfig.Genesis.BaseFeeEM = p.parsedBaseFeeConfig.baseFeeEM
 	chainConfig.Genesis.BaseFeeChangeDenom = p.parsedBaseFeeConfig.baseFeeChangeDenom
+
+	// get the prices data and populate the initial prices in the genesis
+	priceData, err := getPricesData()
+	if err != nil {
+		return err
+	}
+
+	for i, price := range priceData.Prices {
+		chainConfig.Genesis.InitialPrices[i], err = common.ConvertFloatToBigInt(price[1], 18)
+		if err != nil {
+			return err
+		}
+	}
 
 	return helper.WriteGenesisConfigToDisk(chainConfig, params.genesisPath)
 }

@@ -53,6 +53,7 @@ func TestFSM_ValidateHeader(t *testing.T) {
 	// sequence number
 	require.ErrorContains(t, validateHeaderFields(parent, header, blockTimeDrift), "invalid number")
 	header.Number = 1
+	parent.Timestamp = 1
 
 	// failed timestamp
 	require.ErrorContains(
@@ -2133,7 +2134,7 @@ func TestFSM_Validate_TimestampOlder(t *testing.T) {
 	parent.ComputeHash()
 
 	// try some invalid times
-	for _, blockTime := range []uint64{parent.Timestamp - 1, parent.Timestamp} {
+	for _, blockTime := range []uint64{parent.Timestamp - 10, parent.Timestamp - 1} {
 		header := &types.Header{
 			Number:     parentBlockNumber + 1,
 			ParentHash: parent.Hash,

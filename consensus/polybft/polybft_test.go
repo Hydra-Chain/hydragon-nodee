@@ -60,7 +60,12 @@ func TestPolybft_VerifyHeader(t *testing.T) {
 			checkpointHash, err := extra.Checkpoint.Hash(0, header.Number, header.Hash)
 			require.NoError(t, err)
 
-			extra.Committed = createSignature(t, committedAccounts, checkpointHash, signer.DomainCheckpointManager)
+			extra.Committed = createSignature(
+				t,
+				committedAccounts,
+				checkpointHash,
+				signer.DomainCheckpointManager,
+			)
 			header.ExtraData = extra.MarshalRLPTo(nil)
 		}
 
@@ -136,7 +141,13 @@ func TestPolybft_VerifyHeader(t *testing.T) {
 		Number:    polyBftConfig.EpochSize,
 		Timestamp: uint64(time.Now().UTC().Unix()),
 	}
-	parentCommitment := updateHeaderExtra(parentHeader, parentDelta, nil, &CheckpointData{EpochNumber: 1}, accountSetParent)
+	parentCommitment := updateHeaderExtra(
+		parentHeader,
+		parentDelta,
+		nil,
+		&CheckpointData{EpochNumber: 1},
+		accountSetParent,
+	)
 
 	// add parent header to map
 	headersMap.addHeader(parentHeader)
@@ -171,7 +182,11 @@ func TestPolybft_VerifyHeader(t *testing.T) {
 		accountSetCurrent)
 
 	// since parent signature is intentionally disregarded the following error is expected
-	assert.ErrorContains(t, polybft.VerifyHeader(currentHeader), "failed to verify signatures for parent of block")
+	assert.ErrorContains(
+		t,
+		polybft.VerifyHeader(currentHeader),
+		"failed to verify signatures for parent of block",
+	)
 
 	updateHeaderExtra(currentHeader, currentDelta, parentCommitment,
 		&CheckpointData{
@@ -183,15 +198,32 @@ func TestPolybft_VerifyHeader(t *testing.T) {
 	assert.NoError(t, polybft.VerifyHeader(currentHeader))
 
 	// clean validator snapshot cache (re-instantiate it), submit invalid validator set for parent signature and expect the following error
-	polybft.validatorsCache = newValidatorsSnapshotCache(hclog.NewNullLogger(), newTestState(t), blockchainMock)
+	polybft.validatorsCache = newValidatorsSnapshotCache(
+		hclog.NewNullLogger(),
+		newTestState(t),
+		blockchainMock,
+	)
 	assert.NoError(t, polybft.validatorsCache.storeSnapshot(
-		&validatorSnapshot{Epoch: 0, Snapshot: validatorSetCurrent}, nil)) // invalid validator set is submitted
+		&validatorSnapshot{
+			Epoch:    0,
+			Snapshot: validatorSetCurrent,
+		},
+		nil,
+	)) // invalid validator set is submitted
 	assert.NoError(t, polybft.validatorsCache.storeSnapshot(
 		&validatorSnapshot{Epoch: 1, Snapshot: validatorSetCurrent}, nil))
-	assert.ErrorContains(t, polybft.VerifyHeader(currentHeader), "failed to verify signatures for parent of block")
+	assert.ErrorContains(
+		t,
+		polybft.VerifyHeader(currentHeader),
+		"failed to verify signatures for parent of block",
+	)
 
 	// clean validators cache again and set valid snapshots
-	polybft.validatorsCache = newValidatorsSnapshotCache(hclog.NewNullLogger(), newTestState(t), blockchainMock)
+	polybft.validatorsCache = newValidatorsSnapshotCache(
+		hclog.NewNullLogger(),
+		newTestState(t),
+		blockchainMock,
+	)
 	assert.NoError(t, polybft.validatorsCache.storeSnapshot(
 		&validatorSnapshot{Epoch: 0, Snapshot: validatorSetParent}, nil))
 	assert.NoError(t, polybft.validatorsCache.storeSnapshot(
@@ -317,7 +349,12 @@ func Test_GenesisPostHookFactory(t *testing.T) {
 				InitialValidatorSet: validators.GetParamValidators(),
 				Bridge:              bridgeCfg,
 				EpochSize:           epochSize,
-				NativeTokenConfig:   &TokenConfig{Name: "Test Mintable", Symbol: "TEST_MNT", Decimals: 18, IsMintable: true},
+				NativeTokenConfig: &TokenConfig{
+					Name:       "Test Mintable",
+					Symbol:     "TEST_MNT",
+					Decimals:   18,
+					IsMintable: true,
+				},
 				MaxValidatorSetSize: maxValidators,
 			},
 			bridgeAllowList: &chain.AddressListConfig{
@@ -342,7 +379,13 @@ func Test_GenesisPostHookFactory(t *testing.T) {
 				Engine:          map[string]interface{}{ConsensusName: tc.config},
 				BridgeAllowList: tc.bridgeAllowList,
 			}
-			chainConfig := &chain.Chain{Params: params, Genesis: &chain.Genesis{Alloc: make(map[types.Address]*chain.GenesisAccount)}}
+			chainConfig := &chain.Chain{
+				Params: params,
+				Genesis: &chain.Genesis{
+					Alloc:         make(map[types.Address]*chain.GenesisAccount),
+					InitialPrices: generateRandomPrices(t),
+				},
+			}
 			initHandler := GenesisPostHookFactory(chainConfig, ConsensusName)
 			require.NotNil(t, initHandler)
 
