@@ -76,8 +76,9 @@ func NewPriceOracle(
 	consensus consensus.Consensus,
 	jsonRPC string,
 	secretsManager secrets.SecretsManager,
+	secretsManagerConfig *secrets.SecretsManagerConfig,
 ) (*PriceOracle, error) {
-	priceFeed, err := NewPriceFeed()
+	priceFeed, err := NewPriceFeed(secretsManagerConfig)
 	if err != nil {
 		return nil, err
 	}

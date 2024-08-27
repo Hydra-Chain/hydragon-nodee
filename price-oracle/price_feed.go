@@ -30,12 +30,7 @@ type priceFeed struct {
 	coinGeckoAPIKey string
 }
 
-func NewPriceFeed() (PriceFeed, error) {
-	secretsManagerConfig, err := secrets.ReadConfig("./secretsManagerConfig.json")
-	if err != nil {
-		return nil, err
-	}
-
+func NewPriceFeed(secretsManagerConfig *secrets.SecretsManagerConfig) (PriceFeed, error) {
 	apiKey, ok := secretsManagerConfig.Extra[secrets.CoinGeckoAPIKey].(string)
 	if !ok {
 		return nil, fmt.Errorf(secrets.CoinGeckoAPIKey + " is not a string")

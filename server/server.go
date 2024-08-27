@@ -414,6 +414,7 @@ func NewServer(config *Config) (*Server, error) {
 		m.consensus,
 		m.config.JSONRPC.JSONRPCAddr.String(),
 		m.secretsManager,
+		m.config.SecretsManager,
 	)
 	if err != nil {
 		return nil, err
