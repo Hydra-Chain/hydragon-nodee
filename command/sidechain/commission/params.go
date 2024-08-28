@@ -40,14 +40,10 @@ func (scp *setCommissionParams) validateFlags() error {
 		return fmt.Errorf("failed to parse json rpc address. Error: %w", err)
 	}
 
-	return validateCommission(params.commission)
-}
-
-func validateCommission(commission uint64) error {
-	if commission > sidechainHelper.MaxCommission {
+	if params.commission > sidechainHelper.MaxCommission {
 		return fmt.Errorf(
 			"provided commission '%d' is higher than the maximum of '%d'",
-			commission,
+			params.commission,
 			sidechainHelper.MaxCommission,
 		)
 	}
