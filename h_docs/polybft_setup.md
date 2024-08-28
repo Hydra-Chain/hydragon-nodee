@@ -41,7 +41,7 @@ We need to set native token to be mintable, so we can premine balances to differ
 4. Run the chain
 
 ```
-./hydra server --data-dir ./test-chain-1 --chain genesis.json --secrets-config ./secretsManagerConfig.json --grpc-address :5001 --libp2p :30301 --jsonrpc :10001 --log-level DEBUG --log-to ./log
+./hydra server --data-dir ./test-chain-1 --chain genesis.json --grpc-address :5001 --libp2p :30301 --jsonrpc :10001 --log-level DEBUG --log-to ./log
 
 ./hydra server --data-dir ./test-chain-2 --chain genesis.json --grpc-address :5002 --libp2p :30302 --jsonrpc :10002 --log-level DEBUG --log-to ./log-2
 
@@ -92,7 +92,7 @@ Stake tx is made in this step as well
 ```
 
 2. Create manifest file
-  This is the first version of edge that needs a manifest file. It contains information about the initial validators.
+   This is the first version of edge that needs a manifest file. It contains information about the initial validators.
 
 ```
 ./hydra manifest --validators-prefix test-chain-

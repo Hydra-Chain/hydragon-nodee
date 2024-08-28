@@ -106,8 +106,8 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(
 		&params.rawConfig.SecretsConfigPath,
 		secretsConfigFlag,
-		"",
-		"the path to the SecretsManager config file. Used for Hashicorp Vault. "+
+		"./secretsManagerConfig.json",
+		"the path to the SecretsManager config file. Used for Coingecko API key and others. "+
 			"If omitted, the local FS secrets manager is used",
 	)
 
