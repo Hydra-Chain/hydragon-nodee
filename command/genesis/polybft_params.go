@@ -493,13 +493,13 @@ func getInitialPrices() ([310]*big.Int, error) {
 	convertedPrices := [310]*big.Int{}
 
 	// get the prices data and populate the initial prices in the genesis
-	priceData, err := getCGPricesData()
+	priceData, err := getCGPricesData(8)
 	if err != nil {
 		return convertedPrices, err
 	}
 
 	for i, price := range priceData.Prices {
-		convertedPrices[i], err = common.ConvertFloatToBigInt(price[1], 18)
+		convertedPrices[i], err = common.ConvertFloatToBigInt(price[1])
 		if err != nil {
 			return convertedPrices, err
 		}

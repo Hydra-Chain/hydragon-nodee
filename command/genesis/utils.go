@@ -307,14 +307,16 @@ func GenerateExtraDataPolyBft(validators []*validator.ValidatorMetadata) ([]byte
 	return extra.MarshalRLPTo(nil), nil
 }
 
-// getPricesData fetches the prices for the last 310 days from CoinGecko and unmarshal it
-func getCGPricesData() (*PricesDataCoinGecko, error) {
+// getPricesData fetches the prices for the last 310 days from CoinGecko and unmarshal it.
+// It accepts decimal place for currency price value.
+func getCGPricesData(precision int) (*PricesDataCoinGecko, error) {
 	now := time.Now().UTC()
 	from := now.AddDate(0, 0, -310)
 	apiURL := fmt.Sprintf(
-		`https://api.coingecko.com/api/v3/coins/hydra/market_chart/range?vs_currency=usd&from=%d&to=%d`,
+		`https://api.coingecko.com/api/v3/coins/hydra/market_chart/range?vs_currency=usd&from=%d&to=%d&precision=%d`,
 		from.Unix(),
 		now.Unix(),
+		precision,
 	)
 
 	req, err := common.GenerateThirdPartyJSONRequest(apiURL)
