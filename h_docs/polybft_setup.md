@@ -204,13 +204,14 @@ Use the following command in case you want to execute the stake operation only:
 ./hydra hydragon stake --data-dir ./node --self true --amount 999900000000000000000000 --jsonrpc http://localhost:8545
 ```
 
-6. Set or update your commission that will taken from the delegators' rewards.
+Congratulations! You are now a Hydra Chain validator!
+
+6. After becoming a validator, you can set the desired commission that will be deducted from the delegators' rewards.
+Additionally, you can update the commission if you need to.
 
 ```
 ./hydra hydragon commission --data-dir ./node --commission 10 --jsonrpc http://localhost:8545
 ```
-
-Congratulations! You are now a Hydra Chain validator!
 
 ### Admin actions for devnet node setup
 
