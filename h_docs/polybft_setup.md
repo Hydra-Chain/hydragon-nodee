@@ -81,6 +81,12 @@ Stake tx is made in this step as well
 ./hydra server --data-dir ./test-add-chain-1 --chain genesis.json --grpc-address :5006 --libp2p :30306 --jsonrpc :10006 --log-level DEBUG --log-to ./log-6
 ```
 
+5. Set or update commission of the validator that will taken from the delegators' rewards.
+
+```
+./hydra hydragon commission --data-dir ./test-add-chain-1 --commission 10 --jsonrpc http://127.0.0.1:10001 --insecure
+```
+
 ### LEGACY local setup
 
 1. Generate secrets
@@ -196,6 +202,12 @@ Use the following command in case you want to execute the stake operation only:
 
 ```
 ./hydra hydragon stake --data-dir ./node --self true --amount 999900000000000000000000 --jsonrpc http://localhost:8545
+```
+
+6. Set or update your commission that will taken from the delegators' rewards.
+
+```
+./hydra hydragon commission --data-dir ./node --commission 10 --jsonrpc http://localhost:8545
 ```
 
 Congratulations! You are now a Hydra Chain validator!

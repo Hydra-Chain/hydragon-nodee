@@ -12,11 +12,6 @@ import (
 const (
 	stakeFlag   = "stake"
 	chainIDFlag = "chain-id"
-	commissionFlag = "commission"
-)
-
-const (
-	maxCommission = 100
 )
 
 type registerParams struct {
@@ -24,7 +19,6 @@ type registerParams struct {
 	accountConfig      string
 	jsonRPC            string
 	stake              string
-	commission         uint64
 	chainID            int64
 	insecureLocalStore bool
 }
@@ -45,10 +39,6 @@ func (rp *registerParams) validateFlags() error {
 		}
 	}
 
-	if (rp.commission > maxCommission) {
-		return fmt.Errorf("provided commission '%d' is higher than the maximum of '%d'", rp.commission, maxCommission)
-	}
-
 	return nil
 }
 
@@ -56,7 +46,6 @@ type registerResult struct {
 	validatorAddress string
 	stakeResult      string
 	amount           string
-	commission       uint64
 }
 
 func (rr registerResult) GetOutput() string {
@@ -70,7 +59,6 @@ func (rr registerResult) GetOutput() string {
 	vals = append(vals, fmt.Sprintf("Validator Address|%s", rr.validatorAddress))
 	vals = append(vals, fmt.Sprintf("Staking Result|%s", rr.stakeResult))
 	vals = append(vals, fmt.Sprintf("Amount Staked|%v", rr.amount))
-	vals = append(vals, fmt.Sprintf("Commission |%v", rr.commission))
 
 	buffer.WriteString(helper.FormatKV(vals))
 	buffer.WriteString("\n")

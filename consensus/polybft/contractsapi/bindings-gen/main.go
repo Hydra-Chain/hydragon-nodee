@@ -91,6 +91,7 @@ func main() {
 				"delegate",
 				"undelegate",
 				"claimDelegatorReward",
+				"setCommission",
 			},
 			[]string{
 				"CommissionUpdated",
