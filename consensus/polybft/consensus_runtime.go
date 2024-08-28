@@ -305,7 +305,6 @@ func (c *consensusRuntime) OnBlockInserted(fullBlock *types.FullBlock) {
 		epoch = c.epoch
 		err   error
 		// calculation of epoch and sprint end does not consider slashing currently
-
 		isEndOfEpoch = c.isFixedSizeOfEpochMet(fullBlock.Block.Header.Number, epoch)
 	)
 
