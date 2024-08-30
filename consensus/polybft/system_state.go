@@ -144,7 +144,7 @@ func (s *SystemStateImpl) GetVotingPowerExponent() (exponent *big.Int, err error
 }
 
 func (s *SystemStateImpl) GetValidatorBalance(addr types.Address) (balance *big.Int, err error) {
-	rawOutput, err := s.hydraChainContract.Call("totalBalanceOf", ethgo.Latest, addr)
+	rawOutput, err := s.hydraStakingContract.Call("totalBalanceOf", ethgo.Latest, addr)
 	if err != nil {
 		return nil, err
 	}

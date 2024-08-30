@@ -244,6 +244,7 @@ func (c *consensusRuntime) initStakeManager(logger hcf.Logger, dbTx *bolt.Tx) er
 		c.state,
 		wallet.NewEcdsaSigner(c.config.Key),
 		contracts.HydraStakingContract,
+		contracts.HydraChainContract,
 		int(c.config.PolyBFTConfig.MaxValidatorSetSize),
 		c.config.polybftBackend,
 		dbTx,
