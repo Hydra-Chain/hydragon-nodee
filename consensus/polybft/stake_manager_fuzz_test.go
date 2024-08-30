@@ -97,7 +97,7 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 		validatorSetAddr := types.StringToAddress("0x0001")
 
 		systemStateMockVar := new(systemStateMock)
-		vPowerExp := &BigNumDecimal{Numerator: big.NewInt(5000), Denominator: big.NewInt(10000)}
+		vPowerExp := big.NewInt(5000)
 		systemStateMockVar.On("GetVotingPowerExponent").Return(vPowerExp, nil).Maybe()
 		bcMock := new(blockchainMock)
 		for i := 0; i < int(data.BlockID); i++ {
@@ -118,7 +118,8 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 
 		// insert initial hydra chain
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
-			Validators: newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
+			Validators:          newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
+			VotingPowerExponent: vPowerExp,
 		}, nil))
 
 		stakeManager, err := newStakeManager(
@@ -126,6 +127,7 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 			state,
 			wallet.NewEcdsaSigner(validators.GetValidator("A").Key()),
 			types.StringToAddress("0x0002"),
+			types.StringToAddress("0x0001"),
 			5,
 			nil,
 			nil,
@@ -173,6 +175,7 @@ func FuzzTestStakeManagerUpdateValidatorSet(f *testing.F) {
 		hclog.NewNullLogger(),
 		state,
 		wallet.NewEcdsaSigner(validators.GetValidator("A").Key()),
+		types.StringToAddress("0x0002"),
 		types.StringToAddress("0x0001"),
 		10,
 		nil,

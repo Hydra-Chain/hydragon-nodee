@@ -22,18 +22,16 @@ func TestStakeManager_PostBlock(t *testing.T) {
 	t.Parallel()
 
 	var (
-		allAliases        = []string{"A", "B", "C", "D", "E", "F"}
-		initialSetAliases = []string{"A", "B", "C", "D", "E"}
-		epoch             = uint64(1)
-		block             = uint64(10)
-		firstValidator    = uint64(0)
-		secondValidator   = uint64(1)
-		stakeAmount       = new(big.Int).Mul(big.NewInt(1e18), big.NewInt(155050))
-		hydraChainAddr    = types.StringToAddress("0x0005")
-		vPowerExp         = &BigNumDecimal{
-			Numerator:   big.NewInt(5000),
-			Denominator: big.NewInt(10000),
-		}
+		allAliases           = []string{"A", "B", "C", "D", "E", "F"}
+		initialSetAliases    = []string{"A", "B", "C", "D", "E"}
+		epoch                = uint64(1)
+		block                = uint64(10)
+		firstValidator       = uint64(0)
+		secondValidator      = uint64(1)
+		stakeAmount          = new(big.Int).Mul(big.NewInt(1e18), big.NewInt(155050))
+		hydraChainAddr       = types.StringToAddress("0x0005")
+		vPowerExp            = big.NewInt(5000)
+		vPowerExpDenominator = big.NewInt(10000)
 	)
 
 	systemStateMockVar := new(systemStateMock)
@@ -52,7 +50,7 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		customSystemStateMock := new(systemStateMock)
 		customSystemStateMock.On("GetVotingPowerExponent").
-			Return(&BigNumDecimal{Numerator: big.NewInt(5000), Denominator: big.NewInt(10000)}, nil).
+			Return(big.NewInt(5000), nil).
 			Once()
 
 		bcMock := new(blockchainMock)
@@ -77,6 +75,7 @@ func TestStakeManager_PostBlock(t *testing.T) {
 			state,
 			wallet.NewEcdsaSigner(validators.GetValidator("A").Key()),
 			types.StringToAddress("0x0001"),
+			types.StringToAddress("0x0002"),
 			5,
 			nil,
 			nil,
@@ -140,8 +139,9 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		// insert initial full validator set
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
-			Validators:  newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
-			BlockNumber: block - 1,
+			Validators:          newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
+			BlockNumber:         block - 1,
+			VotingPowerExponent: vPowerExp,
 		}, nil))
 
 		stakeManager, err := newStakeManager(
@@ -149,6 +149,7 @@ func TestStakeManager_PostBlock(t *testing.T) {
 			state,
 			wallet.NewEcdsaSigner(validators.GetValidator("A").Key()),
 			types.StringToAddress("0x0001"),
+			types.StringToAddress("0x0002"),
 			5,
 			nil,
 			nil,
@@ -188,7 +189,7 @@ func TestStakeManager_PostBlock(t *testing.T) {
 		require.NotNil(t, firstValidator)
 		require.Equal(
 			t,
-			validator.CalculateVPower(stakeAmount, vPowerExp.Numerator, vPowerExp.Denominator),
+			validator.CalculateVPower(stakeAmount, vPowerExp, vPowerExpDenominator),
 			firstValidator.VotingPower,
 		)
 		require.True(t, firstValidator.IsActive)
@@ -215,14 +216,16 @@ func TestStakeManager_PostBlock(t *testing.T) {
 		state := newTestState(t)
 		// insert initial full validator set
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
-			Validators:  newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
-			BlockNumber: block - 1,
+			Validators:          newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
+			BlockNumber:         block - 1,
+			VotingPowerExponent: vPowerExp,
 		}, nil))
 
 		stakeManager, err := newStakeManager(
 			hclog.NewNullLogger(),
 			state,
 			wallet.NewEcdsaSigner(validators.GetValidator("A").Key()),
+			types.StringToAddress("0x0002"),
 			types.StringToAddress("0x0001"),
 			5,
 			nil,
@@ -260,9 +263,85 @@ func TestStakeManager_PostBlock(t *testing.T) {
 		for _, v := range fullValidatorSet.Validators.getSorted(validatorsCount) {
 			require.Equal(
 				t,
-				validator.CalculateVPower(stakeAmount, vPowerExp.Numerator, vPowerExp.Denominator),
+				validator.CalculateVPower(stakeAmount, vPowerExp, vPowerExpDenominator),
 				v.VotingPower,
 			)
+		}
+	})
+
+	t.Run("PostBlock - update power exponent", func(t *testing.T) {
+		t.Parallel()
+
+		header := &types.Header{Number: block}
+
+		stateProviderMock := new(stateProviderMock)
+		systemStateMockVar := new(systemStateMock)
+		bcMock := new(blockchainMock)
+		bcMock.On("CurrentHeader").Return(&types.Header{Number: block - 1}, true).Once()
+		bcMock.On("GetStateProviderForBlock", header).
+			Return(stateProviderMock, nil).
+			Times(1)
+		bcMock.On("GetSystemState", stateProviderMock).
+			Return(systemStateMockVar).
+			Times(1)
+
+		validators := validator.NewTestValidatorsWithAliases(t, allAliases)
+		validatorSet := validators.GetPublicIdentities(initialSetAliases...)
+
+		for _, data := range validatorSet {
+			systemStateMockVar.On("GetValidatorBalance", data.Address).Return(stakeAmount, nil).Once()
+		}
+
+		state := newTestState(t)
+
+		// insert initial full validator set
+		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
+			Validators:          newValidatorStakeMap(validatorSet),
+			BlockNumber:         block - 1,
+			VotingPowerExponent: vPowerExp,
+		}, nil))
+
+		stakeManager, err := newStakeManager(
+			hclog.NewNullLogger(),
+			state,
+			wallet.NewEcdsaSigner(validators.GetValidator("A").Key()),
+			types.StringToAddress("0x0001"),
+			types.StringToAddress("0x0002"),
+			5,
+			nil,
+			nil,
+			bcMock,
+		)
+		require.NoError(t, err)
+
+		require.NoError(
+			t,
+			stakeManager.ProcessLog(header, convertLog(
+				createTestLogForPowerExponentUpdatedEvent(
+					t,
+					hydraChainAddr,
+					vPowerExp,
+				)), nil),
+		)
+
+		req := &PostBlockRequest{
+			FullBlock: &types.FullBlock{Block: &types.Block{Header: header}},
+			Epoch:     epoch,
+		}
+
+		require.NoError(t, stakeManager.PostBlock(req))
+
+		fullValidatorSet, err := state.StakeStore.getFullValidatorSet(nil)
+		require.NoError(t, err)
+		for _, val := range fullValidatorSet.Validators {
+			require.NotNil(t, val)
+			require.Equal(
+				t,
+				validator.CalculateVPower(stakeAmount, vPowerExp, vPowerExpDenominator),
+				val.VotingPower,
+			)
+
+			require.True(t, val.IsActive)
 		}
 	})
 }
@@ -288,6 +367,7 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 		hclog.NewNullLogger(),
 		state,
 		wallet.NewEcdsaSigner(validators.GetValidator("A").Key()),
+		types.StringToAddress("0x0002"),
 		types.StringToAddress("0x0001"),
 		10,
 		nil,
@@ -485,22 +565,27 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 	t.Parallel()
 
 	var (
-		allAliases       = []string{"A", "B", "C", "D", "E", "F"}
-		hydraStakingAddr = types.StringToAddress("0xf005")
-		epochID          = uint64(120)
-		stakeAmount      = new(big.Int).Mul(big.NewInt(1e18), big.NewInt(155050))
-		vPowerExp        = &BigNumDecimal{
-			Numerator:   big.NewInt(5000),
-			Denominator: big.NewInt(10000),
-		}
+		allAliases           = []string{"A", "B", "C", "D", "E", "F"}
+		hydraStakingAddr     = types.StringToAddress("0xf005")
+		hydraChainAddr       = types.StringToAddress("0xf006")
+		epochID              = uint64(120)
+		stakeAmount          = new(big.Int).Mul(big.NewInt(1e18), big.NewInt(155050))
+		stakeAmountTwo       = new(big.Int).Mul(stakeAmount, big.NewInt(2))
+		stakeAmountThree     = new(big.Int).Mul(stakeAmount, big.NewInt(3))
+		initialVPowerExp     = big.NewInt(5000)
+		middleVPowerExp      = big.NewInt(6000)
+		vPowerExp            = big.NewInt(9000)
+		vPowerExpDenominator = big.NewInt(10000)
 	)
 
 	success := types.ReceiptSuccess
 	contractProvider := &stateProvider{}
+	header0Hash := types.StringToHash("0x99bb")
 	header1Hash := types.StringToHash("0x99aa")
 	header2Hash := types.StringToHash("0xffee")
 	header3Hash := types.StringToHash("0xeeff")
 	header4Hash := types.StringToHash("0xaaff")
+	header0 := &types.Header{Number: 0, Hash: header0Hash}
 	currentHeader := &types.Header{Number: 4}
 	validators := validator.NewTestValidatorsWithAliases(t, allAliases)
 	accountSet := validators.GetPublicIdentities(allAliases...)
@@ -509,7 +594,17 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 
 	sysStateMock := &systemStateMock{}
 	sysStateMock.On("GetEpoch").Return(epochID, nil).Once()
-	sysStateMock.On("GetVotingPowerExponent").Return(vPowerExp, nil).Once()
+	sysStateMock.On("GetVotingPowerExponent").Return(initialVPowerExp, nil).Once()
+
+	for index, addr := range addresses {
+		if index == len(addresses)-1 {
+			sysStateMock.On("GetValidatorBalance", addr).Return(stakeAmountThree, nil).Once()
+		} else if index == len(addresses)-2 {
+			sysStateMock.On("GetValidatorBalance", addr).Return(stakeAmountTwo, nil).Once()
+		} else {
+			sysStateMock.On("GetValidatorBalance", addr).Return(stakeAmount, nil).Once()
+		}
+	}
 
 	polyBackendMock := new(polybftBackendMock)
 	polyBackendMock.On("GetValidatorsWithTx", uint64(0), []*types.Header(nil), mock.Anything).
@@ -517,23 +612,27 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 		Once()
 
 	bcMock := new(blockchainMock)
-	bcMock.On("GetStateProviderForBlock", currentHeader).Return(contractProvider, nil).Twice()
-	bcMock.On("GetSystemState", contractProvider).Return(sysStateMock, nil).Twice()
+	bcMock.On("GetStateProviderForBlock", header0).Return(contractProvider, nil).Once()
 	bcMock.On("CurrentHeader", mock.Anything).Return(currentHeader, true).Once()
+	bcMock.On("GetStateProviderForBlock", currentHeader).Return(contractProvider, nil).Twice()
+	bcMock.On("GetSystemState", contractProvider).Return(sysStateMock, nil).Times(3)
+	bcMock.On("GetHeaderByNumber", uint64(0)).
+		Return(header0, true).
+		Once()
 	bcMock.On("GetHeaderByNumber", uint64(1)).
 		Return(&types.Header{Number: 1, Hash: header1Hash}, true).
-		Once()
+		Twice()
 	bcMock.On("GetHeaderByNumber", uint64(2)).
 		Return(&types.Header{Number: 2, Hash: header2Hash}, true).
-		Once()
+		Twice()
 	bcMock.On("GetHeaderByNumber", uint64(3)).
 		Return(&types.Header{Number: 3, Hash: header3Hash}, true).
-		Once()
+		Twice()
 	bcMock.On("GetHeaderByNumber", uint64(4)).
 		Return(&types.Header{Number: 4, Hash: header4Hash}, true).
-		Once()
-	bcMock.On("GetReceiptsByHash", header1Hash).Return([]*types.Receipt(nil), nil).Once()
-	stakeAmountTwo := new(big.Int).Mul(stakeAmount, big.NewInt(2))
+		Twice()
+
+	bcMock.On("GetReceiptsByHash", header1Hash).Return([]*types.Receipt(nil), nil).Twice()
 	bcMock.On("GetReceiptsByHash", header2Hash).Return([]*types.Receipt{
 		{
 			Status: &success,
@@ -546,8 +645,17 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 				),
 			},
 		},
-	}, nil).Once()
-	stakeAmountThree := new(big.Int).Mul(stakeAmount, big.NewInt(3))
+		{
+			Status: &success,
+			Logs: []*types.Log{
+				createTestLogForPowerExponentUpdatedEvent(
+					t,
+					hydraChainAddr,
+					middleVPowerExp,
+				),
+			},
+		},
+	}, nil).Twice()
 	bcMock.On("GetReceiptsByHash", header3Hash).Return([]*types.Receipt{
 		{
 			Status: &success,
@@ -560,14 +668,26 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 				),
 			},
 		},
-	}, nil).Once()
-	bcMock.On("GetReceiptsByHash", header4Hash).Return([]*types.Receipt{{}}, nil).Once()
+	}, nil).Twice()
+	bcMock.On("GetReceiptsByHash", header4Hash).Return([]*types.Receipt{{},
+		{
+			Status: &success,
+			Logs: []*types.Log{
+				createTestLogForPowerExponentUpdatedEvent(
+					t,
+					hydraChainAddr,
+					vPowerExp,
+				),
+			},
+		},
+	}, nil).Twice()
 
 	_, err := newStakeManager(
 		hclog.NewNullLogger(),
 		state,
 		wallet.NewEcdsaSigner(validators.GetValidator("A").Key()),
 		hydraStakingAddr,
+		hydraChainAddr,
 		5,
 		polyBackendMock,
 		nil,
@@ -591,15 +711,19 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 				t,
 				validator.CalculateVPower(
 					stakeAmountThree,
-					vPowerExp.Numerator,
-					vPowerExp.Denominator,
+					vPowerExp,
+					vPowerExpDenominator,
 				),
 				x.VotingPower,
 			)
 		} else if x.Address == addresses[len(addresses)-2] {
-			require.Equal(t, validator.CalculateVPower(stakeAmountTwo, vPowerExp.Numerator, vPowerExp.Denominator), x.VotingPower)
+			require.Equal(t, validator.CalculateVPower(stakeAmountTwo, vPowerExp, vPowerExpDenominator), x.VotingPower)
 		} else {
-			require.Equal(t, big.NewInt(15000), x.VotingPower)
+			require.Equal(t, validator.CalculateVPower(
+				stakeAmount,
+				vPowerExp,
+				vPowerExpDenominator,
+			), x.VotingPower)
 		}
 	}
 }
@@ -621,6 +745,27 @@ func createTestLogForBalanceChangedEvent(
 
 	return &types.Log{
 		Address: hydraStaking,
+		Topics:  topics,
+		Data:    encodedData,
+	}
+}
+
+func createTestLogForPowerExponentUpdatedEvent(
+	t *testing.T,
+	hydraChain types.Address,
+	newPowerExponent *big.Int,
+) *types.Log {
+	t.Helper()
+
+	var powerExponentEvent contractsapi.PowerExponentUpdatedEvent
+
+	topics := make([]types.Hash, 1)
+	topics[0] = types.Hash(powerExponentEvent.Sig())
+	encodedData, err := abi.MustNewType("uint256").Encode(newPowerExponent)
+	require.NoError(t, err)
+
+	return &types.Log{
+		Address: hydraChain,
 		Topics:  topics,
 		Data:    encodedData,
 	}
