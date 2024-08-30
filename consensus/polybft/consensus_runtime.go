@@ -201,7 +201,7 @@ func (c *consensusRuntime) close() {
 
 // initStateSyncManager initializes state sync manager
 // if bridge is not enabled, then a dummy state sync manager will be used
-func (c *consensusRuntime) initStateSyncManager(logger hcf.Logger) error {
+func (c *consensusRuntime) initStateSyncManager(_ hcf.Logger) error {
 	// Hydra: stateSyncManager is unused
 	c.stateSyncManager = &dummyStateSyncManager{}
 
@@ -210,7 +210,7 @@ func (c *consensusRuntime) initStateSyncManager(logger hcf.Logger) error {
 
 // initCheckpointManager initializes checkpoint manager
 // if bridge is not enabled, then a dummy checkpoint manager will be used
-func (c *consensusRuntime) initCheckpointManager(logger hcf.Logger) error {
+func (c *consensusRuntime) initCheckpointManager(_ hcf.Logger) error {
 	if c.IsBridgeEnabled() {
 		// enable checkpoint manager
 		// Hydra: checkpoint manager is unused
@@ -226,7 +226,7 @@ func (c *consensusRuntime) initCheckpointManager(logger hcf.Logger) error {
 
 // initStateSyncRelayer initializes state sync relayer
 // if not enabled, then a dummy state sync relayer will be used
-func (c *consensusRuntime) initStateSyncRelayer(logger hcf.Logger) error {
+func (c *consensusRuntime) initStateSyncRelayer(_ hcf.Logger) error {
 	// Hydra: state sync relayer is unused
 	c.stateSyncRelayer = &dummyStateSyncRelayer{}
 
@@ -237,7 +237,6 @@ func (c *consensusRuntime) initStateSyncRelayer(logger hcf.Logger) error {
 func (c *consensusRuntime) initStakeManager(logger hcf.Logger, dbTx *bolt.Tx) error {
 	// H_MODIFY: Root chain is unused so we remove initialization of root relayer
 	// rootRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(c.config.PolyBFTConfig.Bridge.JSONRPCEndpoint))
-
 	var err error
 	c.stakeManager, err = newStakeManager(
 		logger.Named("stake-manager"),
@@ -475,10 +474,15 @@ func (c *consensusRuntime) FSM() error {
 	}
 
 	if isEndOfEpoch {
-		ff.commitEpochInput, ff.fundRewardWalletInput, ff.distributeRewardsInput, ff.distributeDAOIncentiveInput, err = c.calculateStateTxsInput(
-			parent,
-			epoch,
-		)
+		ff.commitEpochInput,
+			ff.fundRewardWalletInput,
+			ff.distributeRewardsInput,
+			ff.distributeDAOIncentiveInput,
+			err =
+			c.calculateStateTxsInput(
+				parent,
+				epoch,
+			)
 		if err != nil {
 			return fmt.Errorf("cannot calculate commit epoch info: %w", err)
 		}
@@ -524,7 +528,6 @@ func (c *consensusRuntime) restartEpoch(
 	header *types.Header,
 	dbTx *bolt.Tx,
 ) (*epochMetadata, error) {
-	lastEpoch := c.epoch
 	systemState, err := c.getSystemState(header)
 	if err != nil {
 		return nil, fmt.Errorf("get system state: %w", err)
@@ -536,11 +539,13 @@ func (c *consensusRuntime) restartEpoch(
 		return nil, fmt.Errorf("get epoch: %w", err)
 	}
 
+	lastEpoch := c.epoch
 	if lastEpoch != nil {
 		// Epoch might be already in memory, if its the same number do nothing -> just return provided last one
 		// Otherwise, reset the epoch metadata and restart the async services
 		if lastEpoch.Number == epochNumber {
 			fmt.Println("Epoch already in memory, nothing to do")
+
 			return lastEpoch, nil
 		}
 	}
@@ -714,6 +719,10 @@ func (c *consensusRuntime) generateSyncValidatorsDataTxInput(
 	accSet validator.AccountSet,
 ) (*contractsapi.SyncValidatorsDataHydraChainFn, error) {
 	parentIbftExtraData, err := GetIbftExtra(parent.ExtraData)
+	if err != nil {
+		return nil, err
+	}
+
 	if parentIbftExtraData.Validators.IsEmpty() {
 		return nil, nil
 	}

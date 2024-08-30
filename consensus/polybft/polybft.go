@@ -165,7 +165,8 @@ func GenesisPostHookFactory(
 
 		proxyAddrMapping := contracts.GetProxyImplementationMapping()
 
-		// Hydra: It is enabled in the config because we need it for EIP1559 to be enabled but we don't actually use the burn contract
+		// Hydra: It is enabled in the config because we need it for EIP1559 to be enabled
+		// but we don't actually use the burn contract
 		// burnContractAddress, isBurnContractSet := getBurnContractAddress(config, polyBFTConfig)
 		// if isBurnContractSet {
 		// 	proxyAddrMapping[contracts.DefaultBurnContract] = burnContractAddress
@@ -611,7 +612,6 @@ func (p *Polybft) startConsensusProtocol() {
 	// }
 	//
 	// p.logger.Debug("peers connected")
-
 	newBlockSub := p.blockchain.SubscribeEvents()
 	defer p.blockchain.UnubscribeEvents(newBlockSub)
 
@@ -695,6 +695,7 @@ func (p *Polybft) startConsensusProtocol() {
 		case _, ok := <-sequenceCh:
 			if !ok {
 				sequenceCh = nil
+
 				p.logger.Debug("Sequence channel closed")
 			}
 		case <-p.closeCh:
