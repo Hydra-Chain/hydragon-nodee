@@ -499,7 +499,7 @@ func getInitialPrices() ([310]*big.Int, error) {
 	}
 
 	for i, price := range priceData.Prices {
-		convertedPrices[i], err = common.ConvertFloatToBigInt(price[1])
+		convertedPrices[i], err = common.ConvertFloatToBigInt(price[1], 8)
 		if err != nil {
 			return convertedPrices, err
 		}

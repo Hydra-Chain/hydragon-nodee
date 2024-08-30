@@ -92,7 +92,7 @@ func getCoingeckoPrice(apiKey string) (*big.Int, error) {
 
 	price := priceData.MarketData.CurrentPrice.USD
 
-	return common.ConvertFloatToBigInt(price)
+	return common.ConvertFloatToBigInt(price, 8)
 }
 
 // getYesterdayFormatted returns the date in the format dd-mm-yyyy for the previous day.

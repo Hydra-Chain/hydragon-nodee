@@ -405,14 +405,15 @@ func GetTwoThirdOfMaxUint256() *big.Int {
 	return requiredAmount.Mul(maxUint256, two).Div(requiredAmount, three)
 }
 
-// ConvertFloatToBigInt converts a float64 value to big.Int. If the input decimal is negative, an error is returned.
-func ConvertFloatToBigInt(decimal float64) (*big.Int, error) {
+// ConvertFloatToBigInt converts a float64 value to big.Int, scaling the value by the provided number of decimal places.
+// If the input decimal is negative, an error is returned.
+func ConvertFloatToBigInt(decimal float64, decimals int) (*big.Int, error) {
 	if decimal < 0 {
 		return nil, fmt.Errorf("decimal must be positive")
 	}
 
-	// Convert the float64 to a big.Int, compatible with uint256
-	scaledValue := decimal * math.Pow10(18)
+	// Convert the float64 to a big.Int
+	scaledValue := decimal * math.Pow10(decimals)
 
 	return new(big.Int).SetInt64(int64(scaledValue)), nil
 }
