@@ -49,7 +49,9 @@ func (m *MockBlockchainBackend) CurrentHeader() *types.Header {
 	return header
 }
 
-func (m *MockBlockchainBackend) GetStateProviderForBlock(block *types.Header) (contract.Provider, error) {
+func (m *MockBlockchainBackend) GetStateProviderForBlock(
+	block *types.Header,
+) (contract.Provider, error) {
 	args := m.Called(block)
 	provider, ok := args.Get(0).(contract.Provider)
 	if !ok {
@@ -87,7 +89,10 @@ type MockPolybftBackend struct {
 	mock.Mock
 }
 
-func (m *MockPolybftBackend) GetValidators(blockNumber uint64, parents []*types.Header) (validator.AccountSet, error) {
+func (m *MockPolybftBackend) GetValidators(
+	blockNumber uint64,
+	parents []*types.Header,
+) (validator.AccountSet, error) {
 	args := m.Called(blockNumber, parents)
 	accSet, ok := args.Get(0).(validator.AccountSet)
 	if !ok {
@@ -108,7 +113,10 @@ func (m *MockTxRelayer) Call(from ethgo.Address, to ethgo.Address, input []byte)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockTxRelayer) SendTransaction(txn *ethgo.Transaction, key ethgo.Key) (*ethgo.Receipt, error) {
+func (m *MockTxRelayer) SendTransaction(
+	txn *ethgo.Transaction,
+	key ethgo.Key,
+) (*ethgo.Receipt, error) {
 	args := m.Called(txn, key)
 	receipt, ok := args.Get(0).(*ethgo.Receipt)
 	if !ok {
@@ -145,8 +153,8 @@ type MockState struct {
 	mock.Mock
 }
 
-func (m *MockState) shouldVote(account *wallet.Account, dayNumber uint64) (bool, string, error) {
-	args := m.Called(account)
+func (m *MockState) shouldVote(dayNumber uint64) (bool, string, error) {
+	args := m.Called(dayNumber)
 
 	return args.Bool(0), args.String(1), args.Error(2)
 }
@@ -156,7 +164,10 @@ type MockStateProvider struct {
 	mock.Mock
 }
 
-func (m *MockStateProvider) GetPriceOracleState(header *types.Header) (PriceOracleState, error) {
+func (m *MockStateProvider) GetPriceOracleState(
+	header *types.Header,
+	validatorAccount *wallet.Account,
+) (PriceOracleState, error) {
 	args := m.Called(header)
 	state, ok := args.Get(0).(PriceOracleState)
 	if !ok {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"math/big"
 	"strconv"
 	"strings"
 
@@ -82,6 +83,9 @@ type PolyBFTConfig struct {
 	// ProxyContractsAdmin is the address that will have the privilege to change both the proxy
 	// implementation address and the admin
 	ProxyContractsAdmin types.Address `json:"proxyContractsAdmin,omitempty"`
+
+	// The initial prices to be set for the Price module
+	InitialPrices [310]*big.Int `json:"initialPrices"`
 }
 
 // LoadPolyBFTConfig loads chain config from provided path and unmarshals PolyBFTConfig

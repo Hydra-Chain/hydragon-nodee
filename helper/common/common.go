@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"math"
 	"math/big"
+	"net/http"
 	"os"
 	"os/signal"
 	"os/user"
@@ -403,7 +405,7 @@ func GetTwoThirdOfMaxUint256() *big.Int {
 	return requiredAmount.Mul(maxUint256, two).Div(requiredAmount, three)
 }
 
-// ConvertFloatToBigInt converts a float64 value to a big.Int, scaling the value by the provided number of decimal places.
+// ConvertFloatToBigInt converts a float64 value to big.Int, scaling the value by the provided number of decimal places.
 // If the input decimal is negative, an error is returned.
 func ConvertFloatToBigInt(decimal float64, decimals int) (*big.Int, error) {
 	if decimal < 0 {
@@ -412,5 +414,44 @@ func ConvertFloatToBigInt(decimal float64, decimals int) (*big.Int, error) {
 
 	// Convert the float64 to a big.Int
 	scaledValue := decimal * math.Pow10(decimals)
+
 	return new(big.Int).SetInt64(int64(scaledValue)), nil
+}
+
+// GenerateThirdPartyJSONRequest creates a new HTTP request with a context that has a timeout
+// for fetching data from a third-party API. The request is configured to accept JSON responses.
+// It takes url which is the URL of the third-party API endpoint and timeoutInMinutes
+// which is the duration in minutes for the request.
+// Returns: The created HTTP request and any error that occurred.
+func GenerateThirdPartyJSONRequest(url string) (*http.Request, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("accept", "application/json")
+
+	return req, nil
+}
+
+// FetchData configures an HTTP client, executes a given request and fetches the body data.
+// Returns: The response body as a byte slice, or an error if the request failed.
+func FetchData(req *http.Request) ([]byte, error) {
+	httpClient := &http.Client{
+		Timeout: time.Minute * time.Duration(2),
+	}
+
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	// Close the request when finish, too
+	defer res.Body.Close()
+
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

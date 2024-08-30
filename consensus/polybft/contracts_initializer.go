@@ -156,7 +156,7 @@ func initAPRCalculator(polyBFTConfig PolyBFTConfig, transition *state.Transition
 		Governance:      polyBFTConfig.Governance,
 		HydraChainAddr:  contracts.HydraChainContract,
 		PriceOracleAddr: contracts.PriceOracleContract,
-		Prices:          [310]*big.Int(NewBigIntSlice(310, 1)),
+		Prices:          polyBFTConfig.InitialPrices,
 	}
 
 	input, err := initFn.EncodeAbi()

@@ -69,6 +69,10 @@ type contractInfo struct {
 	address  types.Address
 }
 
+type PricesDataCoinGecko struct {
+	Prices [][]float64 `json:"prices"`
+}
+
 // generatePolyBftChainConfig creates and persists polybft chain configuration to the provided file path
 func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) error {
 	// populate premine balance map
@@ -122,6 +126,11 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		BlockTimeDrift:           p.blockTimeDrift,
 		BlockTrackerPollInterval: common.Duration{Duration: p.blockTrackerPollInterval},
 		ProxyContractsAdmin:      types.StringToAddress(p.proxyContractsAdmin),
+	}
+
+	polyBftConfig.InitialPrices, err = getInitialPrices()
+	if err != nil {
+		return err
 	}
 
 	// Disable london hardfork if burn contract address is not provided
@@ -475,4 +484,26 @@ func getProxyContractsInfo(addresses []types.Address) []*contractInfo {
 	}
 
 	return result
+}
+
+// getInitialPrices returns an array of 310 *big.Int representing the initial prices to be used in the genesis.
+// The prices are retrieved from a third party API and converted to *big.Int with 18 decimal places.
+// If there is an error retrieving or converting the prices, the function returns the error.
+func getInitialPrices() ([310]*big.Int, error) {
+	convertedPrices := [310]*big.Int{}
+
+	// get the prices data and populate the initial prices in the genesis
+	priceData, err := getCGPricesData(8)
+	if err != nil {
+		return convertedPrices, err
+	}
+
+	for i, price := range priceData.Prices {
+		convertedPrices[i], err = common.ConvertFloatToBigInt(price[1], 8)
+		if err != nil {
+			return convertedPrices, err
+		}
+	}
+
+	return convertedPrices, nil
 }
