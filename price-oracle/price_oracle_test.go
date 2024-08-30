@@ -383,8 +383,8 @@ func TestShouldExecuteVote(t *testing.T) {
 
 			if tt.shouldMockState {
 				// Mock the GetPriceOracleState and shouldVote methods
-				mockStateProvider.On("GetPriceOracleState", tt.header).Return(mockState, nil).Once()
-				mockState.On("shouldVote", mock.Anything).Return(tt.stateShouldVote, "", tt.stateShouldVoteErr).Once()
+				mockStateProvider.On("GetPriceOracleState", tt.header, mockAccount).Return(mockState, nil).Once()
+				mockState.On("shouldVote", dayNumber).Return(tt.stateShouldVote, "", tt.stateShouldVoteErr).Once()
 			}
 
 			// Call the function under test

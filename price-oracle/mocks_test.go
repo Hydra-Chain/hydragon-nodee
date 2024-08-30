@@ -168,7 +168,7 @@ func (m *MockStateProvider) GetPriceOracleState(
 	header *types.Header,
 	validatorAccount *wallet.Account,
 ) (PriceOracleState, error) {
-	args := m.Called(header)
+	args := m.Called(header, validatorAccount)
 	state, ok := args.Get(0).(PriceOracleState)
 	if !ok {
 		panic("Expected PriceOracleState but got a different type")
