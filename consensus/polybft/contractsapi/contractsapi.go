@@ -274,6 +274,30 @@ func (v *ValidatorBannedEvent) Decode(input []byte) error {
 	return HydraChain.Abi.Events["ValidatorBanned"].Inputs.DecodeStruct(input, &v)
 }
 
+type PowerExponentUpdatedEvent struct {
+	NewPowerExponent *big.Int `abi:"newPowerExponent"`
+}
+
+func (*PowerExponentUpdatedEvent) Sig() ethgo.Hash {
+	return HydraChain.Abi.Events["PowerExponentUpdated"].ID()
+}
+
+func (p *PowerExponentUpdatedEvent) Encode() ([]byte, error) {
+	return HydraChain.Abi.Events["PowerExponentUpdated"].Inputs.Encode(p)
+}
+
+func (p *PowerExponentUpdatedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraChain.Abi.Events["PowerExponentUpdated"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraChain.Abi.Events["PowerExponentUpdated"], log, p)
+}
+
+func (p *PowerExponentUpdatedEvent) Decode(input []byte) error {
+	return HydraChain.Abi.Events["PowerExponentUpdated"].Inputs.DecodeStruct(input, &p)
+}
+
 type StakerInit struct {
 	Addr  types.Address `abi:"addr"`
 	Stake *big.Int      `abi:"stake"`
