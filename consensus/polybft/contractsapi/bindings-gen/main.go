@@ -58,6 +58,7 @@ func main() {
 				"AddedToWhitelist",
 				"RemovedFromWhitelist",
 				"ValidatorBanned",
+				"PowerExponentUpdated",
 			},
 		},
 		{

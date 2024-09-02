@@ -237,8 +237,8 @@ type systemStateMock struct {
 	mock.Mock
 }
 
-func (m *systemStateMock) GetNextCommittedIndex() (uint64, error) {
-	args := m.Called()
+func (s *systemStateMock) GetNextCommittedIndex() (uint64, error) {
+	args := s.Called()
 
 	if len(args) == 1 {
 		index, _ := args.Get(0).(uint64)
@@ -253,8 +253,8 @@ func (m *systemStateMock) GetNextCommittedIndex() (uint64, error) {
 	return 0, nil
 }
 
-func (m *systemStateMock) GetEpoch() (uint64, error) {
-	args := m.Called()
+func (s *systemStateMock) GetEpoch() (uint64, error) {
+	args := s.Called()
 	if len(args) == 1 {
 		epochNumber, _ := args.Get(0).(uint64)
 
@@ -276,15 +276,26 @@ func (s *systemStateMock) GetValidatorBlsKey(addr types.Address) (*bls.PublicKey
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (s *systemStateMock) GetVotingPowerExponent() (*BigNumDecimal, error) {
+func (s *systemStateMock) GetVotingPowerExponent() (*big.Int, error) {
 	args := s.Called()
-	exp, _ := args.Get(0).(*BigNumDecimal)
+	exp, _ := args.Get(0).(*big.Int)
+
 	var err error
 	if args.Get(1) != nil {
 		err, _ = args.Get(1).(error)
 	}
 
 	return exp, err
+}
+
+func (s *systemStateMock) GetValidatorBalance(addr types.Address) (balance *big.Int, err error) {
+	args := s.Called(addr)
+	balance, _ = args.Get(0).(*big.Int)
+	if args.Get(1) != nil {
+		err, _ = args.Get(1).(error)
+	}
+
+	return balance, err
 }
 
 var _ contract.Provider = (*stateProviderMock)(nil)

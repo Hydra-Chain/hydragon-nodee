@@ -34,9 +34,11 @@ type SystemState interface {
 	// GetNextCommittedIndex retrieves next committed bridge state sync index
 	GetNextCommittedIndex() (uint64, error)
 	// GetVotingPowerExponent retrieves voting power exponent from the HydraChain smart contract
-	GetVotingPowerExponent() (exponent *BigNumDecimal, err error)
+	GetVotingPowerExponent() (exponent *big.Int, err error)
 	// GetValidatorBlsKey retrieves validator BLS public key from the HydraChain smart contract
 	GetValidatorBlsKey(addr types.Address) (*bls.PublicKey, error)
+	// GetValidatorBalance retrieves validator staked + delegated balance from the HydraStaking smart contract
+	GetValidatorBalance(addr types.Address) (*big.Int, error)
 }
 
 var _ SystemState = &SystemStateImpl{}
@@ -127,23 +129,32 @@ func (s *SystemStateImpl) GetEpoch() (uint64, error) {
 }
 
 // H: add a function to fetch the voting power exponent
-func (s *SystemStateImpl) GetVotingPowerExponent() (exponent *BigNumDecimal, err error) {
-	rawOutput, err := s.hydraChainContract.Call("getExponent", ethgo.Latest)
+func (s *SystemStateImpl) GetVotingPowerExponent() (exponent *big.Int, err error) {
+	rawOutput, err := s.hydraChainContract.Call("powerExponent", ethgo.Latest)
 	if err != nil {
 		return nil, err
 	}
 
-	expNumerator, ok := rawOutput["numerator"].(*big.Int)
+	votingPowerExponent, ok := rawOutput["0"].(*big.Int)
 	if !ok {
 		return nil, fmt.Errorf("failed to decode voting power exponent numerator")
 	}
 
-	expDenominator, ok := rawOutput["denominator"].(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("failed to decode voting power exponent denominator")
+	return votingPowerExponent, nil
+}
+
+func (s *SystemStateImpl) GetValidatorBalance(addr types.Address) (balance *big.Int, err error) {
+	rawOutput, err := s.hydraStakingContract.Call("totalBalanceOf", ethgo.Latest, addr)
+	if err != nil {
+		return nil, err
 	}
 
-	return &BigNumDecimal{Numerator: expNumerator, Denominator: expDenominator}, nil
+	balance, ok := rawOutput["0"].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("failed to decode validator balance")
+	}
+
+	return balance, nil
 }
 
 // H: add a function to fetch the validator bls key
