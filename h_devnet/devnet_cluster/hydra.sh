@@ -42,7 +42,7 @@ case "$1" in
   secrets=$("$HYDRA_NODE_BIN" secrets init --insecure --chain-id 88441 --num 5 --data-dir /data/data- --json)
 
   # Generate secretsManagerConfig.json with the COINGECKO_API_KEY
-  "$HYDRA_NODE_BIN" secrets generate --type local --name node --extra "coingecko-api-key=${COINGECKO_API_KEY}"
+  "$HYDRA_NODE_BIN" secrets generate --type local --name node --extra "coingecko-api-key=${COINGECKO_API_KEY}" --dir /data/secretsManagerConfig.json
 
   rm -f /data/genesis.json
 

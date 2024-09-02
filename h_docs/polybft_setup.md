@@ -92,7 +92,7 @@ Stake tx is made in this step as well
 ```
 
 2. Create manifest file
-  This is the first version of edge that needs a manifest file. It contains information about the initial validators.
+   This is the first version of edge that needs a manifest file. It contains information about the initial validators.
 
 ```
 ./hydra manifest --validators-prefix test-chain-
