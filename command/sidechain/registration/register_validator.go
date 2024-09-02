@@ -84,6 +84,7 @@ func setFlags(cmd *cobra.Command) {
 	)
 
 	helper.RegisterJSONRPCFlag(cmd)
+
 	cmd.MarkFlagsMutuallyExclusive(polybftsecrets.AccountConfigFlag, polybftsecrets.AccountDirFlag)
 }
 
@@ -161,7 +162,9 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	if !foundNewValidatorLog {
-		return fmt.Errorf("could not find an appropriate log in the receipt that validates the registration has happened")
+		return fmt.Errorf(
+			"could not find an appropriate log in the receipt that validates the registration has happened",
+		)
 	}
 
 	if params.stake != "" {
@@ -235,8 +238,11 @@ func populateStakeResults(receipt *ethgo.Receipt, result *registerResult) {
 	result.stakeResult = "Could not find an appropriate log in receipt that stake happened"
 }
 
-func registerValidator(sender txrelayer.TxRelayer, account *wallet.Account,
-	signature *bls.Signature) (*ethgo.Receipt, error) {
+func registerValidator(
+	sender txrelayer.TxRelayer,
+	account *wallet.Account,
+	signature *bls.Signature,
+) (*ethgo.Receipt, error) {
 	sigMarshal, err := signature.ToBigInt()
 	if err != nil {
 		return nil, fmt.Errorf("register validator failed: %w", err)

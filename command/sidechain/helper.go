@@ -15,6 +15,7 @@ const (
 	InsecureLocalStoreFlag = "insecure"
 
 	DefaultGasPrice = 1879048192 // 0x70000000
+	MaxCommission   = 100
 )
 
 func CheckIfDirectoryExist(dir string) error {

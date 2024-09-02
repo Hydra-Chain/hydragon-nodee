@@ -188,6 +188,15 @@ hydra hydragon stake --data-dir ./node-secrets --self true --amount 990000000000
 
 Congratulations! You have successfully become a validator on the Hydra Chain. For further information and support, join our Telegram group and engage with the community.
 
+### Set or update the commission for the delegators
+
+After becoming a validator, you can set the desired commission that will be deducted from the delegators' rewards.
+Additionally, you can update the commission if you need to.
+
+```
+hydra hydragon commission --data-dir ./node-secrets --commission 10 --jsonrpc http://localhost:8545
+```
+
 ### Command Line Interface
 
 Here are the HydraChain node CLI commands that currently can be used:
@@ -195,7 +204,7 @@ Here are the HydraChain node CLI commands that currently can be used:
 - Usage:
 
 ```
-    hydra [command]
+  hydra [command]
 ```
 
 - Available Commands:

@@ -640,6 +640,22 @@ func (c *ClaimDelegatorRewardHydraDelegationFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraDelegation.Abi.Methods["claimDelegatorReward"], buf, c)
 }
 
+type SetCommissionHydraDelegationFn struct {
+	NewCommission *big.Int `abi:"newCommission"`
+}
+
+func (s *SetCommissionHydraDelegationFn) Sig() []byte {
+	return HydraDelegation.Abi.Methods["setCommission"].ID()
+}
+
+func (s *SetCommissionHydraDelegationFn) EncodeAbi() ([]byte, error) {
+	return HydraDelegation.Abi.Methods["setCommission"].Encode(s)
+}
+
+func (s *SetCommissionHydraDelegationFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraDelegation.Abi.Methods["setCommission"], buf, s)
+}
+
 type CommissionUpdatedEvent struct {
 	Staker        types.Address `abi:"staker"`
 	NewCommission *big.Int      `abi:"newCommission"`

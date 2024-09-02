@@ -7,6 +7,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/command/sidechain/staking"
 	"github.com/0xPolygon/polygon-edge/command/sidechain/whitelist"
 
+	"github.com/0xPolygon/polygon-edge/command/sidechain/commission"
 	"github.com/0xPolygon/polygon-edge/command/sidechain/rewards"
 	"github.com/0xPolygon/polygon-edge/command/sidechain/unstaking"
 	sidechainWithdraw "github.com/0xPolygon/polygon-edge/command/sidechain/withdraw"
@@ -33,6 +34,8 @@ func GetCommand() *cobra.Command {
 		registration.GetCommand(),
 		// sidechain (validator set) command to whitelist validators
 		whitelist.GetCommand(),
+		// sidechain (hydra delegation) command to set commission
+		commission.GetCommand(),
 	)
 
 	return polybftCmd
