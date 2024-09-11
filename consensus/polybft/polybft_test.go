@@ -341,6 +341,7 @@ func Test_GenesisPostHookFactory(t *testing.T) {
 				EpochSize:           epochSize,
 				NativeTokenConfig:   &TokenConfig{Name: "Test", Symbol: "TEST", Decimals: 18},
 				MaxValidatorSetSize: maxValidators,
+				InitialPrices:       generateRandomPrices(t),
 			},
 		},
 		{
@@ -356,6 +357,7 @@ func Test_GenesisPostHookFactory(t *testing.T) {
 					IsMintable: true,
 				},
 				MaxValidatorSetSize: maxValidators,
+				InitialPrices:       generateRandomPrices(t),
 			},
 			bridgeAllowList: &chain.AddressListConfig{
 				AdminAddresses:   []types.Address{validators.Validators["0"].Address()},
