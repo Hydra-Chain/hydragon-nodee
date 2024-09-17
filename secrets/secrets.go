@@ -120,5 +120,5 @@ type SecretsManagerFactory func(
 // SupportedServiceManager checks if the passed in service manager type is supported
 func SupportedServiceManager(service SecretsManagerType) bool {
 	return service == HashicorpVault || service == AWSSSM ||
-		service == Local || service == GCPSSM
+		service == Local || service == GCPSSM || service == EncryptedLocal
 }
