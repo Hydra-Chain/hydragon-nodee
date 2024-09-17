@@ -702,9 +702,8 @@ func (c *consensusRuntime) calculateStateTxsInput(
 	fundRewardWallet := &contractsapi.FundRewardWalletFn{}
 
 	distributeRewards := &contractsapi.DistributeRewardsForHydraStakingFn{
-		EpochID:   new(big.Int).SetUint64(epochID),
-		Uptime:    uptime,
-		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
+		EpochID: new(big.Int).SetUint64(epochID),
+		Uptime:  uptime,
 	}
 
 	distributeVaultFunds := &contractsapi.DistributeDAOIncentiveHydraChainFn{}

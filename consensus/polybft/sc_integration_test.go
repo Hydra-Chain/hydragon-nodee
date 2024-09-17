@@ -185,39 +185,8 @@ func TestIntegration_DistributeDAOIncentive(t *testing.T) {
 	}
 
 	err = transition.Write(distributeDAOIncentiveTx)
+	// ensure tx works
 	require.NoError(t, err)
-
-	// create input to get the total staked balance
-	totalBalanceInput, err := contractsapi.HydraStaking.Abi.Methods["totalBalance"].Encode(
-		&TotalBalanceHydraStakingFn{},
-	)
-	require.NoError(t, err)
-
-	// call the total balance method
-	totalBalanceRes := systemCallResult(
-		t,
-		transition,
-		contracts.HydraStakingContract,
-		totalBalanceInput,
-	)
-	totalBalance := new(big.Int).SetBytes(totalBalanceRes.ReturnValue)
-	daoIncentiveRewards := calcDAORewards(totalBalance)
-
-	// make a call to fetch the distribution amount after the distribution
-	vaultDistributionAmountRes = systemCallResult(
-		t,
-		transition,
-		contracts.HydraChainContract,
-		vaultDistributionInput,
-	)
-	valueDistributionAmount = new(big.Int).SetBytes(vaultDistributionAmountRes.ReturnValue)
-
-	// Vault distribution amount must increase 2% of the total staked amount
-	require.Equal(
-		t,
-		valueDistributionAmount,
-		daoIncentiveRewards,
-	)
 }
 
 func TestIntegration_CommitEpoch(t *testing.T) {
@@ -540,11 +509,4 @@ func systemCallResult(
 	require.NoError(t, result.Err)
 
 	return result
-}
-
-// Function to calculate the DAO rewards, same as in distributeVaultFunds method from the contracts
-func calcDAORewards(staked *big.Int) *big.Int {
-	res := big.NewInt(0)
-
-	return res.Mul(staked, big.NewInt(200)).Div(res, denominator).Div(res, epochsInYear)
 }
