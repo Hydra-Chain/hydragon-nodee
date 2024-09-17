@@ -324,6 +324,7 @@ func getCGPricesData(precision int) (*PricesDataCoinGecko, error) {
 		return nil, err
 	}
 
+	// TODO: Remove hardcoded Coingecko API key
 	// Add the key in the header
 	req.Header.Add("x-cg-demo-api-key", "CG-M6fdZBrNeR3njQQtBmkUBhkg")
 
