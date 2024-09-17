@@ -412,7 +412,7 @@ func (p *genesisParams) getValidatorAccounts() ([]*validator.GenesisValidator, e
 		validators := make([]*validator.GenesisValidator, len(p.validators))
 		for i, val := range p.validators {
 			parts := strings.Split(val, ":")
-			if len(parts) != 3 {
+			if len(parts) != 4 {
 				return nil, fmt.Errorf("expected 4 parts provided in the following format "+
 					"<P2P multi address:ECDSA address:public BLS key:BLS signature>, but got %d part(s)",
 					len(parts))
@@ -441,6 +441,7 @@ func (p *genesisParams) getValidatorAccounts() ([]*validator.GenesisValidator, e
 				MultiAddr: parts[0],
 				Address:   addr,
 				BlsKey:    trimmedBLSKey,
+				Stake:     command.DefaultStake,
 			}
 		}
 
