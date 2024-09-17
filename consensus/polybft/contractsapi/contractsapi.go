@@ -368,9 +368,8 @@ func (u *UnstakeHydraStakingFn) DecodeAbi(buf []byte) error {
 }
 
 type DistributeRewardsForHydraStakingFn struct {
-	EpochID   *big.Int  `abi:"epochId"`
-	Uptime    []*Uptime `abi:"uptime"`
-	EpochSize *big.Int  `abi:"epochSize"`
+	EpochID *big.Int  `abi:"epochId"`
+	Uptime  []*Uptime `abi:"uptime"`
 }
 
 func (d *DistributeRewardsForHydraStakingFn) Sig() []byte {

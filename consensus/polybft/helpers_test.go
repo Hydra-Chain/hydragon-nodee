@@ -125,9 +125,8 @@ func createTestDistributeRewardsInput(
 	uptime := generateValidatorsUpTime(t, validatorSet, epochSize)
 
 	return &contractsapi.DistributeRewardsForHydraStakingFn{
-		EpochID:   new(big.Int).SetUint64(epochID),
-		Uptime:    uptime,
-		EpochSize: new(big.Int).SetUint64(epochSize),
+		EpochID: new(big.Int).SetUint64(epochID),
+		Uptime:  uptime,
 	}
 }
 
