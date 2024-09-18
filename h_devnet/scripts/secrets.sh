@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Define the directory structure
-NODE_DIR="node"
+NODE_DIR="/app/node"
 CONS_DIR="${NODE_DIR}/consensus"
 LIBP2P_DIR="${NODE_DIR}/libp2p"
-FLAG_FILE="${NODE_DIR}/.secrets_setup_done"
+SECRETS_CONFIG="${NODE_DIR}/secretsManagerConfig.json"
 
 # Function to write a secret to a file
 write_secret() {
@@ -12,41 +12,73 @@ write_secret() {
   echo -n "${secret}" >"$1"
 }
 
-# Check if the CoinGecko API key is set
-if [ -z "${CG_KEY}" ]; then
-  echo "ERROR: The CoinGecko API key must be set."
-else
-  # Generate the secrets config file in order to set the API secrets
-  hydra secrets generate --type local --name node --extra "coingecko-api-key=${CG_KEY}"
-
-# Check if the secrets setup has already been done
-if [ -f "${FLAG_FILE}" ]; then
-  echo "Secrets setup has already been done. Skipping..."
-else
-  # Check if the KEY environment variable is not set
-  if [ -z "${KEY}" ]; then
-    hydra secrets init --chain-id 8844 --data-dir node --insecure
+# Check if the secretsManagerConfig.json file exists
+if [ ! -f "${SECRETS_CONFIG}" ]; then
+  # If secretsManagerConfig.json does not exist, check if the CoinGecko API key is set
+  if [ -z "${CG_KEY}" ]; then
+    echo "ERROR: The CoinGecko API key (CG_KEY) must be set."
+    exit 1
   else
-    # Ensure that the all environment variables are set
-    if [ -z "${BLS_KEY}" ] || [ -z "${SIG}" ] || [ -z "${P2P_KEY}" ]; then
-      echo "ERROR: All four environment variables (KEY, BLS_KEY, SIG, P2P_KEY) must be set."
-      exit 1
-    fi
-
-    # Check if the directories exist
-    if [ ! -d "${CONS_DIR}" ] || [ ! -d "${LIBP2P_DIR}" ]; then
-      # Create the required directories
-      mkdir -p "${CONS_DIR}"
-      mkdir -p "${LIBP2P_DIR}"
-    fi
-
-    # Write the secrets to their respective files
-    write_secret "${CONS_DIR}/validator.key" "${KEY}"
-    write_secret "${CONS_DIR}/validator-bls.key" "${BLS_KEY}"
-    write_secret "${CONS_DIR}/validator.sig" "${SIG}"
-    write_secret "${LIBP2P_DIR}/libp2p.key" "${P2P_KEY}"
+    # Generate the secretsManagerConfig.json using the CoinGecko API key
+    echo "Generating secretsManagerConfig.json using CoinGecko API key..."
+    hydra secrets generate --type local --name node --extra "coingecko-api-key=${CG_KEY}"
+    echo "Generated secretsManagerConfig.json."
   fi
+else
+  echo "secretsManagerConfig.json already exists."
+fi
 
-  # Create the flag file as a marker telling us that the secrets setup has been done
-  touch "${FLAG_FILE}"
+# Create the required directories if they don't exist
+mkdir -p "${CONS_DIR}" "${LIBP2P_DIR}"
+
+# Check if the validator key file is missing and corresponding env variable is set
+if [ ! -f "${CONS_DIR}/validator.key" ]; then
+  if [ -z "${KEY}" ]; then
+    echo "ERROR: The KEY environment variable is not set."
+    exit 1
+  else
+    write_secret "${CONS_DIR}/validator.key" "${KEY}"
+    echo "Generated validator.key from KEY environment variable."
+  fi
+else
+  echo "validator.key already exists."
+fi
+
+# Check if the validator BLS key file is missing and corresponding env variable is set
+if [ ! -f "${CONS_DIR}/validator-bls.key" ]; then
+  if [ -z "${BLS_KEY}" ]; then
+    echo "ERROR: The BLS_KEY environment variable is not set."
+    exit 1
+  else
+    write_secret "${CONS_DIR}/validator-bls.key" "${BLS_KEY}"
+    echo "Generated validator-bls.key from BLS_KEY environment variable."
+  fi
+else
+  echo "validator-bls.key already exists."
+fi
+
+# Check if the libp2p key file is missing and corresponding env variable is set
+if [ ! -f "${LIBP2P_DIR}/libp2p.key" ]; then
+  if [ -z "${P2P_KEY}" ]; then
+    echo "ERROR: The P2P_KEY environment variable is not set."
+    exit 1
+  else
+    write_secret "${LIBP2P_DIR}/libp2p.key" "${P2P_KEY}"
+    echo "Generated libp2p.key from P2P_KEY environment variable."
+  fi
+else
+  echo "libp2p.key already exists."
+fi
+
+# Check if the validator signature file is missing and corresponding env variable is set
+if [ ! -f "${CONS_DIR}/validator.sig" ]; then
+  if [ -z "${SIG}" ]; then
+    echo "ERROR: The SIG environment variable is not set."
+    exit 1
+  else
+    write_secret "${CONS_DIR}/validator.sig" "${SIG}"
+    echo "Generated validator.sig from SIG environment variable."
+  fi
+else
+  echo "validator.sig already exists."
 fi

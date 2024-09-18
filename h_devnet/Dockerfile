@@ -11,9 +11,7 @@ COPY ./scripts/genesis.sh .
 COPY ./scripts/run.sh .
 
 # Make scripts executable
-RUN chmod +x genesis.sh
-RUN chmod +x run.sh
-RUN chmod +x secrets.sh 
+RUN chmod +x genesis.sh run.sh secrets.sh
 
 EXPOSE 9632 1478 8545
 
