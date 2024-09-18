@@ -23,7 +23,7 @@ This is the minimum hardware configuration required to set up a Hydra validator 
 
 ### Download Node code distribution
 
-To begin your journey as a validator, you'll first need to obtain the software for your node. We currently support only Linux environments, and you can choose between two options:
+To begin your journey as a validator, you'll first need to obtain the software for your node. We currently support only Linux environments, and you can choose between three options:
 
 - #### Executable
 
@@ -48,10 +48,12 @@ git checkout prod
 
 3. Open a terminal in the unarchived folder.
 
+Use the Makefile to build the source.
+
 4. Build the node
 
 ```
-CGO_ENABLED=0 go build -o hydra -a -installsuffix cgo main.go
+make build
 ```
 
 **CGO_ENABLED=0**: This environment variable disables CGO, which is a feature in Go that allows for the creation of Go packages that call C code. Setting CGO_ENABLED=0 makes the build static, meaning it does not depend on C libraries at runtime, enhancing portability across different environments without needing those C libraries installed.
@@ -60,18 +62,14 @@ CGO_ENABLED=0 go build -o hydra -a -installsuffix cgo main.go
 
 **-o hydra**: The -o flag specifies the output file name for the compiled binary. In this case, the binary will be named `hydra`.
 
-**-a**: This flag forces a rebuild of all packages that are part of the binary. It's useful to ensure you're compiling with the most up-to-date version of the code and dependencies.
-
-**-installsuffix cgo**: This flag adds a suffix to the package path of the compiled binary. This is often used in conjunction with disabling CGO to differentiate the compiled packages from those built with CGO enabled. It can help avoid conflicts and ensure the correct packages are used.
-
 **main.go**: This specifies the main entry file of the application to be compiled. It contains the main function, which is the starting point of the Go program.
 
-To build Go applications for different platforms directly from your command line, set `GOOS` for the target operating system (e.g., darwin, linux, windows) and `GOARCH` for the architecture (e.g., amd64, arm64). Without specifying these variables, the Go compiler defaults to the current machine's OS and architecture.
+To build Go applications for different platforms directly from your command line, update the build command by setting `GOOS` for the target operating system (e.g., darwin, linux, windows) and `GOARCH` for the architecture (e.g., amd64, arm64). Without specifying these variables, the Go compiler defaults to the current machine's OS and architecture.
 
 Example:
 
 ```
-CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o hydra -a -installsuffix cgo main.go
+GOOS=darwin GOARCH=arm64
 ```
 
 4. Add the generated binary to your system's PATH environment variable to allow its execution from any directory.
@@ -114,7 +112,7 @@ Node ID              = 16Uiu2HAmQ1kj6B9PM1K5DorkwHhgWLzKSiL6VEZLxharhCbNTXKU
 
 The genesis.json file is crucial, containing details about the genesis block and node configurations.
 **Important: Do not alter this file to avoid potential loss of funds.**
-Future releases will automate this configuration. You can find the Testnet genesis file in the extracted folder containing the [release assets](#executable) and place it in your node directory.
+Future releases will automate this configuration. You can find the Testnet genesis file in the extracted folder containing the [release assets]([#executable](https://github.com/Hydra-Chain/hydragon-node/releases/latest)) and place it in your node directory.
 
 #### Secrets Configuration File
 
@@ -132,10 +130,10 @@ hydra secrets generate --type encrypted-local --name node --extra "coingecko-api
 Run your node with the following command from its directory:
 
 ```
-hydra server --data-dir ./node-secrets --chain ./genesis.json --grpc-address :9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545  --secrets-config ./secrets-config.json
+hydra server --data-dir ./node-secrets --chain ./genesis.json --grpc-address :9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545  --secrets-config ./secretsManagerConfig.json
 ```
 
-This process may take some time, as the node needs to fully sync with the blockchain. Once the syncing process is complete, you will need to restart the node by running the same command.
+This process may take some time, as the node needs to fully sync with the blockchain. Once the syncing process is complete, you will need to restart the node by stopping it and running the same command again.
 
 ### Prepare account to be a validator
 
