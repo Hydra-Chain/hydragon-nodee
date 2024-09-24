@@ -86,7 +86,7 @@ func TestFSM_ValidateHeader(t *testing.T) {
 		validateHeaderFields(parent, header, blockTimeDrift),
 		"mix digest is not correct",
 	)
-	header.MixHash = PolyBFTMixDigest
+	header.MixHash = HydragonMixDigest
 
 	// difficulty
 	header.Difficulty = 0
@@ -2682,7 +2682,7 @@ func TestFSM_Validate_FailToVerifySignatures(t *testing.T) {
 			Number:     parentBlockNumber + 1,
 			ParentHash: parent.Hash,
 			Timestamp:  parent.Timestamp + 1,
-			MixHash:    PolyBFTMixDigest,
+			MixHash:    HydragonMixDigest,
 			Difficulty: 1,
 			ExtraData:  parent.ExtraData,
 		},
@@ -2712,7 +2712,7 @@ func createDummyStateBlock(
 			ParentHash: parentHash,
 			Difficulty: 1,
 			ExtraData:  extraData,
-			MixHash:    PolyBFTMixDigest,
+			MixHash:    HydragonMixDigest,
 		},
 	})
 
