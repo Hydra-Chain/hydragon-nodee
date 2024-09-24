@@ -237,7 +237,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		Alloc:      allocs,
 		ExtraData:  genesisExtraData,
 		GasUsed:    command.DefaultGenesisGasUsed,
-		Mixhash:    polybft.PolyBFTMixDigest,
+		Mixhash:    polybft.HydragonMixDigest,
 	}
 
 	if len(p.contractDeployerAllowListAdmin) != 0 {

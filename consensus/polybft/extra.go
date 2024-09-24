@@ -21,8 +21,9 @@ const (
 	ExtraSeal = 65
 )
 
-// PolyBFTMixDigest represents a hash of "PolyBFT Mix" to identify whether the block is from PolyBFT consensus engine
-var PolyBFTMixDigest = types.StringToHash("adce6e5230abe012342a44e4e9b6d05997d6f015387ae0e59be924afc7ec70c1")
+// HydragonMixDigest represents a keccak256 hash of "Hydragon Mix"
+// to identify whether the block is from Hydragon consensus engine
+var HydragonMixDigest = types.StringToHash("bec5e99c34f7f2bae6b9adc45b262da57ab2335f9af7dd55a05b937cb23e7c72")
 
 // Extra defines the structure of the extra field for Istanbul
 type Extra struct {

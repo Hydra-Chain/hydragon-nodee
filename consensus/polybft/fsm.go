@@ -288,7 +288,7 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 
 	stateBlock, err := f.blockBuilder.Build(func(h *types.Header) {
 		h.ExtraData = extra.MarshalRLPTo(nil)
-		h.MixHash = PolyBFTMixDigest
+		h.MixHash = HydragonMixDigest
 	})
 
 	if err != nil {
@@ -1020,7 +1020,7 @@ func validateHeaderFields(parent *types.Header, header *types.Header, blockTimeD
 		return fmt.Errorf("timestamp older than parent")
 	}
 	// verify mix digest
-	if header.MixHash != PolyBFTMixDigest {
+	if header.MixHash != HydragonMixDigest {
 		return fmt.Errorf("mix digest is not correct")
 	}
 	// difficulty must be > 0

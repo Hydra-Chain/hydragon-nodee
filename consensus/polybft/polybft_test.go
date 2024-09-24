@@ -160,7 +160,7 @@ func TestPolybft_VerifyHeader(t *testing.T) {
 		Number:     polyBftConfig.EpochSize + 1,
 		ParentHash: parentHeader.Hash,
 		Timestamp:  parentHeader.Timestamp + 1,
-		MixHash:    PolyBFTMixDigest,
+		MixHash:    HydragonMixDigest,
 		Difficulty: 1,
 	}
 	updateHeaderExtra(currentHeader, currentDelta, nil,
