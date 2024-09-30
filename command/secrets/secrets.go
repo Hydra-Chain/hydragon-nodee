@@ -4,6 +4,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/command/secrets/generate"
+	"github.com/0xPolygon/polygon-edge/command/secrets/output"
 	"github.com/spf13/cobra"
 )
 
@@ -26,8 +27,7 @@ func registerSubcommands(baseCmd *cobra.Command) {
 		polybftsecrets.GetCommand(),
 		// secrets generate
 		generate.GetCommand(),
-		// secrets output public data
-		// TODO: Must be fixed to properly work with both encrypted and unencrypted local secrets
-		// output.GetCommand(),
+		// secrets output private and public data
+		output.GetCommand(),
 	)
 }

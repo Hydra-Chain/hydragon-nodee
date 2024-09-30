@@ -7,64 +7,27 @@ import (
 	"github.com/0xPolygon/polygon-edge/command/helper"
 )
 
-// SecretsOutputAllResult for default output case
-type SecretsOutputAllResult struct {
-	Address   string `json:"address"`
-	BLSPubkey string `json:"bls"`
-	NodeID    string `json:"node_id"`
+type SecretsOutputResult struct {
+	NetworkKey       string `json:"network_key"`
+	PrivateKey       string `json:"private_key"`
+	BLSPrivateKey    string `json:"bls_private_key"`
+	ValidatorAddress string `json:"validator_address"`
+	BLSPublicKey     string `json:"bls_public_key"`
+	NodeID           string `json:"node_id"`
 }
 
-// SecretsOutputNodeIDResult for `--node` output case
-type SecretsOutputNodeIDResult struct {
-	NodeID string `json:"node_id"`
-}
-
-// SecretsOutputBLSResult for `--bls` output case
-type SecretsOutputBLSResult struct {
-	BLSPubkey string `json:"bls"`
-}
-
-// SecretsOutputValidatorResult for `--validator` output case
-type SecretsOutputValidatorResult struct {
-	Address string `json:"address"`
-}
-
-func (r *SecretsOutputNodeIDResult) GetOutput() string {
-	return r.NodeID
-}
-
-func (r *SecretsOutputValidatorResult) GetOutput() string {
-	return r.Address
-}
-
-func (r *SecretsOutputBLSResult) GetOutput() string {
-	return r.BLSPubkey
-}
-
-func (r *SecretsOutputAllResult) GetOutput() string {
+func (r *SecretsOutputResult) GetOutput() string {
 	var buffer bytes.Buffer
 
-	vals := make([]string, 0, 3)
-
-	vals = append(
-		vals,
-		fmt.Sprintf("Public key (address)|%s", r.Address),
-	)
-
-	vals = append(
-		vals,
-		fmt.Sprintf("BLS Public key|%s", r.BLSPubkey),
-	)
-
-	vals = append(
-		vals,
+	buffer.WriteString("\n[SECRET AND PUBLIC KEYS]\n")
+	buffer.WriteString(helper.FormatKV([]string{
+		fmt.Sprintf("Network Key|%s", r.NetworkKey),
+		fmt.Sprintf("Private Key|%s", r.PrivateKey),
+		fmt.Sprintf("BLS Private Key|%s", r.BLSPrivateKey),
+		fmt.Sprintf("Validator Address|%s", r.ValidatorAddress),
+		fmt.Sprintf("BLS Public Key|%s", r.BLSPublicKey),
 		fmt.Sprintf("Node ID|%s", r.NodeID),
-	)
-
-	buffer.WriteString("\n[SECRETS OUTPUT]\n")
-	buffer.WriteString(helper.FormatKV(vals))
-
-	buffer.WriteString("\n")
+	}))
 
 	return buffer.String()
 }

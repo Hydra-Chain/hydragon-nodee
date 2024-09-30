@@ -1,81 +1,42 @@
 package output
 
 import (
-	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/spf13/cobra"
+
+	"github.com/0xPolygon/polygon-edge/command"
 )
 
-const (
-	outputFlagDesc = "output the %s from the provided secrets manager"
-)
+var outputParams = &OutputParams{}
 
 func GetCommand() *cobra.Command {
-	secretsOutputCmd := &cobra.Command{
-		Use:     "output",
-		Short:   "Outputs validator key address and public network key from the provided Secrets Manager",
+	secretsOuputCmd := &cobra.Command{
+		Use: "output",
+		Short: "Retrieves the private keys for both the validator and the networking components " +
+			"from the specified Secrets Manager. If the keys are encrypted, the prompted password " +
+			"will be used for decryption. It will then gather the corresponding public keys " +
+			"and output them to the console.",
 		PreRunE: runPreRun,
 		Run:     runCommand,
 	}
 
-	setFlags(secretsOutputCmd)
+	outputParams.setFlags(secretsOuputCmd)
 
-	return secretsOutputCmd
-}
-
-func setFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVar(
-		&params.dataDir,
-		dataDirFlag,
-		"",
-		"the directory for the Hydra Chain data if the local FS is used",
-	)
-
-	cmd.Flags().StringVar(
-		&params.configPath,
-		configFlag,
-		"",
-		"the path to the SecretsManager config file, "+
-			"if omitted, the local FS secrets manager is used",
-	)
-
-	cmd.Flags().BoolVar(
-		&params.outputBLS,
-		blsFlag,
-		false,
-		"output only the BLS public key from the provided secrets manager",
-	)
-
-	cmd.Flags().BoolVar(
-		&params.outputNodeID,
-		nodeIDFlag,
-		false,
-		"output only the node id from the provided secrets manager",
-	)
-
-	cmd.Flags().BoolVar(
-		&params.outputValidator,
-		validatorFlag,
-		false,
-		"output only the validator key address from the provided secrets manager",
-	)
-
-	cmd.MarkFlagsMutuallyExclusive(dataDirFlag, configFlag)
-	cmd.MarkFlagsMutuallyExclusive(nodeIDFlag, validatorFlag, blsFlag)
+	return secretsOuputCmd
 }
 
 func runPreRun(_ *cobra.Command, _ []string) error {
-	return params.validateFlags()
+	return outputParams.validateFlags()
 }
 
 func runCommand(cmd *cobra.Command, _ []string) {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	if err := params.initSecrets(); err != nil {
+	if err := outputParams.initSecrets(); err != nil {
 		outputter.SetError(err)
 
 		return
 	}
 
-	outputter.SetCommandResult(params.getResult())
+	outputter.SetCommandResult(outputParams.getResult())
 }

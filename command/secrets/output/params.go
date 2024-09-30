@@ -1,54 +1,42 @@
 package output
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"path/filepath"
-	"strings"
 
 	"github.com/0xPolygon/polygon-edge/command"
-	"github.com/0xPolygon/polygon-edge/helper/common"
+	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
+	"github.com/0xPolygon/polygon-edge/network"
 	"github.com/0xPolygon/polygon-edge/secrets"
-	"github.com/0xPolygon/polygon-edge/secrets/helper"
-	"github.com/0xPolygon/polygon-edge/types"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/spf13/cobra"
 )
 
-const (
-	dataDirFlag   = "data-dir"
-	configFlag    = "config"
-	validatorFlag = "validator"
-	blsFlag       = "bls"
-	nodeIDFlag    = "node-id"
-)
-
-var (
-	params = &outputParams{}
-)
-
-var (
-	errInvalidConfig   = errors.New("invalid secrets configuration")
-	errInvalidParams   = errors.New("no config file or data directory passed in")
-	errUnsupportedType = errors.New("unsupported secrets manager")
-)
-
-type outputParams struct {
-	dataDir    string
-	configPath string
-
-	outputNodeID    bool
-	outputValidator bool
-	outputBLS       bool
+type OutputParams struct {
+	dataDir            string
+	configPath         string
+	insecureLocalStore bool
 
 	secretsManager secrets.SecretsManager
 	secretsConfig  *secrets.SecretsManagerConfig
 
+	networkKey       string
+	privateKey       string
+	blsPrivateKey    string
 	validatorAddress string
-	blsPubkey        string
-
-	nodeID string
+	blsPublicKey     string
+	nodeID           string
 }
 
-func (op *outputParams) validateFlags() error {
+var (
+	errInvalidParams   = errors.New("no config file or data directory passed in")
+	errInvalidConfig   = errors.New("invalid secrets configuration")
+	errUnsupportedType = errors.New("unsupported secrets manager")
+)
+
+func (op *OutputParams) validateFlags() error {
 	if op.dataDir == "" && op.configPath == "" {
 		return errInvalidParams
 	}
@@ -56,153 +44,115 @@ func (op *outputParams) validateFlags() error {
 	return nil
 }
 
-func (op *outputParams) initSecrets() error {
+func (op *OutputParams) setFlags(cmd *cobra.Command) {
+	cmd.Flags().StringVar(
+		&op.dataDir,
+		polybftsecrets.AccountDirFlag,
+		"",
+		polybftsecrets.AccountDirFlagDesc,
+	)
+
+	cmd.Flags().StringVar(
+		&op.configPath,
+		polybftsecrets.AccountConfigFlag,
+		"",
+		polybftsecrets.AccountConfigFlagDesc,
+	)
+
+	cmd.Flags().BoolVar(
+		&op.insecureLocalStore,
+		polybftsecrets.InsecureLocalStoreFlag,
+		false,
+		"the flag indicates if the stored secrets are encrypted or not",
+	)
+
+	// Don't accept data-dir and config flags because they are related to different secrets managers.
+	// data-dir is about the local FS as secrets storage, config is about remote secrets manager.
+	cmd.MarkFlagsMutuallyExclusive(polybftsecrets.AccountDirFlag, polybftsecrets.AccountConfigFlag)
+}
+
+func (op *OutputParams) initSecrets() error {
 	if err := op.initSecretsManager(); err != nil {
 		return err
 	}
 
-	outputAll := !(op.outputBLS || op.outputValidator || op.outputNodeID)
-
-	if op.outputValidator || outputAll {
-		if err := op.initValidatorAddress(); err != nil || op.outputValidator {
-			return err
-		}
+	if !op.secretsManager.HasSecret(secrets.NetworkKey) {
+		return fmt.Errorf("network key does not exist")
 	}
 
-	if op.outputBLS || outputAll {
-		if err := op.initBLSPublicKey(); err != nil || op.outputBLS {
-			return err
-		}
+	if !op.secretsManager.HasSecret(secrets.ValidatorKey) {
+		return fmt.Errorf("validator key does not exist")
 	}
 
-	return op.initNodeID()
-}
-
-func (op *outputParams) initSecretsManager() error {
-	var err error
-	if op.hasConfigPath() {
-		if err = op.parseConfig(); err != nil {
-			return err
-		}
-
-		op.secretsManager, err = helper.InitCloudSecretsManager(op.secretsConfig)
-
-		return err
+	if !op.secretsManager.HasSecret(secrets.ValidatorBLSKey) {
+		return fmt.Errorf("validator bls key does not exist")
 	}
 
-	return op.initLocalSecretsManager()
-}
-
-func (op *outputParams) hasConfigPath() bool {
-	return op.configPath != ""
-}
-
-func (op *outputParams) parseConfig() error {
-	secretsConfig, readErr := secrets.ReadConfig(op.configPath)
-	if readErr != nil {
-		return errInvalidConfig
-	}
-
-	if !secrets.SupportedServiceManager(secretsConfig.Type) {
-		return errUnsupportedType
-	}
-
-	op.secretsConfig = secretsConfig
-
-	return nil
-}
-
-func (op *outputParams) initLocalSecretsManager() error {
-	validatorPathPrefix := filepath.Join(op.dataDir, secrets.ConsensusFolderLocal)
-	networkPathPrefix := filepath.Join(op.dataDir, secrets.NetworkFolderLocal)
-	dataDirAbs, _ := filepath.Abs(op.dataDir)
-
-	if !common.DirectoryExists(op.dataDir) {
-		return fmt.Errorf("the data directory provided does not exist: %s", dataDirAbs)
-	}
-
-	errs := make([]string, 0, 2)
-	if !common.DirectoryExists(validatorPathPrefix) {
-		errs = append(errs, fmt.Sprintf("no validator keys found in the data directory provided: %s", dataDirAbs))
-	}
-
-	if !common.DirectoryExists(networkPathPrefix) {
-		errs = append(errs, fmt.Sprintf("no network key found in the data directory provided: %s", dataDirAbs))
-	}
-
-	if len(errs) > 0 {
-		return fmt.Errorf(strings.Join(errs, "\n"))
-	}
-
-	local, err := helper.SetupLocalSecretsManager(op.dataDir)
+	// decrypt the validator key
+	encodedKey, err := op.secretsManager.GetSecret(secrets.ValidatorKey)
 	if err != nil {
 		return err
 	}
 
-	op.secretsManager = local
+	op.privateKey = string(encodedKey)
 
-	return nil
-}
-
-func (op *outputParams) initValidatorAddress() error {
-	validatorAddress, err := helper.LoadValidatorAddress(op.secretsManager)
+	account, err := wallet.NewAccountFromSecret(op.secretsManager)
 	if err != nil {
 		return err
 	}
 
-	if validatorAddress == types.ZeroAddress {
-		op.validatorAddress = ""
-	} else {
-		op.validatorAddress = validatorAddress.String()
-	}
+	op.validatorAddress = account.Address().String()
 
-	return nil
-}
-
-func (op *outputParams) initBLSPublicKey() error {
-	blsPubkey, err := helper.LoadBLSPublicKey(op.secretsManager)
+	// decrypt the validator bls key
+	encodedKey, err = op.secretsManager.GetSecret(secrets.ValidatorBLSKey)
 	if err != nil {
 		return err
 	}
 
-	op.blsPubkey = blsPubkey
+	op.blsPrivateKey = string(encodedKey)
+	op.blsPublicKey = hex.EncodeToString(account.Bls.PublicKey().Marshal())
 
-	return nil
-}
-
-func (op *outputParams) initNodeID() error {
-	nodeID, err := helper.LoadNodeID(op.secretsManager)
+	// decrypt the network key and get node ID
+	encodedKey, err = op.secretsManager.GetSecret(secrets.NetworkKey)
 	if err != nil {
 		return err
 	}
 
-	op.nodeID = nodeID
+	op.networkKey = string(encodedKey)
+
+	parsedKey, err := network.ParseLibp2pKey(encodedKey)
+	if err != nil {
+		return err
+	}
+
+	nodeID, err := peer.IDFromPrivateKey(parsedKey)
+	if err != nil {
+		return err
+	}
+
+	op.nodeID = nodeID.String()
 
 	return nil
 }
 
-func (op *outputParams) getResult() command.CommandResult {
-	if op.outputNodeID {
-		return &SecretsOutputNodeIDResult{
-			NodeID: op.nodeID,
-		}
+func (op *OutputParams) initSecretsManager() error {
+	secretsManager, err := polybftsecrets.GetSecretsManager(op.dataDir, op.configPath, op.insecureLocalStore)
+	if err != nil {
+		return err
 	}
 
-	if op.outputValidator {
-		return &SecretsOutputValidatorResult{
-			Address: op.validatorAddress,
-		}
-	}
+	op.secretsManager = secretsManager
 
-	if op.outputBLS {
-		return &SecretsOutputBLSResult{
-			BLSPubkey: op.blsPubkey,
-		}
-	}
+	return nil
+}
 
-	return &SecretsOutputAllResult{
-		BLSPubkey: op.blsPubkey,
-		NodeID:    op.nodeID,
-		Address:   op.validatorAddress,
+func (op *OutputParams) getResult() command.CommandResult {
+	return &SecretsOutputResult{
+		NetworkKey:       op.networkKey,
+		PrivateKey:       op.privateKey,
+		BLSPrivateKey:    op.blsPrivateKey,
+		ValidatorAddress: op.validatorAddress,
+		BLSPublicKey:     op.blsPublicKey,
+		NodeID:           op.nodeID,
 	}
 }

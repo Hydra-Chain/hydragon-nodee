@@ -10,10 +10,11 @@ import (
 
 // common flags for all polybft commands
 const (
-	AccountDirFlag    = "data-dir"
-	AccountConfigFlag = "config"
-	PrivateKeyFlag    = "private-key"
-	ChainIDFlag       = "chain-id"
+	AccountDirFlag         = "data-dir"
+	AccountConfigFlag      = "config"
+	PrivateKeyFlag         = "private-key"
+	ChainIDFlag            = "chain-id"
+	InsecureLocalStoreFlag = "insecure"
 
 	AccountDirFlagDesc    = "the directory for the Hydra Chain data if the local FS is used"
 	AccountConfigFlagDesc = "the path to the SecretsManager config file, if omitted, the local FS secrets manager is used"
