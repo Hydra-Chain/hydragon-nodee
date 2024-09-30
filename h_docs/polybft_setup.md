@@ -60,7 +60,7 @@ We need to set native token to be mintable, so we can premine balances to differ
 ./hydra secrets init --chain-id 8844 --data-dir test-add-chain-1 --insecure
 ```
 
-In order to output private and public keys, including the Node ID, too, use the following command:
+In order to output private and public keys, including the Node ID, use the following command:
 ```
 ./hydra secrets output --data-dir ./test-add-chain-1 --insecure
 ```
