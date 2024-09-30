@@ -60,6 +60,11 @@ We need to set native token to be mintable, so we can premine balances to differ
 ./hydra secrets init --chain-id 8844 --data-dir test-add-chain-1 --insecure
 ```
 
+In order to output private and public keys, including the Node ID, too, use the following command:
+```
+./hydra secrets output --data-dir ./test-add-chain-1 --insecure
+```
+
 2. Use the governer (first validator by default) to whitelist the new account
 
 ```
@@ -175,15 +180,15 @@ Open the container shell:
 docker exec -it <container name or ID; check it with docker ps> /bin/bash
 ```
 
-Check your public secrets data with the following command:
+Check your private and public secrets data with the following command:
 
 ```
-hydra secrets --data-dir ./node --insecure
+./hydra secrets output --data-dir ./node --insecure
 ```
 
 You need the following value:
 
-Public key (address) = 0x...
+**Validator Address = 0x...**
 
 Send it to Hydra's team.
 

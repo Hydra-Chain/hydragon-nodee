@@ -106,6 +106,16 @@ BLS Public key       = 048649f153a668b86043b1ab6e2d33a91cff389df100666c5aeb5c4ab
 Node ID              = 16Uiu2HAmQ1kj6B9PM1K5DorkwHhgWLzKSiL6VEZLxharhCbNTXKU
 ```
 
+#### Output secrets and public validator data
+
+There could be need to retrieve the secrets and public validator data after the node has been initialized. This can be done using the following command:
+
+```
+hydra secrets output --data-dir node-secrets
+```
+
+More information about the command can be found by running `hydra secrets output --help`.
+
 ### Configuring your node
 
 #### The Genesis File
