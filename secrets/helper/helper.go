@@ -331,19 +331,19 @@ func LoadBLSSignature(secretsManager secrets.SecretsManager) (string, error) {
 }
 
 // HydraGon Functions
-// LoadEncodedPrivateKey retrieves the specified secret by its name from SecretsManager and returns the
-// encoded private key
-func LoadEncodedPrivateKey(secretsManager secrets.SecretsManager, name string) ([]byte, error) {
+// LoadEncodedSecret retrieves the specified secret by its name from SecretsManager and returns the
+// encoded secret value
+func LoadEncodedSecret(secretsManager secrets.SecretsManager, name string) ([]byte, error) {
 	if !secretsManager.HasSecret(name) {
 		return nil, fmt.Errorf("%s not exist", name)
 	}
 
-	encodedKey, err := secretsManager.GetSecret(name)
+	encodedValue, err := secretsManager.GetSecret(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return encodedKey, nil
+	return encodedValue, nil
 }
 
 // GetValidatorAddress loads ECDSA key by SecretsManager and returns validator address

@@ -72,7 +72,7 @@ func (or *outputResult) initSecrets(outputParams *OutputParams) error {
 	}
 
 	// load the encoded ecdsa private key
-	encodedKey, err := helper.LoadEncodedPrivateKey(outputParams.SecretsManager, secrets.ValidatorKey)
+	encodedKey, err := helper.LoadEncodedSecret(outputParams.SecretsManager, secrets.ValidatorKey)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (or *outputResult) initSecrets(outputParams *OutputParams) error {
 	or.privateKey = string(encodedKey)
 
 	// load the encoded bls private key
-	encodedKey, err = helper.LoadEncodedPrivateKey(outputParams.SecretsManager, secrets.ValidatorBLSKey)
+	encodedKey, err = helper.LoadEncodedSecret(outputParams.SecretsManager, secrets.ValidatorBLSKey)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (or *outputResult) initSecrets(outputParams *OutputParams) error {
 	or.blsPrivateKey = string(encodedKey)
 
 	// load the encoded network private key
-	encodedKey, err = helper.LoadEncodedPrivateKey(outputParams.SecretsManager, secrets.NetworkKey)
+	encodedKey, err = helper.LoadEncodedSecret(outputParams.SecretsManager, secrets.NetworkKey)
 	if err != nil {
 		return err
 	}

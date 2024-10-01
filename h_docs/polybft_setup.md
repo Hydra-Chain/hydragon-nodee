@@ -70,7 +70,7 @@ for the secret keys, and the following for the public keys, including the Node I
 ./hydra secrets output-public --data-dir ./test-add-chain-1 --insecure
 ```
 
-1. Use the governer (first validator by default) to whitelist the new account
+2. Use the governer (first validator by default) to whitelist the new account
 
 ```
 ./hydra hydragon whitelist-validator --data-dir ./test-chain-1 --address <public address> --jsonrpc http://127.0.0.1:10001 --insecure
