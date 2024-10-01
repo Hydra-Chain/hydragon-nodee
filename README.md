@@ -159,7 +159,7 @@ Once your node is operational and fully synced, you're ready to become a validat
 
 **Note:** Currently, you will have to import the validator's private key into Metamask to be able to interact with the web UI which can be considered as a security issue, but we will provide better option in the future.
 
-- Whitelisting: Your public key needs to be whitelisted by the Hydra team to participate as a validator. Use the command below to retrieve your public key, then forward it to the Hydra team for whitelisting:
+- Whitelisting: Your public key needs to be whitelisted by the Hydra team to participate as a validator. Use the following command to retrieve your public key:
 
 ```
 ./hydra secrets output-public --data-dir node-secrets
