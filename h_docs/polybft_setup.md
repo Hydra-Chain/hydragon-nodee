@@ -60,15 +60,20 @@ We need to set native token to be mintable, so we can premine balances to differ
 ./hydra secrets init --chain-id 8844 --data-dir test-add-chain-1 --insecure
 ```
 
-In order to output private and public keys, including the Node ID, use the following command:
+In order to output private and public keys, use the following commands:
 ```
-./hydra secrets output --data-dir ./test-add-chain-1 --insecure
+./hydra secrets output-private --data-dir ./test-add-chain-1 --insecure
 ```
 
-2. Use the governer (first validator by default) to whitelist the new account
+for the secret keys, and the following for the public keys, including the Node ID:
+```
+./hydra secrets output-public --data-dir ./test-add-chain-1 --insecure
+```
+
+1. Use the governer (first validator by default) to whitelist the new account
 
 ```
-./hydra hydragon whitelist-validator --data-dir ./test-chain-1 --address 0x7A94400e0d33B79B6C69979df3f7a46CF1963c69 --jsonrpc http://127.0.0.1:10001 --insecure
+./hydra hydragon whitelist-validator --data-dir ./test-chain-1 --address <public address> --jsonrpc http://127.0.0.1:10001 --insecure
 ```
 
 3. Register account
@@ -103,7 +108,7 @@ Stake tx is made in this step as well
 ```
 
 2. Create manifest file
-   This is the first version of edge that needs a manifest file. It contains information about the initial validators.
+  This is the first version of edge that needs a manifest file. It contains information about the initial validators.
 
 ```
 ./hydra manifest --validators-prefix test-chain-
@@ -180,10 +185,10 @@ Open the container shell:
 docker exec -it <container name or ID; check it with docker ps> /bin/bash
 ```
 
-Check your private and public secrets data with the following command:
+Check your public data with the following command:
 
 ```
-./hydra secrets output --data-dir ./node --insecure
+./hydra secrets output-public --data-dir ./node --insecure
 ```
 
 You need the following value:
