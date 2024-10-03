@@ -106,6 +106,22 @@ BLS Public key       = 048649f153a668b86043b1ab6e2d33a91cff389df100666c5aeb5c4ab
 Node ID              = 16Uiu2HAmQ1kj6B9PM1K5DorkwHhgWLzKSiL6VEZLxharhCbNTXKU
 ```
 
+#### Output the secret and public data for the validator
+
+There could be need to retrieve the secrets data (private keys) after the node has been initialized. They can be outputted using the following command:
+```
+hydra secrets output-private --data-dir node-secrets
+```
+
+Then you will be prompted to enter the password you set when you initialized the secrets.
+
+The same process goes for the public keys and the Node ID, but with the following command:
+```
+hydra secrets output-public --data-dir node-secrets
+```
+
+More information about the commands can be found by running them with only the `--help` flag.
+
 ### Configuring your node
 
 #### The Genesis File
@@ -143,19 +159,17 @@ Once your node is operational and fully synced, you're ready to become a validat
 
 **Note:** Currently, you will have to import the validator's private key into Metamask to be able to interact with the web UI which can be considered as a security issue, but we will provide better option in the future.
 
-- Whitelisting: Your public key needs to be whitelisted by the Hydra team to participate as a validator. Use the command below to retrieve your public key, then forward it to the Hydra team for whitelisting:
-
-Check your public secrets data with the same command you've used to generate your secrets. It will output the public data about the already generated secrets:
+- Whitelisting: Your public key needs to be whitelisted by the Hydra team to participate as a validator. Use the following command to retrieve your public key:
 
 ```
-./hydra secrets init --chain-id 8844 --data-dir node-secrets
+./hydra secrets output-public --data-dir node-secrets
 ```
 
 You need the following value:
 
 ```
-[SECRETS INIT]
-Public key (address) = 0x...
+[PUBLIC DATA OUTPUT]
+Validator Address = 0x...
 ```
 
 Send it to Hydra's team, so they can whitelist your address to be able to participate as validator.

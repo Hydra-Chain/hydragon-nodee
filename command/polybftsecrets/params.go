@@ -16,16 +16,15 @@ import (
 )
 
 const (
-	accountFlag            = "account"
-	privateKeyFlag         = "private"
-	insecureLocalStoreFlag = "insecure"
-	networkFlag            = "network"
-	numFlag                = "num"
-	outputFlag             = "output"
-	chainIDFlag            = "chain-id"
-	networkKeyFlag         = "network-key"
-	ecdsaKeyFlag           = "ecdsa-key"
-	blsKeyFlag             = "bls-key"
+	accountFlag    = "account"
+	privateKeyFlag = "private"
+	networkFlag    = "network"
+	numFlag        = "num"
+	outputFlag     = "output"
+	chainIDFlag    = "chain-id"
+	networkKeyFlag = "network-key"
+	ecdsaKeyFlag   = "ecdsa-key"
+	blsKeyFlag     = "bls-key"
 
 	// maxInitNum is the maximum value for "num" flag
 	maxInitNum = 30
@@ -131,7 +130,7 @@ func (ip *initParams) setFlags(cmd *cobra.Command) {
 
 	cmd.Flags().BoolVar(
 		&ip.insecureLocalStore,
-		insecureLocalStoreFlag,
+		InsecureLocalStoreFlag,
 		false,
 		"the flag indicating should the secrets stored on the local storage be encrypted",
 	)

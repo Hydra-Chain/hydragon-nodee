@@ -329,3 +329,39 @@ func LoadBLSSignature(secretsManager secrets.SecretsManager) (string, error) {
 
 	return string(s), err
 }
+
+// HydraGon Functions
+// LoadEncodedSecret retrieves the specified secret by its name from SecretsManager and returns the
+// encoded secret value
+func LoadEncodedSecret(secretsManager secrets.SecretsManager, name string) ([]byte, error) {
+	if !secretsManager.HasSecret(name) {
+		return nil, fmt.Errorf("%s not exist", name)
+	}
+
+	encodedValue, err := secretsManager.GetSecret(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return encodedValue, nil
+}
+
+// GetValidatorAddress loads ECDSA key by SecretsManager and returns validator address
+func GetValidatorAddress(secretsManager secrets.SecretsManager) (string, error) {
+	ecdsaKey, err := wallet.GetEcdsaFromSecret(secretsManager)
+	if err != nil {
+		return "", err
+	}
+
+	return ecdsaKey.Address().String(), nil
+}
+
+// GetBLSPublicKey loads BLS key by SecretsManager and returns BLS Public Key
+func GetBLSPublicKey(secretsManager secrets.SecretsManager) (string, error) {
+	bls, err := wallet.GetBlsFromSecret(secretsManager)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(bls.PublicKey().Marshal()), nil
+}
