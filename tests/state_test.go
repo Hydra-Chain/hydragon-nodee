@@ -138,12 +138,10 @@ func TestState(t *testing.T) {
 		"RevertPrecompiledTouch",
 	}
 
-	// There are two folders in spec tests, one for the current tests for the Istanbul fork
-	// and one for the legacy tests for the other forks
-	folders, err := listFolders(stateTests, legacyStateTests)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// TODO: Add evm-benchmarks repo's tests
+	// Remove all tests because tx fee is distributed in different way in Hydragon,
+	// so ethereum state tests are not valid anymore
+	folders := []string{}
 
 	for _, folder := range folders {
 		folder := folder
