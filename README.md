@@ -244,7 +244,7 @@ Here are the HydraChain node CLI commands that currently can be used:
 
 ## Becoming a delegator
 
-We've implemented the initial version of a straightforward dashboard, enabling users to connect their wallet, request testing HYDRA coins from our Faucet, and access to [delegation](#delegation) section where one can delegate funds to validators. To access the Dashboard Interface, please visit [https://app.testnet.hydrachain.org](https://app.testnet.hydrachain.org).
+We've implemented the initial version of a straightforward dashboard, enabling users to connect their wallet, request testing HYDRA coins from our Faucet, and access to [delegation](#delegation) section where one can delegate funds to validators. To access the Dashboard Interface, please visit [testnetapp.hydrachain.org](https://testnetapp.hydrachain.org).
 
 ### Adding Hydragon network to Metamask
 
@@ -292,7 +292,7 @@ https://hydragon.hydrachain.org
 
 In the Faucet section, users have the option to request a fixed amount of test HYDRA coins, granting them opportunity to explore the staking/delegation processes and other features. Please note that there will be a waiting period before users can request test tokens again.
 
-- Navigate to [https://app.testnet.hydrachain.org/faucet](https://app.testnet.hydrachain.org/faucet) to access the Faucet section of our platform.
+- Navigate to [testnetapp.hydrachain.org/faucet](https://testnetapp.hydrachain.org/faucet) to access the Faucet section of our platform.
 - Here, users can connect their wallet and request HYDRA coins.
 - To connect a self-custody wallet (e.g., Metamask), click the `Connect` button located in the top right corner or within the Faucet form.
 - Once the wallet is connected, Click on `Request HYDRA` to receive 100 HYDRA to the connected wallet. Please be aware that there is a 2-hour cooldown before additional coins can be requested.
@@ -301,7 +301,7 @@ In the Faucet section, users have the option to request a fixed amount of test H
 
 In the Delegation section, users can interact with an intuitive UI to delegate to active validators. There are two types of delegation available: normal delegation, which can be undelegated at any time. It offers a fixed APR. There is also a vested position delegation, which includes a lockup mechanism. With vested delegation, users can potentially earn up to almost 80% APR, depending on different economical parameters. It's important to note that penalties apply for undelegating from a still active vested positions. More details regarding APR calculations and vested delegation can be found in our upcoming public paper. Here's how to proceed:
 
-- Navigate to [https://app.testnet.hydrachain.org/delegation](https://app.testnet.hydrachain.org/delegation) to access the Delegation section of our platform. If you're already on the platform, you can find the `Delegation` section in the sidebar on the left.
+- Navigate to [testnetapp.hydrachain.org](https://testnetapp.hydrachain.org) to access the Delegation section of our platform. If you're already on the platform, you can find the `Delegation` section in the sidebar on the left.
 
 - Upon entering the Delegation section, you'll find an overview of your delegation, including the number of validators, the current APR, the total delegated HYDRA, and a table listing all the validators. Click on Actions (Details) in order to see more details for the selected validator.
 
