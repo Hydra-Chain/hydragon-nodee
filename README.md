@@ -180,7 +180,7 @@ Hydra's validator set is unique as it offers a permissionless opportunity on a f
 After ensuring you have a minimum of 15,000 HYDRA in your validator wallet, you can execute the following command.
 
 ```
-hydra hydragon register-validator --data-dir ./node-secrets --stake 15000000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
+hydra hydragon register-validator --data-dir ./node-secrets --stake 15000000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.

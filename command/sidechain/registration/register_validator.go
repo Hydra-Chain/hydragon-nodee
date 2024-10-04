@@ -69,13 +69,6 @@ func setFlags(cmd *cobra.Command) {
 		"stake represents amount which is going to be staked by the new validator account",
 	)
 
-	cmd.Flags().Int64Var(
-		&params.chainID,
-		chainIDFlag,
-		command.DefaultChainID,
-		"the ID of the chain",
-	)
-
 	cmd.Flags().BoolVar(
 		&params.insecureLocalStore,
 		sidechain.InsecureLocalStoreFlag,

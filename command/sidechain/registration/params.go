@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	stakeFlag   = "stake"
-	chainIDFlag = "chain-id"
+	stakeFlag = "stake"
 )
 
 type registerParams struct {
@@ -19,7 +18,6 @@ type registerParams struct {
 	accountConfig      string
 	jsonRPC            string
 	stake              string
-	chainID            int64
 	insecureLocalStore bool
 }
 

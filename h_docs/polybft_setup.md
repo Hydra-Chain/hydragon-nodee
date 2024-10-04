@@ -82,7 +82,7 @@ for the secret keys, and the following for the public keys, including the Node I
 Stake tx is made in this step as well
 
 ```
-./hydra hydragon register-validator --data-dir ./test-add-chain-1 --stake 15000000000000000000000 --chain-id 8844 --jsonrpc http://127.0.0.1:10001 --insecure
+./hydra hydragon register-validator --data-dir ./test-add-chain-1 --stake 15000000000000000000000 --jsonrpc http://127.0.0.1:10001 --insecure
 ```
 
 4. Run new validator
@@ -203,7 +203,7 @@ After Hydra's team confirms you are whitelisted you have to register your accoun
 In the container's shell execute:
 
 ```
-./hydra hydragon register-validator --data-dir ./node --stake 1000000000000000000000000 --chain-id 8844 --jsonrpc http://localhost:8545
+./hydra hydragon register-validator --data-dir ./node --stake 1000000000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.
