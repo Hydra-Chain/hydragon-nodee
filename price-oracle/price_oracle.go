@@ -25,9 +25,10 @@ import (
 )
 
 var (
-	alreadyVotedMapping = make(map[uint64]bool)
-	calculatedDayNumber = make(map[uint64]uint64)
-	priceVotedEventABI  = contractsapi.PriceOracle.Abi.Events["PriceVoted"]
+	alreadyVotedMapping        = make(map[uint64]bool)
+	priceUpdatedAlreadyMapping = make(map[uint64]bool)
+	calculatedDayNumber        = make(map[uint64]uint64)
+	priceVotedEventABI         = contractsapi.PriceOracle.Abi.Events["PriceVoted"]
 )
 
 // emit PriceVoted(_price, msg.sender, day);
@@ -186,8 +187,8 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 		return false, nil
 	}
 
-	// check is voting already made for the current day
-	if p.alreadyVoted(header) {
+	// check is voting made or price updated already for the current day
+	if p.alreadyVoted(header) || p.priceUpdatedAlready(header) {
 		return false, nil
 	}
 
@@ -198,15 +199,18 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 	}
 
 	// then check if the contract is in a proper state to vote
-	shouldVote, falseReason, err := state.shouldVote(
-		calcDayNumber(header.Timestamp),
-	)
+	dayNumber := calcDayNumber(header.Timestamp)
+	shouldVote, falseReason, err := state.shouldVote(dayNumber)
 	if err != nil {
 		return false, err
 	}
 
 	if !shouldVote {
 		p.logger.Debug("should not vote", "reason", falseReason)
+
+		if falseReason == "PRICE_ALREADY_SET" {
+			priceUpdatedAlreadyMapping[dayNumber] = true
+		}
 
 		return false, nil
 	}
@@ -240,6 +244,10 @@ func (p *PriceOracle) blockMustBeProcessed(ev *blockchain.Event) bool {
 
 func (p *PriceOracle) alreadyVoted(header *types.Header) bool {
 	return alreadyVotedMapping[calcDayNumber(header.Timestamp)]
+}
+
+func (p *PriceOracle) priceUpdatedAlready(header *types.Header) bool {
+	return priceUpdatedAlreadyMapping[calcDayNumber(header.Timestamp)]
 }
 
 // executeVote get the price from the price feed and votes
