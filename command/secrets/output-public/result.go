@@ -18,8 +18,8 @@ func (or *OutputResult) GetOutput() string {
 
 	buffer.WriteString("\n[PUBLIC DATA OUTPUT]\n")
 	buffer.WriteString(helper.FormatKV([]string{
-		fmt.Sprintf("Validator Address|%s", or.ValidatorAddress),
-		fmt.Sprintf("BLS Public Key|%s", or.BLSPublicKey),
+		fmt.Sprintf("EVM Address|%s", or.ValidatorAddress),
+		fmt.Sprintf("Validator BLS Public Key|%s", or.BLSPublicKey),
 		fmt.Sprintf("Node ID|%s", or.NodeID),
 	}))
 

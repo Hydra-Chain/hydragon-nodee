@@ -155,8 +155,6 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 			}
 
 			result.validatorAddress = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
-			result.stakeResult = "No stake parameters have been submitted"
-			result.amount = "0"
 			foundNewValidatorLog = true
 		}
 	}
@@ -214,6 +212,7 @@ func stake(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.Receipt,
 func populateStakeResults(receipt *ethgo.Receipt, result *registerResult) {
 	if receipt.Status != uint64(types.ReceiptSuccess) {
 		result.stakeResult = "Stake transaction failed"
+		result.amount = "0"
 
 		return
 	}
