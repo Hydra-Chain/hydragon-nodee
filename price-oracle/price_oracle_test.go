@@ -318,60 +318,76 @@ func TestShouldExecuteVote(t *testing.T) {
 	}
 
 	tests := []struct {
-		name               string
-		header             *types.Header
-		alreadyVoted       bool
-		shouldMockState    bool
-		stateShouldVote    bool
-		stateShouldVoteErr error
-		expectedResult     bool
-		expectedError      error
+		name                string
+		header              *types.Header
+		alreadyVoted        bool
+		priceUpdatedAlready bool
+		shouldMockState     bool
+		stateShouldVote     bool
+		stateShouldVoteErr  error
+		expectedResult      bool
+		expectedError       error
 	}{
 		{
-			name:            "Not in voting time",
-			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 0, 30, 0, 0, time.UTC).Unix())},
-			alreadyVoted:    false,
-			shouldMockState: false,
-			stateShouldVote: false,
-			expectedResult:  false,
-			expectedError:   nil,
+			name:                "Not in voting time",
+			header:              &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 0, 30, 0, 0, time.UTC).Unix())},
+			alreadyVoted:        false,
+			priceUpdatedAlready: false,
+			shouldMockState:     false,
+			stateShouldVote:     false,
+			expectedResult:      false,
+			expectedError:       nil,
 		},
 		{
-			name:            "Already voted",
-			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
-			alreadyVoted:    true,
-			shouldMockState: false,
-			stateShouldVote: false,
-			expectedResult:  false,
-			expectedError:   nil,
+			name:                "Already voted",
+			header:              &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			alreadyVoted:        true,
+			priceUpdatedAlready: false,
+			shouldMockState:     false,
+			stateShouldVote:     false,
+			expectedResult:      false,
+			expectedError:       nil,
 		},
 		{
-			name:            "Should not vote based on state",
-			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
-			alreadyVoted:    false,
-			shouldMockState: true,
-			stateShouldVote: false,
-			expectedResult:  false,
-			expectedError:   nil,
+			name:                "Price updated already",
+			header:              &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			alreadyVoted:        true,
+			priceUpdatedAlready: true,
+			shouldMockState:     false,
+			stateShouldVote:     false,
+			expectedResult:      false,
+			expectedError:       nil,
 		},
 		{
-			name:               "Error in shouldVote",
-			header:             &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
-			alreadyVoted:       false,
-			shouldMockState:    true,
-			stateShouldVote:    false,
-			stateShouldVoteErr: errors.New("should vote error"),
-			expectedResult:     false,
-			expectedError:      errors.New("should vote error"),
+			name:                "Should not vote based on state",
+			header:              &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			alreadyVoted:        false,
+			priceUpdatedAlready: false,
+			shouldMockState:     true,
+			stateShouldVote:     false,
+			expectedResult:      false,
+			expectedError:       nil,
 		},
 		{
-			name:            "Should vote",
-			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
-			alreadyVoted:    false,
-			shouldMockState: true,
-			stateShouldVote: true,
-			expectedResult:  true,
-			expectedError:   nil,
+			name:                "Error in shouldVote",
+			header:              &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			alreadyVoted:        false,
+			priceUpdatedAlready: false,
+			shouldMockState:     true,
+			stateShouldVote:     false,
+			stateShouldVoteErr:  errors.New("should vote error"),
+			expectedResult:      false,
+			expectedError:       errors.New("should vote error"),
+		},
+		{
+			name:                "Should vote",
+			header:              &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			alreadyVoted:        false,
+			priceUpdatedAlready: false,
+			shouldMockState:     true,
+			stateShouldVote:     true,
+			expectedResult:      true,
+			expectedError:       nil,
 		},
 	}
 
@@ -627,8 +643,6 @@ func TestExecuteVote(t *testing.T) {
 
 func TestExecuteVote_PriceFeedError(t *testing.T) {
 	header := &types.Header{Timestamp: 100000}
-	dayNumber := calcDayNumber(header.Timestamp)
-	alreadyVotedMapping[dayNumber] = false
 
 	mockPriceFeed := new(MockPriceFeed)
 	account := validator.NewTestValidator(t, "X", 1000).Account
@@ -648,8 +662,10 @@ func TestExecuteVote_PriceFeedError(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "price feed error")
 
-	// Check if the alreadyVotedMapping was not updated
+	// Check if the alreadyVotedMapping and priceUpdatedAlreadyMapping were not updated
+	dayNumber := calcDayNumber(header.Timestamp)
 	require.False(t, alreadyVotedMapping[dayNumber])
+	require.False(t, priceUpdatedAlreadyMapping[dayNumber])
 
 	// Assert that the mocks were called as expected
 	mockPriceFeed.AssertExpectations(t)
@@ -681,9 +697,10 @@ func TestExecuteVote_VoteError(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "vote: failed vote error")
 
-	// Check if the alreadyVotedMapping was not updated
+	// Check if the alreadyVotedMapping and priceUpdatedAlreadyMapping were not updated
 	dayNumber := calcDayNumber(header.Timestamp)
 	require.False(t, alreadyVotedMapping[dayNumber])
+	require.False(t, priceUpdatedAlreadyMapping[dayNumber])
 
 	// Assert that the mocks were called as expected
 	mockPriceFeed.AssertExpectations(t)
