@@ -159,20 +159,6 @@ Once your node is operational and fully synced, you're ready to become a validat
 
 **Note:** Currently, you will have to import the validator's private key into Metamask to be able to interact with the web UI which can be considered as a security issue, but we will provide better option in the future.
 
-### Obtaining your Public Key 
-Use the following command to retrieve your public key:
-
-```
-./hydra secrets output-public --data-dir node-secrets
-```
-
-You need the following value:
-
-```
-[PUBLIC DATA OUTPUT]
-Validator Address = 0x...
-```
-
 ### Register account as validator and stake
 
 Hydra's validator set is unique as it offers a permissionless opportunity on a first come/first serve. It supports up to 150 validators and uses exponentiating formula to ensure consolidation is countered for a maximum Nakamoto Coefficient. The requirements to become a validator: a) to have a minimum of 15,000 HYDRA and b) there to be vacant slots in the validator sets. Inactive validators are going to be ejected after 72 hours in order to ensure fair environment and highest level of network security.
