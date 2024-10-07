@@ -27,7 +27,7 @@ import (
 const (
 	maxCommitmentSize       = 10
 	stateFileName           = "consensusState.db"
-	commitEpochLookbackSize = 2 // number of blocks to calculate commit epoch info from the previous epoch
+	commitEpochLookbackSize = 1 // number of blocks to calculate commit epoch info from the previous epoch
 )
 
 var (
@@ -443,6 +443,7 @@ func (c *consensusRuntime) FSM() error {
 
 	valSet := validator.NewValidatorSet(epoch.Validators, c.logger)
 
+	// TODO: can be removed for optimization
 	exitRootHash, err := c.checkpointManager.BuildEventRoot(epoch.Number)
 	if err != nil {
 		return fmt.Errorf("could not build exit root hash for fsm: %w", err)
@@ -474,24 +475,6 @@ func (c *consensusRuntime) FSM() error {
 	}
 
 	if isEndOfEpoch {
-		ff.commitEpochInput,
-			ff.fundRewardWalletInput,
-			ff.distributeRewardsInput,
-			ff.distributeDAOIncentiveInput,
-			err =
-			c.calculateStateTxsInput(
-				parent,
-				epoch,
-			)
-		if err != nil {
-			return fmt.Errorf("cannot calculate commit epoch info: %w", err)
-		}
-
-		ff.rewardWalletFundAmount, err = c.rewardWalletCalculator.GetRewardWalletFundAmount(parent)
-		if err != nil {
-			return fmt.Errorf("cannot calculate the reward wallet fund amount: %w", err)
-		}
-
 		ff.newValidatorsDelta, err = c.stakeManager.UpdateValidatorSet(
 			epoch.Number,
 			epoch.Validators.Copy(),
@@ -502,6 +485,24 @@ func (c *consensusRuntime) FSM() error {
 	}
 
 	if isStartOfEpoch {
+		ff.commitEpochInput,
+			ff.fundRewardWalletInput,
+			ff.distributeRewardsInput,
+			ff.distributeDAOIncentiveInput,
+			err =
+			c.calculateStateTxsInput(
+				parent,
+				epoch.Number-1,
+			)
+		if err != nil {
+			return fmt.Errorf("cannot calculate commit epoch info: %w", err)
+		}
+
+		ff.rewardWalletFundAmount, err = c.rewardWalletCalculator.GetRewardWalletFundAmount(parent)
+		if err != nil {
+			return fmt.Errorf("cannot calculate the reward wallet fund amount: %w", err)
+		}
+
 		ff.syncValidatorsDataInput, err = c.generateSyncValidatorsDataTxInput(parent, ff.validators.Accounts())
 		if err != nil {
 			return fmt.Errorf("cannot generate sync validators data tx input: %w", err)
@@ -604,16 +605,15 @@ func (c *consensusRuntime) restartEpoch(
 // calculateStateTxsInput calculates the state txs input data for blocks starting from the last built block
 // in the current epoch, and ending at the last block of previous epoch
 func (c *consensusRuntime) calculateStateTxsInput(
-	currentBlock *types.Header,
-	epoch *epochMetadata,
+	latestBuildBlock *types.Header,
+	previousEpochID uint64,
 ) (*contractsapi.CommitEpochHydraChainFn,
 	*contractsapi.FundRewardWalletFn,
 	*contractsapi.DistributeRewardsForHydraStakingFn,
 	*contractsapi.DistributeDAOIncentiveHydraChainFn, error,
 ) {
 	uptimeCounter := map[types.Address]int64{}
-	blockHeader := currentBlock
-	epochID := epoch.Number
+	blockHeader := latestBuildBlock
 	totalBlocks := int64(0)
 
 	getSealersForBlock := func(blockExtra *Extra, validators validator.AccountSet) error {
@@ -631,14 +631,25 @@ func (c *consensusRuntime) calculateStateTxsInput(
 		return nil
 	}
 
-	blockExtra, err := GetIbftExtra(currentBlock.ExtraData)
+	blockExtra, err := GetIbftExtra(latestBuildBlock.ExtraData)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	// get the validators from (the last block of) the previous epoch
+	validators, err := c.config.polybftBackend.GetValidators(blockHeader.Number, nil)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	previousBlockHeader, previousBlockExtra, err := getBlockData(blockHeader.Number-1, c.config.blockchain)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
 
 	// calculate uptime for current epoch
-	for blockHeader.Number > epoch.FirstBlockInEpoch {
-		if err := getSealersForBlock(blockExtra, epoch.Validators); err != nil {
+	for blockExtra.Checkpoint.EpochNumber == previousBlockExtra.Checkpoint.EpochNumber {
+		if err := getSealersForBlock(blockExtra, validators); err != nil {
 			return nil, nil, nil, nil, err
 		}
 
@@ -646,7 +657,14 @@ func (c *consensusRuntime) calculateStateTxsInput(
 		if err != nil {
 			return nil, nil, nil, nil, err
 		}
+
+		previousBlockHeader, previousBlockExtra, err = getBlockData(previousBlockHeader.Number-1, c.config.blockchain)
+		if err != nil {
+			return nil, nil, nil, nil, err
+		}
 	}
+
+	previousEpochStartBlock := blockHeader.Number
 
 	// calculate uptime for blocks from previous epoch that were not processed in previous uptime
 	// since we can not calculate uptime for the last block in epoch (because of parent signatures)
@@ -689,10 +707,10 @@ func (c *consensusRuntime) calculateStateTxsInput(
 	}
 
 	commitEpoch := &contractsapi.CommitEpochHydraChainFn{
-		ID: new(big.Int).SetUint64(epochID),
+		ID: new(big.Int).SetUint64(previousEpochID), // we commit the previous epoch
 		Epoch: &contractsapi.Epoch{
-			StartBlock: new(big.Int).SetUint64(epoch.FirstBlockInEpoch),
-			EndBlock:   new(big.Int).SetUint64(currentBlock.Number + 1),
+			StartBlock: new(big.Int).SetUint64(previousEpochStartBlock),
+			EndBlock:   new(big.Int).SetUint64(latestBuildBlock.Number),
 			EpochRoot:  types.Hash{},
 		},
 		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
@@ -702,7 +720,7 @@ func (c *consensusRuntime) calculateStateTxsInput(
 	fundRewardWallet := &contractsapi.FundRewardWalletFn{}
 
 	distributeRewards := &contractsapi.DistributeRewardsForHydraStakingFn{
-		EpochID: new(big.Int).SetUint64(epochID),
+		EpochID: new(big.Int).SetUint64(previousEpochID),
 		Uptime:  uptime,
 	}
 
