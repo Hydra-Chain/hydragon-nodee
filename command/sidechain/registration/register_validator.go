@@ -204,7 +204,7 @@ func stake(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.Receipt,
 
 func populateStakeResults(receipt *ethgo.Receipt, result *registerResult) {
 	if receipt.Status != uint64(types.ReceiptSuccess) {
-		result.stakeResult = "Stake transaction failed"
+		result.stakeResult = fmt.Sprintf("Stake transaction failed. Tx: %s", receipt.TransactionHash.String())
 		result.amount = "0"
 
 		return
