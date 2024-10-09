@@ -471,7 +471,7 @@ func TestConsensusRuntime_FSM_NotEndOfEpoch_NotEndOfSprint(t *testing.T) {
 	blockchainMock.AssertExpectations(t)
 }
 
-func TestConsensusRuntime_FSM_EndOfEpoch_BuildCommitEpoch(t *testing.T) {
+func TestConsensusRuntime_FSM_StartOfEpoch_Epoch(t *testing.T) {
 	t.Parallel()
 
 	const (
@@ -479,8 +479,6 @@ func TestConsensusRuntime_FSM_EndOfEpoch_BuildCommitEpoch(t *testing.T) {
 		epochSize         = uint64(10)
 		sprintSize        = uint64(3)
 		firstBlockInEpoch = uint64(1)
-		fromIndex         = uint64(0)
-		toIndex           = uint64(9)
 	)
 
 	validatorAccounts := validator.NewTestValidatorsWithAliases(
@@ -489,13 +487,14 @@ func TestConsensusRuntime_FSM_EndOfEpoch_BuildCommitEpoch(t *testing.T) {
 	)
 	validators := validatorAccounts.GetPublicIdentities()
 
-	lastBuiltBlock, headerMap := createTestBlocks(t, 9, epochSize, validators)
+	lastBuiltBlock, _ := createTestBlocks(t, 0, epochSize, validators)
 
 	blockchainMock := new(blockchainMock)
 	blockchainMock.On("NewBlockBuilder", mock.Anything).Return(&BlockBuilder{}, nil).Once()
-	blockchainMock.On("GetHeaderByNumber", mock.Anything).Return(headerMap.getHeader)
-	blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
-		Return(big.NewInt(0), nil)
+
+	polybftBackendMock := new(polybftBackendMock)
+	polybftBackendMock.On("GetValidators", mock.Anything, mock.Anything, mock.Anything).
+		Return(validators).Once()
 
 	rewardWalletCalculator := &rewardWalletCalculator{
 		blockchain: blockchainMock,
@@ -515,8 +514,9 @@ func TestConsensusRuntime_FSM_EndOfEpoch_BuildCommitEpoch(t *testing.T) {
 			EpochSize:  epochSize,
 			SprintSize: sprintSize,
 		},
-		Key:        validatorAccounts.GetValidator("A").Key(),
-		blockchain: blockchainMock,
+		Key:            validatorAccounts.GetValidator("A").Key(),
+		blockchain:     blockchainMock,
+		polybftBackend: polybftBackendMock,
 	}
 
 	snapshot := NewProposerSnapshot(1, nil)
@@ -541,7 +541,87 @@ func TestConsensusRuntime_FSM_EndOfEpoch_BuildCommitEpoch(t *testing.T) {
 	fsm := runtime.fsm
 
 	assert.NoError(t, err)
-	assert.True(t, fsm.isEndOfEpoch)
+	assert.True(t, fsm.isStartOfEpoch)
+	assert.Nil(t, fsm.commitEpochInput)
+	assert.Empty(t, fsm.commitEpochInput)
+
+	blockchainMock.AssertExpectations(t)
+}
+
+func TestConsensusRuntime_FSM_StartOfEpoch_BuildCommitEpoch(t *testing.T) {
+	t.Parallel()
+
+	const (
+		epoch             = 1
+		epochSize         = uint64(10)
+		sprintSize        = uint64(3)
+		firstBlockInEpoch = uint64(11)
+	)
+
+	validatorAccounts := validator.NewTestValidatorsWithAliases(
+		t,
+		[]string{"A", "B", "C", "D", "E", "F"},
+	)
+	validators := validatorAccounts.GetPublicIdentities()
+
+	lastBuiltBlock, headerMap := createTestBlocks(t, 10, epochSize, validators)
+
+	blockchainMock := new(blockchainMock)
+	blockchainMock.On("NewBlockBuilder", mock.Anything).Return(&BlockBuilder{}, nil).Once()
+	blockchainMock.On("GetHeaderByNumber", mock.Anything).Return(headerMap.getHeader)
+	blockchainMock.On("GetAccountBalance", mock.Anything, contracts.RewardWalletContract).
+		Return(big.NewInt(0), nil)
+
+	polybftBackendMock := new(polybftBackendMock)
+	polybftBackendMock.On("GetValidators", mock.Anything, mock.Anything, mock.Anything).
+		Return(validators).Once()
+
+	rewardWalletCalculator := &rewardWalletCalculator{
+		blockchain: blockchainMock,
+	}
+
+	state := newTestState(t)
+	require.NoError(t, state.EpochStore.insertEpoch(epoch, nil))
+
+	metadata := &epochMetadata{
+		Validators:        validators,
+		Number:            epoch,
+		FirstBlockInEpoch: firstBlockInEpoch,
+	}
+
+	config := &runtimeConfig{
+		PolyBFTConfig: &PolyBFTConfig{
+			EpochSize:  epochSize,
+			SprintSize: sprintSize,
+		},
+		Key:            validatorAccounts.GetValidator("A").Key(),
+		blockchain:     blockchainMock,
+		polybftBackend: polybftBackendMock,
+	}
+
+	snapshot := NewProposerSnapshot(1, nil)
+	runtime := &consensusRuntime{
+		proposerCalculator: NewProposerCalculatorFromSnapshot(
+			snapshot,
+			config,
+			hclog.NewNullLogger(),
+		),
+		logger:                 hclog.NewNullLogger(),
+		state:                  state,
+		epoch:                  metadata,
+		config:                 config,
+		lastBuiltBlock:         lastBuiltBlock,
+		stateSyncManager:       &dummyStateSyncManager{},
+		checkpointManager:      &dummyCheckpointManager{},
+		stakeManager:           &dummyStakeManager{},
+		rewardWalletCalculator: rewardWalletCalculator,
+	}
+
+	err := runtime.FSM()
+	fsm := runtime.fsm
+
+	assert.NoError(t, err)
+	assert.True(t, fsm.isStartOfEpoch)
 	assert.NotNil(t, fsm.commitEpochInput)
 	assert.NotEmpty(t, fsm.commitEpochInput)
 
@@ -720,10 +800,10 @@ func TestConsensusRuntime_calculateStateTxsInput_SecondEpoch(t *testing.T) {
 	t.Parallel()
 
 	const (
-		epoch           = 2
+		epoch           = 3
 		epochSize       = 10
-		epochStartBlock = 11
-		epochEndBlock   = 20
+		epochStartBlock = 21
+		epochEndBlock   = 30
 		sprintSize      = 5
 	)
 
@@ -735,7 +815,7 @@ func TestConsensusRuntime_calculateStateTxsInput_SecondEpoch(t *testing.T) {
 
 	lastBuiltBlock, headerMap := createTestBlocks(
 		t,
-		19,
+		20,
 		epochSize,
 		validators.GetPublicIdentities(),
 	)
@@ -773,10 +853,10 @@ func TestConsensusRuntime_calculateStateTxsInput_SecondEpoch(t *testing.T) {
 	assert.NotEmpty(t, commitEpochInput)
 	assert.Empty(t, fundRewardWalletInput)
 	assert.Empty(t, distributeVaultFundsInput)
-	assert.Equal(t, uint64(epoch), commitEpochInput.ID.Uint64())
-	assert.Equal(t, uint64(epochStartBlock), commitEpochInput.Epoch.StartBlock.Uint64())
-	assert.Equal(t, uint64(epochEndBlock), commitEpochInput.Epoch.EndBlock.Uint64())
-	assert.Equal(t, uint64(epoch), distributeRewardsInput.EpochID.Uint64())
+	assert.Equal(t, uint64(epoch)-1, commitEpochInput.ID.Uint64()) // distribute for previous epoch
+	assert.Equal(t, uint64(epochStartBlock)-10, commitEpochInput.Epoch.StartBlock.Uint64())
+	assert.Equal(t, uint64(epochEndBlock-10), commitEpochInput.Epoch.EndBlock.Uint64())
+	assert.Equal(t, uint64(epoch)-1, distributeRewardsInput.EpochID.Uint64())
 
 	blockchainMock.AssertExpectations(t)
 	polybftBackendMock.AssertExpectations(t)
@@ -1237,7 +1317,7 @@ func createTestBlocks(t *testing.T, numberOfBlocks, defaultEpochSize uint64,
 
 	var hash types.Hash
 
-	var blockHeader *types.Header
+	var blockHeader *types.Header = genesisBlock
 
 	for i := uint64(1); i <= numberOfBlocks; i++ {
 		big := big.NewInt(int64(i))

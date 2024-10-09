@@ -484,7 +484,7 @@ func (c *consensusRuntime) FSM() error {
 		}
 	}
 
-	if isStartOfEpoch {
+	if isStartOfEpoch && pendingBlockNumber > 1 {
 		ff.commitEpochInput,
 			ff.fundRewardWalletInput,
 			ff.distributeRewardsInput,

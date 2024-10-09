@@ -33,38 +33,38 @@ type blockBuilder interface {
 
 var (
 	errCommitEpochTxDoesNotExist = errors.New(
-		"commit epoch transaction is not found in the epoch ending block",
+		"commit epoch transaction is not found in the epoch starting block",
 	)
 	errCommitEpochTxNotExpected = errors.New(
-		"didn't expect commit epoch transaction in a non epoch ending block",
+		"didn't expect commit epoch transaction in a non epoch starting block",
 	)
 	errCommitEpochTxSingleExpected = errors.New("only one commit epoch transaction is allowed " +
-		"in an epoch ending block")
+		"in an epoch starting block")
 	errFundRewardWalletTxDoesNotExists = errors.New("fund reward wallet transaction is " +
-		"not found in the epoch ending block")
+		"not found in the epoch starting block")
 	errFundRewardWalletTxSingleExpected = errors.New(
 		"only one fund reward wallet transaction is allowed " +
-			"in an epoch ending block",
+			"in an epoch starting block",
 	)
 	errDistributeRewardsTxDoesNotExist = errors.New("distribute rewards transaction is " +
-		"not found in the epoch ending block")
+		"not found in the epoch starting block")
 	errDistributeRewardsTxNotExpected = errors.New("didn't expect distribute rewards transaction " +
-		"in a non epoch ending block")
+		"in a non epoch starting block")
 	errDistributeRewardsTxSingleExpected = errors.New(
 		"only one distribute rewards transaction is " +
-			"allowed in an epoch ending block",
+			"allowed in an epoch starting block",
 	)
 	errDistributeDAOIncentiveTxDoesNotExist = errors.New(
 		"distribute DAO incentive transaction is " +
-			"not found in the epoch ending block",
+			"not found in the epoch starting block",
 	)
 	errDistributeDAOIncentiveTxNotExpected = errors.New(
 		"didn't expect distribute DAO incentive transaction " +
-			"in a non epoch ending block",
+			"in a non epoch starting block",
 	)
 	errDistributeDAOIncentiveTxSingleExpected = errors.New(
 		"only one distribute DAO incentive transaction is " +
-			"allowed in an epoch ending block",
+			"allowed in an epoch starting block",
 	)
 	errSyncValidatorsDataTxDoesNotExist = errors.New(
 		"sync validators data transaction is not found in the epoch starting block",
@@ -188,7 +188,7 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 		return nil, fmt.Errorf("failed to initialize block builder: %w", err)
 	}
 
-	if f.isEndOfEpoch {
+	if f.isStartOfEpoch {
 		tx, err := f.createCommitEpochTx()
 		if err != nil {
 			return nil, err
@@ -196,6 +196,20 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 
 		if err := f.blockBuilder.WriteTx(tx); err != nil {
 			return nil, fmt.Errorf("failed to apply commit epoch transaction: %w", err)
+		}
+
+		if f.syncValidatorsDataInput != nil {
+			tx, err = f.createSyncValidatorsDataTx()
+			if err != nil {
+				return nil, err
+			}
+
+			if err := f.blockBuilder.WriteTx(tx); err != nil {
+				return nil, fmt.Errorf(
+					"failed to apply sync validators data transaction: %w",
+					err,
+				)
+			}
 		}
 
 		// if fund amount is 0, then no need to fund the reward wallet
@@ -251,18 +265,6 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 		}
 
 		extra.Validators = f.newValidatorsDelta
-	} else if f.isStartOfEpoch && f.syncValidatorsDataInput != nil {
-		tx, err := f.createSyncValidatorsDataTx()
-		if err != nil {
-			return nil, err
-		}
-
-		if err := f.blockBuilder.WriteTx(tx); err != nil {
-			return nil, fmt.Errorf(
-				"failed to apply sync validators data transaction: %w",
-				err,
-			)
-		}
 	}
 
 	currentValidatorsHash, err := f.validators.Accounts().Hash()
@@ -624,63 +626,12 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 				return errCommitEpochTxSingleExpected
 			}
 
-			expectedIndex := 0
-			if i != expectedIndex {
-				return InvalidTxIndexErr(expectedIndex, i)
-			}
-
 			commitEpochTxExists = true
 
-			if err := f.verifyCommitEpochTx(tx); err != nil {
+			if err := f.verifyCommitEpochTx(tx, i); err != nil {
 				return fmt.Errorf("error while verifying commit epoch transaction. error: %w", err)
 			}
-		case *contractsapi.FundRewardWalletFn:
-			if fundRewardWalletTxExists {
-				// if we already validated fund reward wallet tx,
-				// that means someone added more txs to fund reward wallet,
-				// which is invalid
-				return errFundRewardWalletTxSingleExpected
-			}
 
-			fundRewardWalletTxExists = true
-
-			if err := f.verifyRewardWalletFundTx(tx); err != nil {
-				return fmt.Errorf("error while verifying fund reward wallet transaction. error: %w", err)
-			}
-		case *contractsapi.DistributeRewardsForHydraStakingFn:
-			if distributeRewardsTxExists {
-				// if we already validated distribute rewards tx,
-				// that means someone added more than one distribute rewards tx to block,
-				// which is invalid
-				return errDistributeRewardsTxSingleExpected
-			}
-
-			if f.isRewardWalletFundTxRequired() && !fundRewardWalletTxExists {
-				return errFundRewardWalletTxRequired
-			}
-
-			distributeRewardsTxExists = true
-
-			if err := f.verifyDistributeRewardsTx(tx); err != nil {
-				return fmt.Errorf("error while verifying distribute rewards transaction. error: %w", err)
-			}
-		case *contractsapi.DistributeDAOIncentiveHydraChainFn:
-			if distributeDAOIncentiveTxExists {
-				// if we already validated distribute DAO incentive tx,
-				// that means someone added more than one distribute DAO incentive tx to block,
-				// which is invalid
-				return errDistributeDAOIncentiveTxSingleExpected
-			}
-
-			if f.isRewardWalletFundTxRequired() && !fundRewardWalletTxExists {
-				return errFundRewardWalletTxRequired
-			}
-
-			distributeDAOIncentiveTxExists = true
-
-			if err := f.verifyDistributeDAOIncentiveTx(tx); err != nil {
-				return fmt.Errorf("error while verifying distribute DAO incentive rewards transaction. error: %w", err)
-			}
 		case *contractsapi.SyncValidatorsDataHydraChainFn:
 			if syncValidatorsDataTxExists {
 				// if we already validated sync validators data tx,
@@ -694,16 +645,75 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			if err := f.verifySyncValidatorsDataTx(tx, i); err != nil {
 				return fmt.Errorf("error while verifying sync validators data transaction. error: %w", err)
 			}
+
+		case *contractsapi.FundRewardWalletFn:
+			if fundRewardWalletTxExists {
+				// if we already validated fund reward wallet tx,
+				// that means someone added more txs to fund reward wallet,
+				// which is invalid
+				return errFundRewardWalletTxSingleExpected
+			}
+
+			fundRewardWalletTxExists = true
+
+			if err := f.verifyRewardWalletFundTx(tx); err != nil {
+				return fmt.Errorf("error while verifying fund reward wallet transaction. error: %w", err)
+			}
+
+		case *contractsapi.DistributeRewardsForHydraStakingFn:
+			if distributeRewardsTxExists {
+				// if we already validated distribute rewards tx,
+				// that means someone added more than one distribute rewards tx to block,
+				// which is invalid
+				return errDistributeRewardsTxSingleExpected
+			}
+
+			// ensure reward wallet is funded before distributing rewards
+			if f.isRewardWalletFundTxRequired() && !fundRewardWalletTxExists {
+				return errFundRewardWalletTxRequired
+			}
+
+			distributeRewardsTxExists = true
+
+			if err := f.verifyDistributeRewardsTx(tx); err != nil {
+				return fmt.Errorf("error while verifying distribute rewards transaction. error: %w", err)
+			}
+
+		case *contractsapi.DistributeDAOIncentiveHydraChainFn:
+			if distributeDAOIncentiveTxExists {
+				// if we already validated distribute DAO incentive tx,
+				// that means someone added more than one distribute DAO incentive tx to block,
+				// which is invalid
+				return errDistributeDAOIncentiveTxSingleExpected
+			}
+
+			// ensure reward wallet is funded before distributing DAO incentive rewards
+			if f.isRewardWalletFundTxRequired() && !fundRewardWalletTxExists {
+				return errFundRewardWalletTxRequired
+			}
+
+			distributeDAOIncentiveTxExists = true
+
+			if err := f.verifyDistributeDAOIncentiveTx(tx); err != nil {
+				return fmt.Errorf("error while verifying distribute DAO incentive rewards transaction. error: %w", err)
+			}
+
 		default:
 			return fmt.Errorf("invalid state transaction data type: %v", stateTxData)
 		}
 	}
 
-	if f.isEndOfEpoch {
+	if f.isStartOfEpoch {
 		if !commitEpochTxExists {
 			// this is a check if commit epoch transaction is not in the list of transactions at all
 			// but it should be
 			return errCommitEpochTxDoesNotExist
+		}
+
+		if f.isSyncValidatorsDataTxRequired() && !syncValidatorsDataTxExists {
+			// this is a check if sync validators data transaction is not in the list of transactions
+			// at all, but it should be
+			return errSyncValidatorsDataTxDoesNotExist
 		}
 
 		if f.isRewardWalletFundTxRequired() && !fundRewardWalletTxExists {
@@ -722,14 +732,6 @@ func (f *fsm) VerifyStateTransactions(transactions []*types.Transaction) error {
 			// this is a check if distribute DAO incentive rewards tx is not in the list of transactions at all
 			// but it should be
 			return errDistributeDAOIncentiveTxDoesNotExist
-		}
-	}
-
-	if f.isStartOfEpoch {
-		if f.isSyncValidatorsDataTxRequired() && !syncValidatorsDataTxExists {
-			// this is a check if sync validators data transaction is not in the list of transactions
-			// at all, but it should be
-			return errSyncValidatorsDataTxDoesNotExist
 		}
 	}
 
@@ -826,8 +828,13 @@ func (f *fsm) ValidatorSet() validator.ValidatorSet {
 }
 
 // verifyCommitEpochTx creates commit epoch transaction and compares its hash with the one extracted from the block.
-func (f *fsm) verifyCommitEpochTx(commitEpochTx *types.Transaction) error {
-	if f.isEndOfEpoch {
+func (f *fsm) verifyCommitEpochTx(commitEpochTx *types.Transaction, index int) error {
+	if f.isStartOfEpoch {
+		expectedIndex := 0
+		if index != expectedIndex {
+			return InvalidTxIndexErr(expectedIndex, index)
+		}
+
 		localCommitEpochTx, err := f.createCommitEpochTx()
 		if err != nil {
 			return err
@@ -847,9 +854,9 @@ func (f *fsm) verifyCommitEpochTx(commitEpochTx *types.Transaction) error {
 	return errCommitEpochTxNotExpected
 }
 
-// verifyCommitEpochTx creates commit epoch transaction and compares its hash with the one extracted from the block.
+// verifyRewardWalletFundTx creates commit epoch transaction and compares its hash with the one extracted from the block.
 func (f *fsm) verifyRewardWalletFundTx(fundRewardWalletTx *types.Transaction) error {
-	if f.isEndOfEpoch {
+	if f.isStartOfEpoch {
 		localFundRewardWalletTx, err := f.createRewardWalletFundTx()
 		if err != nil {
 			return err
@@ -872,7 +879,7 @@ func (f *fsm) verifyRewardWalletFundTx(fundRewardWalletTx *types.Transaction) er
 // verifyDistributeRewardsTx creates distribute rewards transaction
 // and compares its hash with the one extracted from the block.
 func (f *fsm) verifyDistributeRewardsTx(distributeRewardsTx *types.Transaction) error {
-	if f.isEndOfEpoch {
+	if f.isStartOfEpoch {
 		localDistributeRewardsTx, err := f.createDistributeRewardsTx()
 		if err != nil {
 			return err
@@ -895,7 +902,7 @@ func (f *fsm) verifyDistributeRewardsTx(distributeRewardsTx *types.Transaction) 
 // verifyDistributeDAOIncentiveTx creates distribute vault rewards transaction
 // and compares its hash with the one extracted from the block.
 func (f *fsm) verifyDistributeDAOIncentiveTx(distributeDAOIncentiveTx *types.Transaction) error {
-	if f.isEndOfEpoch {
+	if f.isStartOfEpoch {
 		localDistributeDAOIncentiveTx, err := f.createDistributeDAOIncentiveTx()
 		if err != nil {
 			return err
@@ -919,7 +926,7 @@ func (f *fsm) verifyDistributeDAOIncentiveTx(distributeDAOIncentiveTx *types.Tra
 // and compares its hash with the one extracted from the block.
 func (f *fsm) verifySyncValidatorsDataTx(syncValidatorsDataTx *types.Transaction, txIndex int) error {
 	if f.isStartOfEpoch {
-		expectedTxIndex := 0
+		expectedTxIndex := 1
 		if txIndex != expectedTxIndex {
 			return InvalidTxIndexErr(expectedTxIndex, txIndex)
 		}
