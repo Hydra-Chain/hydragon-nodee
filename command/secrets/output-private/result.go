@@ -18,9 +18,9 @@ func (r *SecretsOutputResult) GetOutput() string {
 
 	buffer.WriteString("\n[PRIVATE KEYS OUTPUT]\n")
 	buffer.WriteString(helper.FormatKV([]string{
-		fmt.Sprintf("Network Key|%s", r.NetworkKey),
-		fmt.Sprintf("Private Key|%s", r.PrivateKey),
-		fmt.Sprintf("BLS Private Key|%s", r.BLSPrivateKey),
+		fmt.Sprintf("Network Private Key|%s", r.NetworkKey),
+		fmt.Sprintf("EVM Private Key|%s", r.PrivateKey),
+		fmt.Sprintf("Validator BLS Private Key|%s", r.BLSPrivateKey),
 	}))
 
 	return buffer.String()

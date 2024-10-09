@@ -24,13 +24,13 @@ const (
 // Define constant names for available secrets
 const (
 	// ValidatorKey is the private key secret of the validator node
-	ValidatorKey = "validator-key"
+	ValidatorKey = "evm-private-key"
 
 	// ValidatorBLSKey is the bls secret key of the validator node
-	ValidatorBLSKey = "validator-bls-key"
+	ValidatorBLSKey = "validator-bls-private-key"
 
 	// NetworkKey is the libp2p private key secret used for networking
-	NetworkKey = "network-key"
+	NetworkKey = "network-private-key"
 
 	// ValidatorBLSSignature is the BLS signature of the validator node
 	ValidatorBLSSignature = "validator-bls-signature"

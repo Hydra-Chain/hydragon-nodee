@@ -69,13 +69,6 @@ func setFlags(cmd *cobra.Command) {
 		"stake represents amount which is going to be staked by the new validator account",
 	)
 
-	cmd.Flags().Int64Var(
-		&params.chainID,
-		chainIDFlag,
-		command.DefaultChainID,
-		"the ID of the chain",
-	)
-
 	cmd.Flags().BoolVar(
 		&params.insecureLocalStore,
 		sidechain.InsecureLocalStoreFlag,
@@ -155,8 +148,6 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 			}
 
 			result.validatorAddress = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
-			result.stakeResult = "No stake parameters have been submitted"
-			result.amount = "0"
 			foundNewValidatorLog = true
 		}
 	}
@@ -213,7 +204,8 @@ func stake(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.Receipt,
 
 func populateStakeResults(receipt *ethgo.Receipt, result *registerResult) {
 	if receipt.Status != uint64(types.ReceiptSuccess) {
-		result.stakeResult = "Stake transaction failed"
+		result.stakeResult = fmt.Sprintf("Stake transaction failed. Tx: %s", receipt.TransactionHash.String())
+		result.amount = "0"
 
 		return
 	}

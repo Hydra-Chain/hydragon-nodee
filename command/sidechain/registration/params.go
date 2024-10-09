@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	stakeFlag   = "stake"
-	chainIDFlag = "chain-id"
+	stakeFlag = "stake"
 )
 
 type registerParams struct {
@@ -19,7 +18,6 @@ type registerParams struct {
 	accountConfig      string
 	jsonRPC            string
 	stake              string
-	chainID            int64
 	insecureLocalStore bool
 }
 
@@ -53,15 +51,24 @@ func (rr registerResult) GetOutput() string {
 
 	var vals []string
 
-	buffer.WriteString("\n[REGISTRATION]\n")
+	buffer.WriteString("\n[SUCCESSFUL REGISTRATION]\n")
 
-	vals = make([]string, 0, 3)
-	vals = append(vals, fmt.Sprintf("Validator Address|%s", rr.validatorAddress))
-	vals = append(vals, fmt.Sprintf("Staking Result|%s", rr.stakeResult))
-	vals = append(vals, fmt.Sprintf("Amount Staked|%v", rr.amount))
+	vals = make([]string, 0, 1)
+	vals = append(vals, fmt.Sprintf("EVM Address|%s", rr.validatorAddress))
 
 	buffer.WriteString(helper.FormatKV(vals))
 	buffer.WriteString("\n")
+
+	if rr.stakeResult != "" {
+		buffer.WriteString("\n[SELF STAKE]\n")
+
+		vals = make([]string, 0, 2)
+		vals = append(vals, fmt.Sprintf("Staking Result|%s", rr.stakeResult))
+		vals = append(vals, fmt.Sprintf("Amount Staked|%v", rr.amount))
+
+		buffer.WriteString(helper.FormatKV(vals))
+		buffer.WriteString("\n")
+	}
 
 	return buffer.String()
 }

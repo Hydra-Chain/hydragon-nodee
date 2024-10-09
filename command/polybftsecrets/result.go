@@ -39,7 +39,7 @@ func (r *SecretsInitResult) GetOutput() string {
 
 	vals = append(
 		vals,
-		fmt.Sprintf("Public key (address)|%s", r.Address.String()),
+		fmt.Sprintf("EVM Address|%s", r.Address.String()),
 	)
 
 	if r.PrivateKey != "" {
@@ -52,14 +52,14 @@ func (r *SecretsInitResult) GetOutput() string {
 	if r.BLSPrivateKey != "" {
 		vals = append(
 			vals,
-			fmt.Sprintf("BLS Private key|%s", r.BLSPrivateKey),
+			fmt.Sprintf("Validator BLS Private key|%s", r.BLSPrivateKey),
 		)
 	}
 
 	if r.BLSPubkey != "" {
 		vals = append(
 			vals,
-			fmt.Sprintf("BLS Public key|%s", r.BLSPubkey),
+			fmt.Sprintf("Validator BLS Public key|%s", r.BLSPubkey),
 		)
 	}
 
