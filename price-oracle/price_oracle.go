@@ -25,7 +25,8 @@ import (
 )
 
 var (
-	alreadyVotedMapping = make(map[uint64]bool)
+	// hasExecutedForDay mapping will indicate when there is no need to vote for a given day
+	hasExecutedForDay   = make(map[uint64]bool)
 	calculatedDayNumber = make(map[uint64]uint64)
 	priceVotedEventABI  = contractsapi.PriceOracle.Abi.Events["PriceVoted"]
 )
@@ -186,8 +187,8 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 		return false, nil
 	}
 
-	// check is voting already made for the current day
-	if p.alreadyVoted(header) {
+	// check if there is a need to execute the vote
+	if p.hasExecutedForDay(header) {
 		return false, nil
 	}
 
@@ -198,15 +199,18 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 	}
 
 	// then check if the contract is in a proper state to vote
-	shouldVote, falseReason, err := state.shouldVote(
-		calcDayNumber(header.Timestamp),
-	)
+	dayNumber := calcDayNumber(header.Timestamp)
+	shouldVote, falseReason, err := state.shouldVote(dayNumber)
 	if err != nil {
 		return false, err
 	}
 
 	if !shouldVote {
 		p.logger.Debug("should not vote", "reason", falseReason)
+
+		if falseReason == "PRICE_ALREADY_SET" {
+			hasExecutedForDay[dayNumber] = true
+		}
 
 		return false, nil
 	}
@@ -238,8 +242,8 @@ func (p *PriceOracle) blockMustBeProcessed(ev *blockchain.Event) bool {
 		block.Number >= p.blockchain.CurrentHeader().Number && (ev.Type != blockchain.EventFork)
 }
 
-func (p *PriceOracle) alreadyVoted(header *types.Header) bool {
-	return alreadyVotedMapping[calcDayNumber(header.Timestamp)]
+func (p *PriceOracle) hasExecutedForDay(header *types.Header) bool {
+	return hasExecutedForDay[calcDayNumber(header.Timestamp)]
 }
 
 // executeVote get the price from the price feed and votes
@@ -254,7 +258,7 @@ func (p *PriceOracle) executeVote(header *types.Header) error {
 		return fmt.Errorf("vote: failed %w", err)
 	}
 
-	alreadyVotedMapping[calcDayNumber(header.Timestamp)] = true
+	hasExecutedForDay[calcDayNumber(header.Timestamp)] = true
 
 	return nil
 }

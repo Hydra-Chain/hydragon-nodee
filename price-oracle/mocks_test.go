@@ -16,7 +16,6 @@ import (
 
 type MockPriceOracle struct {
 	PriceOracle
-	MockAlreadyVotedMapping map[uint64]bool
 }
 
 var _ contract.Provider = (*stateProviderMock)(nil)

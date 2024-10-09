@@ -320,7 +320,7 @@ func TestShouldExecuteVote(t *testing.T) {
 	tests := []struct {
 		name               string
 		header             *types.Header
-		alreadyVoted       bool
+		hasExecutedForDay  bool
 		shouldMockState    bool
 		stateShouldVote    bool
 		stateShouldVoteErr error
@@ -328,36 +328,36 @@ func TestShouldExecuteVote(t *testing.T) {
 		expectedError      error
 	}{
 		{
-			name:            "Not in voting time",
-			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 0, 30, 0, 0, time.UTC).Unix())},
-			alreadyVoted:    false,
-			shouldMockState: false,
-			stateShouldVote: false,
-			expectedResult:  false,
-			expectedError:   nil,
+			name:              "Not in voting time",
+			header:            &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 0, 30, 0, 0, time.UTC).Unix())},
+			hasExecutedForDay: false,
+			shouldMockState:   false,
+			stateShouldVote:   false,
+			expectedResult:    false,
+			expectedError:     nil,
 		},
 		{
-			name:            "Already voted",
-			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
-			alreadyVoted:    true,
-			shouldMockState: false,
-			stateShouldVote: false,
-			expectedResult:  false,
-			expectedError:   nil,
+			name:              "Should not vote because it has executed the required action for the day",
+			header:            &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			hasExecutedForDay: true,
+			shouldMockState:   false,
+			stateShouldVote:   false,
+			expectedResult:    false,
+			expectedError:     nil,
 		},
 		{
-			name:            "Should not vote based on state",
-			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
-			alreadyVoted:    false,
-			shouldMockState: true,
-			stateShouldVote: false,
-			expectedResult:  false,
-			expectedError:   nil,
+			name:              "Should not vote based on state",
+			header:            &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			hasExecutedForDay: false,
+			shouldMockState:   true,
+			stateShouldVote:   false,
+			expectedResult:    false,
+			expectedError:     nil,
 		},
 		{
 			name:               "Error in shouldVote",
 			header:             &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
-			alreadyVoted:       false,
+			hasExecutedForDay:  false,
 			shouldMockState:    true,
 			stateShouldVote:    false,
 			stateShouldVoteErr: errors.New("should vote error"),
@@ -365,21 +365,21 @@ func TestShouldExecuteVote(t *testing.T) {
 			expectedError:      errors.New("should vote error"),
 		},
 		{
-			name:            "Should vote",
-			header:          &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
-			alreadyVoted:    false,
-			shouldMockState: true,
-			stateShouldVote: true,
-			expectedResult:  true,
-			expectedError:   nil,
+			name:              "Should vote",
+			header:            &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			hasExecutedForDay: false,
+			shouldMockState:   true,
+			stateShouldVote:   true,
+			expectedResult:    true,
+			expectedError:     nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Set the alreadyVotedMapping state
+			// Set the hasExecutedForDay state
 			dayNumber := calcDayNumber(tt.header.Timestamp)
-			alreadyVotedMapping[dayNumber] = tt.alreadyVoted
+			hasExecutedForDay[dayNumber] = tt.hasExecutedForDay
 
 			if tt.shouldMockState {
 				// Mock the GetPriceOracleState and shouldVote methods
@@ -616,9 +616,9 @@ func TestExecuteVote(t *testing.T) {
 	// Assert that the appropriate log was found
 	require.True(t, foundVoteLog)
 
-	// Check if the alreadyVotedMapping was updated
+	// Check if the hasExecutedForDay was updated
 	dayNumber := calcDayNumber(header.Timestamp)
-	require.True(t, alreadyVotedMapping[dayNumber])
+	require.True(t, hasExecutedForDay[dayNumber])
 
 	// Assert that the mocks were called as expected
 	mockPriceFeed.AssertExpectations(t)
@@ -627,8 +627,6 @@ func TestExecuteVote(t *testing.T) {
 
 func TestExecuteVote_PriceFeedError(t *testing.T) {
 	header := &types.Header{Timestamp: 100000}
-	dayNumber := calcDayNumber(header.Timestamp)
-	alreadyVotedMapping[dayNumber] = false
 
 	mockPriceFeed := new(MockPriceFeed)
 	account := validator.NewTestValidator(t, "X", 1000).Account
@@ -648,8 +646,9 @@ func TestExecuteVote_PriceFeedError(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "price feed error")
 
-	// Check if the alreadyVotedMapping was not updated
-	require.False(t, alreadyVotedMapping[dayNumber])
+	// Check if the hasExecutedForDay not updated
+	dayNumber := calcDayNumber(header.Timestamp)
+	require.False(t, hasExecutedForDay[dayNumber])
 
 	// Assert that the mocks were called as expected
 	mockPriceFeed.AssertExpectations(t)
@@ -681,9 +680,9 @@ func TestExecuteVote_VoteError(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "vote: failed vote error")
 
-	// Check if the alreadyVotedMapping was not updated
+	// Check if the hasExecutedForDay not updated
 	dayNumber := calcDayNumber(header.Timestamp)
-	require.False(t, alreadyVotedMapping[dayNumber])
+	require.False(t, hasExecutedForDay[dayNumber])
 
 	// Assert that the mocks were called as expected
 	mockPriceFeed.AssertExpectations(t)
