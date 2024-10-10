@@ -27,6 +27,8 @@ var (
 	validatorTypeABI = abi.MustNewType(
 		"tuple(uint256[4] blsKey, uint256 stake, bool isWhitelisted, bool isActive)",
 	)
+	// DefaultDenominator is the default denominator for voting power exponent and the APR calculations in the contracts
+	DefaultDenominator = big.NewInt(10000)
 )
 
 // StakeManager interface provides functions for handling stake change of validators
@@ -188,7 +190,11 @@ func (s *stakeManager) init(dbTx *bolt.Tx) error {
 		// so going through the balanceChangedEvents next is not needed theoretically, but leave it for now
 		// The best decision would be keeping the validators balance in the db,
 		// so fetching it from state in updateOnPowerExponentEvent() can be removed
-		err = s.updateOnPowerExponentEvent(&fullValidatorSet, powerExponentUpdatedEvents[eventsCount-1], currentHeader)
+		err = s.updateOnPowerExponentEvent(
+			&fullValidatorSet,
+			powerExponentUpdatedEvents[eventsCount-1],
+			currentHeader,
+		)
 		if err != nil {
 			return err
 		}
@@ -289,7 +295,11 @@ func (s *stakeManager) updateWithReceipts(
 		)
 
 		// update the stake
-		fullValidatorSet.Validators.setStake(event.Account, event.NewBalance, fullValidatorSet.VotingPowerExponent)
+		fullValidatorSet.Validators.setStake(
+			event.Account,
+			event.NewBalance,
+			fullValidatorSet.VotingPowerExponent,
+		)
 	}
 
 	blockNumber := blockHeader.Number
@@ -573,7 +583,10 @@ func (sc *validatorStakeMap) setStake(
 	stakedBalance *big.Int,
 	exponent *big.Int,
 ) {
-	votingPower := sc.calcVotingPower(stakedBalance, &BigNumDecimal{Numerator: exponent, Denominator: big.NewInt(10000)})
+	votingPower := sc.calcVotingPower(
+		stakedBalance,
+		&BigNumDecimal{Numerator: exponent, Denominator: DefaultDenominator},
+	)
 	isActive := votingPower.Cmp(bigZero) > 0
 	if metadata, exists := (*sc)[address]; exists {
 		metadata.VotingPower = votingPower

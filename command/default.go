@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/umbracle/ethgo"
 
@@ -30,6 +31,8 @@ var (
 		DefaultGenesisBaseFeeEM,
 		DefaultGenesisBaseFeeChangeDenom,
 	)
+	// DefaultNumerator is the default numerator for the voting power exponent
+	DefaultNumerator = big.NewInt(5000)
 )
 
 const (
