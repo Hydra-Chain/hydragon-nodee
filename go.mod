@@ -21,7 +21,7 @@ require (
 	github.com/libp2p/go-libp2p-pubsub v0.10.1
 	github.com/miekg/dns v1.1.56 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
-	github.com/multiformats/go-multiaddr v0.12.3
+	github.com/multiformats/go-multiaddr v0.13.0
 	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/prometheus/client_golang v1.18.0
 	github.com/ryanuber/columnize v2.1.2+incompatible
