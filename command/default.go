@@ -19,6 +19,9 @@ const (
 	DefaultGenesisGasLimit           = 5242880 // 0x500000
 	DefaultGenesisBaseFeeEM          = chain.GenesisBaseFeeEM
 	DefaultGenesisBaseFeeChangeDenom = chain.BaseFeeChangeDenom
+	DefaultSecretsConfigPath         = "./secretsManagerConfig.json"
+	DefaultSecretsConfigPathDesc     = "the path to the SecretsManager config file. " +
+		"Used for Coingecko API key and others. If omitted, the local FS secrets manager is used"
 )
 
 var (

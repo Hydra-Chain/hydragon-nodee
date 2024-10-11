@@ -29,6 +29,8 @@ const (
 	MaxValidatorCountFlag = "max-validator-count"
 
 	IBFTValidatorTypeFlag = "ibft-validator-type"
+
+	SecretsConfigFlag = "secrets-config"
 )
 
 const (
@@ -37,8 +39,10 @@ const (
 )
 
 var (
-	errInvalidValidatorRange = errors.New("minimum number of validators can not be greater than the " +
-		"maximum number of validators")
+	errInvalidValidatorRange = errors.New(
+		"minimum number of validators can not be greater than the " +
+			"maximum number of validators",
+	)
 	errInvalidMinNumValidators = errors.New("minimum number of validators must be greater than 0")
 	errInvalidMaxNumValidators = errors.New("maximum number of validators must be lower or equal " +
 		"than MaxSafeJSInt (2^53 - 2)")

@@ -19,6 +19,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/helper/common"
+	"github.com/0xPolygon/polygon-edge/secrets"
 	"github.com/0xPolygon/polygon-edge/server"
 	"github.com/0xPolygon/polygon-edge/types"
 )
@@ -111,6 +112,10 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		}
 	}
 
+	if err := p.initSecretsConfig(); err != nil {
+		return err
+	}
+
 	polyBftConfig := &polybft.PolyBFTConfig{
 		InitialValidatorSet: initialValidators,
 		BlockTime:           common.Duration{Duration: p.blockTime},
@@ -128,7 +133,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		ProxyContractsAdmin:      types.StringToAddress(p.proxyContractsAdmin),
 	}
 
-	polyBftConfig.InitialPrices, err = getInitialPrices()
+	polyBftConfig.InitialPrices, err = p.getInitialPrices()
 	if err != nil {
 		return err
 	}
@@ -207,7 +212,10 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 
 	for i, validator := range initialValidators {
 		// create validator metadata instance
-		metadata, err := validator.ToValidatorMetadata(command.DefaultNumerator, polybft.DefaultDenominator)
+		metadata, err := validator.ToValidatorMetadata(
+			command.DefaultNumerator,
+			polybft.DefaultDenominator,
+		)
 		if err != nil {
 			return err
 		}
@@ -296,7 +304,9 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	return helper.WriteGenesisConfigToDisk(chainConfig, params.genesisPath)
 }
 
-func (p *genesisParams) deployContracts(totalStake *big.Int) (map[types.Address]*chain.GenesisAccount, error) {
+func (p *genesisParams) deployContracts(
+	totalStake *big.Int,
+) (map[types.Address]*chain.GenesisAccount, error) {
 	proxyToImplAddrMap := contracts.GetProxyImplementationMapping()
 	proxyAddresses := make([]types.Address, 0, len(proxyToImplAddrMap))
 
@@ -414,7 +424,11 @@ func (p *genesisParams) getValidatorAccounts() ([]*validator.GenesisValidator, e
 			}
 
 			if _, err := multiaddr.NewMultiaddr(parts[0]); err != nil {
-				return nil, fmt.Errorf("invalid P2P multi address '%s' provided: %w ", parts[0], err)
+				return nil, fmt.Errorf(
+					"invalid P2P multi address '%s' provided: %w ",
+					parts[0],
+					err,
+				)
 			}
 
 			trimmedAddress := strings.TrimPrefix(parts[1], "0x")
@@ -485,11 +499,16 @@ func getProxyContractsInfo(addresses []types.Address) []*contractInfo {
 // getInitialPrices returns an array of 310 *big.Int representing the initial prices to be used in the genesis.
 // The prices are retrieved from a third party API and converted to *big.Int with 18 decimal places.
 // If there is an error retrieving or converting the prices, the function returns the error.
-func getInitialPrices() ([310]*big.Int, error) {
+func (p *genesisParams) getInitialPrices() ([310]*big.Int, error) {
 	convertedPrices := [310]*big.Int{}
 
+	apiKey, err := getCGAPIKey(p.secretsConfig)
+	if err != nil {
+		return convertedPrices, err
+	}
+
 	// get the prices data and populate the initial prices in the genesis
-	priceData, err := getCGPricesData(8)
+	priceData, err := getCGPricesData(apiKey, 8)
 	if err != nil {
 		return convertedPrices, err
 	}
@@ -502,4 +521,14 @@ func getInitialPrices() ([310]*big.Int, error) {
 	}
 
 	return convertedPrices, nil
+}
+
+func (p *genesisParams) initSecretsConfig() error {
+	var parseErr error
+
+	if p.secretsConfig, parseErr = secrets.ReadConfig(p.secretsConfigPath); parseErr != nil {
+		return fmt.Errorf("unable to read secrets config file, %w", parseErr)
+	}
+
+	return nil
 }
