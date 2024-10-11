@@ -39,7 +39,7 @@ require (
 require (
 	cloud.google.com/go/secretmanager v1.13.0
 	github.com/armon/go-metrics v0.4.1
-	github.com/aws/aws-sdk-go v1.52.2
+	github.com/aws/aws-sdk-go v1.55.5
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/coinbase/kryptology v1.8.0
 	github.com/fatih/color v1.15.0 // indirect
