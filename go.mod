@@ -51,7 +51,7 @@ require (
 	github.com/umbracle/ethgo v0.1.4-0.20231006072852-6b068360fc97
 	github.com/valyala/fastjson v1.6.3 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/tools v0.17.0
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.2.1 // indirect
@@ -69,7 +69,7 @@ require (
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22
 	github.com/sethvargo/go-retry v0.2.4
 	golang.org/x/sync v0.7.0
-	golang.org/x/term v0.19.0
+	golang.org/x/term v0.25.0
 	google.golang.org/genproto v0.0.0-20240401170217-c3f982113cda
 	gopkg.in/DataDog/dd-trace-go.v1 v1.63.1
 	pgregory.net/rapid v1.1.0
