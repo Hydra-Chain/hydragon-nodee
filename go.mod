@@ -52,7 +52,7 @@ require (
 	github.com/valyala/fastjson v1.6.3 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/tools v0.17.0
+	golang.org/x/tools v0.18.0
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.2.1 // indirect
 )
@@ -65,7 +65,7 @@ require (
 
 require (
 	github.com/Hydra-Chain/go-ibft v0.4.4-hydra
-	github.com/quasilyte/go-ruleguard v0.4.0
+	github.com/quasilyte/go-ruleguard v0.4.2
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22
 	github.com/sethvargo/go-retry v0.2.4
 	golang.org/x/sync v0.7.0
@@ -223,8 +223,8 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect
-	golang.org/x/mod v0.14.0 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20240213143201-ec583247a57a // indirect
+	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/oauth2 v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
