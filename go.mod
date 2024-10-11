@@ -67,7 +67,7 @@ require (
 	github.com/Hydra-Chain/go-ibft v0.4.4-hydra
 	github.com/quasilyte/go-ruleguard v0.4.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22
-	github.com/sethvargo/go-retry v0.2.4
+	github.com/sethvargo/go-retry v0.3.0
 	golang.org/x/sync v0.7.0
 	golang.org/x/term v0.19.0
 	google.golang.org/genproto v0.0.0-20240401170217-c3f982113cda
