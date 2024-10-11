@@ -30,7 +30,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
 	github.com/umbracle/fastrlp v0.1.1-0.20230504065717-58a1b8a9929d
 	github.com/umbracle/go-eth-bn256 v0.0.0-20230125114011-47cb310d9b0b
-	golang.org/x/crypto v0.22.0
+	golang.org/x/crypto v0.28.0
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.34.0
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
@@ -51,8 +51,8 @@ require (
 	github.com/umbracle/ethgo v0.1.4-0.20231006072852-6b068360fc97
 	github.com/valyala/fastjson v1.6.3 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/tools v0.17.0
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/tools v0.26.0
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.2.1 // indirect
 )
@@ -68,8 +68,8 @@ require (
 	github.com/quasilyte/go-ruleguard v0.4.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22
 	github.com/sethvargo/go-retry v0.2.4
-	golang.org/x/sync v0.7.0
-	golang.org/x/term v0.19.0
+	golang.org/x/sync v0.8.0
+	golang.org/x/term v0.25.0
 	google.golang.org/genproto v0.0.0-20240401170217-c3f982113cda
 	gopkg.in/DataDog/dd-trace-go.v1 v1.63.1
 	pgregory.net/rapid v1.1.0
@@ -224,10 +224,10 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect
-	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/mod v0.21.0 // indirect
+	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.177.0 // indirect
