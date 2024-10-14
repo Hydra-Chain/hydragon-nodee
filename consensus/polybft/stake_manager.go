@@ -536,7 +536,7 @@ func (s *stakeManager) updateOnPowerExponentEvent(
 	}
 
 	for addr := range fullValidatorSet.Validators {
-		// TODO: Currently, the balances are taken from the contracts (state), however,
+		// TODO: Currently, the balances are fetched from the contracts (state), however,
 		// the best decision would be keeping the validators balance in the db,
 		balance, err := systemState.GetValidatorBalance(addr)
 		if err != nil {
