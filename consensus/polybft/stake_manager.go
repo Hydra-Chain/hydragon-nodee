@@ -184,12 +184,9 @@ func (s *stakeManager) init(dbTx *bolt.Tx) error {
 		return err
 	}
 
+	checkForBalanceChanges := true
 	eventsCount := len(powerExponentUpdatedEvents)
 	if eventsCount > 0 {
-		// TODO: Here the voting powers would be updated based on the latest balances in the contract,
-		// so going through the balanceChangedEvents next is not needed theoretically, but leave it for now
-		// The best decision would be keeping the validators balance in the db,
-		// so fetching it from state in updateOnPowerExponentEvent() can be removed
 		err = s.updateOnPowerExponentEvent(
 			&fullValidatorSet,
 			powerExponentUpdatedEvents[eventsCount-1],
@@ -198,34 +195,39 @@ func (s *stakeManager) init(dbTx *bolt.Tx) error {
 		if err != nil {
 			return err
 		}
+
+		// skip the check for balanceChanged events
+		checkForBalanceChanges = false
 	}
 
-	// then check for balance changed events
-	balanceChangedEventsGetter := &eventsGetter[*contractsapi.BalanceChangedEvent]{
-		receiptsGetter: receiptsGetter{
-			blockchain: s.blockchain,
-		},
-		isValidLogFn: func(l *types.Log) bool {
-			return l.Address == s.hydraStakingContract
-		},
-		parseEventFn: func(h *types.Header, l *ethgo.Log) (*contractsapi.BalanceChangedEvent, bool, error) {
-			var balanceChangedEvent contractsapi.BalanceChangedEvent
-			doesMatch, err := balanceChangedEvent.ParseLog(l)
+	// check for balance changed events only if there are no voting power changes
+	if checkForBalanceChanges {
+		balanceChangedEventsGetter := &eventsGetter[*contractsapi.BalanceChangedEvent]{
+			receiptsGetter: receiptsGetter{
+				blockchain: s.blockchain,
+			},
+			isValidLogFn: func(l *types.Log) bool {
+				return l.Address == s.hydraStakingContract
+			},
+			parseEventFn: func(h *types.Header, l *ethgo.Log) (*contractsapi.BalanceChangedEvent, bool, error) {
+				var balanceChangedEvent contractsapi.BalanceChangedEvent
+				doesMatch, err := balanceChangedEvent.ParseLog(l)
 
-			return &balanceChangedEvent, doesMatch, err
-		},
-	}
+				return &balanceChangedEvent, doesMatch, err
+			},
+		}
 
-	stakeChangedEvents, err := balanceChangedEventsGetter.getEventsFromBlocksRange(
-		fullValidatorSet.BlockNumber+1,
-		currentBlockNumber,
-	)
-	if err != nil {
-		return err
-	}
+		stakeChangedEvents, err := balanceChangedEventsGetter.getEventsFromBlocksRange(
+			fullValidatorSet.BlockNumber+1,
+			currentBlockNumber,
+		)
+		if err != nil {
+			return err
+		}
 
-	if err := s.updateWithReceipts(&fullValidatorSet, stakeChangedEvents, currentHeader); err != nil {
-		return err
+		if err := s.updateWithReceipts(&fullValidatorSet, stakeChangedEvents, currentHeader); err != nil {
+			return err
+		}
 	}
 
 	// we should save new state even if number of events is zero
@@ -534,6 +536,8 @@ func (s *stakeManager) updateOnPowerExponentEvent(
 	}
 
 	for addr := range fullValidatorSet.Validators {
+		// TODO: Currently, the balances are taken from the contracts (state), however,
+		// the best decision would be keeping the validators balance in the db,
 		balance, err := systemState.GetValidatorBalance(addr)
 		if err != nil {
 			return err
