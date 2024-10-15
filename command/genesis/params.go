@@ -60,7 +60,7 @@ var (
 	errBaseFeeEMZero            = errors.New(
 		"base fee elasticity multiplier must be greater than 0",
 	)
-	errBaseFeeZero = errors.New("base fee  must be greater than 0")
+	errBaseFeeZero = errors.New("base fee must be greater than 0")
 )
 
 type genesisParams struct {
