@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
+var InitialMinStake = new(big.Int).Mul(big.NewInt(1e18), big.NewInt(15000))
+
 // ValidatorSet interface of the current validator set
 type ValidatorSet interface {
 	// Includes check if given address is among the current validator set

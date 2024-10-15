@@ -26,10 +26,11 @@ var accountSetABIType = abi.MustNewType(
 
 // ValidatorMetadata represents a validator metadata (its public identity)
 type ValidatorMetadata struct {
-	Address     types.Address
-	BlsKey      *bls.PublicKey
-	VotingPower *big.Int
-	IsActive    bool
+	Address       types.Address
+	BlsKey        *bls.PublicKey
+	StakedBalance *big.Int
+	VotingPower   *big.Int
+	IsActive      bool
 }
 
 // Equals checks ValidatorMetadata equality
@@ -58,10 +59,11 @@ func (v *ValidatorMetadata) Copy() *ValidatorMetadata {
 	blsKey, _ := bls.UnmarshalPublicKey(copiedBlsKey)
 
 	return &ValidatorMetadata{
-		Address:     types.BytesToAddress(v.Address[:]),
-		BlsKey:      blsKey,
-		VotingPower: new(big.Int).Set(v.VotingPower),
-		IsActive:    v.IsActive,
+		Address:       types.BytesToAddress(v.Address[:]),
+		BlsKey:        blsKey,
+		StakedBalance: new(big.Int).Set(v.StakedBalance),
+		VotingPower:   new(big.Int).Set(v.VotingPower),
+		IsActive:      v.IsActive,
 	}
 }
 
@@ -72,6 +74,8 @@ func (v *ValidatorMetadata) MarshalRLPWith(ar *fastrlp.Arena) *fastrlp.Value {
 	vv.Set(ar.NewBytes(v.Address.Bytes()))
 	// BlsKey
 	vv.Set(ar.NewCopyBytes(v.BlsKey.Marshal()))
+	// StakedBalance
+	vv.Set(ar.NewBigInt(v.StakedBalance))
 	// VotingPower
 	vv.Set(ar.NewBigInt(v.VotingPower))
 	// IsActive
@@ -87,9 +91,9 @@ func (v *ValidatorMetadata) UnmarshalRLPWith(val *fastrlp.Value) error {
 		return err
 	}
 
-	if num := len(elems); num != 4 {
+	if num := len(elems); num != 5 {
 		return fmt.Errorf(
-			"incorrect elements count to decode validator account, expected 4 but found %d",
+			"incorrect elements count to decode validator account, expected 5 but found %d",
 			num,
 		)
 	}
@@ -115,16 +119,24 @@ func (v *ValidatorMetadata) UnmarshalRLPWith(val *fastrlp.Value) error {
 
 	v.BlsKey = blsKey
 
+	// StakedBalance
+	stakedBalance := new(big.Int)
+	if err = elems[2].GetBigInt(stakedBalance); err != nil {
+		return fmt.Errorf("expected 'stakedBalance' encoded as big int: %w", err)
+	}
+
+	v.StakedBalance = new(big.Int).Set(stakedBalance)
+
 	// VotingPower
 	votingPower := new(big.Int)
-	if err = elems[2].GetBigInt(votingPower); err != nil {
+	if err = elems[3].GetBigInt(votingPower); err != nil {
 		return fmt.Errorf("expected 'VotingPower' encoded as big int: %w", err)
 	}
 
 	v.VotingPower = new(big.Int).Set(votingPower)
 
 	// IsActive
-	isActive, err := elems[3].GetBool()
+	isActive, err := elems[4].GetBool()
 	if err != nil {
 		return fmt.Errorf("expected 'IsActive' encoded as bool: %w", err)
 	}

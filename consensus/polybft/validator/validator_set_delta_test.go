@@ -85,7 +85,11 @@ func TestValidatorSetDelta_UnmarshalRLPWith_NegativeCases(t *testing.T) {
 		deltaMarshalled.Set(ar.NewBytes([]byte{0x26}))
 		deltaMarshalled.Set(ar.NewBytes([]byte{0x74}))
 		delta := &ValidatorSetDelta{}
-		require.ErrorContains(t, delta.UnmarshalRLPWith(deltaMarshalled), "incorrect elements count to decode validator set delta, expected 3 but found 4")
+		require.ErrorContains(
+			t,
+			delta.UnmarshalRLPWith(deltaMarshalled),
+			"incorrect elements count to decode validator set delta, expected 3 but found 4",
+		)
 	})
 
 	t.Run("Incorrect RLP value type for Added field", func(t *testing.T) {
@@ -97,7 +101,11 @@ func TestValidatorSetDelta_UnmarshalRLPWith_NegativeCases(t *testing.T) {
 		deltaMarshalled.Set(ar.NewBytes([]byte{0x33}))
 		deltaMarshalled.Set(ar.NewBytes([]byte{0x27}))
 		delta := &ValidatorSetDelta{}
-		require.ErrorContains(t, delta.UnmarshalRLPWith(deltaMarshalled), "array expected for added validators")
+		require.ErrorContains(
+			t,
+			delta.UnmarshalRLPWith(deltaMarshalled),
+			"array expected for added validators",
+		)
 	})
 
 	t.Run("Incorrect RLP value type for ValidatorMetadata in Added field", func(t *testing.T) {
@@ -111,7 +119,11 @@ func TestValidatorSetDelta_UnmarshalRLPWith_NegativeCases(t *testing.T) {
 		deltaMarshalled.Set(ar.NewNullArray())
 		deltaMarshalled.Set(ar.NewNull())
 		delta := &ValidatorSetDelta{}
-		require.ErrorContains(t, delta.UnmarshalRLPWith(deltaMarshalled), "value is not of type array")
+		require.ErrorContains(
+			t,
+			delta.UnmarshalRLPWith(deltaMarshalled),
+			"value is not of type array",
+		)
 	})
 
 	t.Run("Incorrect RLP value type for Removed field", func(t *testing.T) {
@@ -136,7 +148,11 @@ func TestValidatorSetDelta_UnmarshalRLPWith_NegativeCases(t *testing.T) {
 		deltaMarshalled.Set(updatedArray)
 		deltaMarshalled.Set(ar.NewNull())
 		delta := &ValidatorSetDelta{}
-		require.ErrorContains(t, delta.UnmarshalRLPWith(deltaMarshalled), "value is not of type bytes")
+		require.ErrorContains(
+			t,
+			delta.UnmarshalRLPWith(deltaMarshalled),
+			"value is not of type bytes",
+		)
 	})
 
 	t.Run("Incorrect RLP value type for Updated field", func(t *testing.T) {
@@ -148,7 +164,11 @@ func TestValidatorSetDelta_UnmarshalRLPWith_NegativeCases(t *testing.T) {
 		deltaMarshalled.Set(ar.NewBytes([]byte{0x33}))
 		deltaMarshalled.Set(ar.NewNull())
 		delta := &ValidatorSetDelta{}
-		require.ErrorContains(t, delta.UnmarshalRLPWith(deltaMarshalled), "array expected for updated validators")
+		require.ErrorContains(
+			t,
+			delta.UnmarshalRLPWith(deltaMarshalled),
+			"array expected for updated validators",
+		)
 	})
 
 	t.Run("Incorrect RLP value type for ValidatorMetadata in Updated field", func(t *testing.T) {
@@ -162,7 +182,11 @@ func TestValidatorSetDelta_UnmarshalRLPWith_NegativeCases(t *testing.T) {
 		deltaMarshalled.Set(updatedArray)
 		deltaMarshalled.Set(ar.NewNull())
 		delta := &ValidatorSetDelta{}
-		require.ErrorContains(t, delta.UnmarshalRLPWith(deltaMarshalled), "value is not of type array")
+		require.ErrorContains(
+			t,
+			delta.UnmarshalRLPWith(deltaMarshalled),
+			"value is not of type array",
+		)
 	})
 }
 
@@ -195,10 +219,10 @@ func TestExtra_CreateValidatorSetDelta_Cases(t *testing.T) {
 			vals := NewTestValidatorsWithAliases(t, []string{})
 
 			for _, name := range c.oldSet {
-				vals.Create(t, name, 1)
+				vals.Create(t, name, 1, 1)
 			}
 			for _, name := range c.newSet {
-				vals.Create(t, name, 1)
+				vals.Create(t, name, 1, 1)
 			}
 
 			oldValidatorSet := vals.GetPublicIdentities(c.oldSet...)

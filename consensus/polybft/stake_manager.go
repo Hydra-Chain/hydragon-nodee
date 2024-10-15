@@ -188,7 +188,11 @@ func (s *stakeManager) init(dbTx *bolt.Tx) error {
 		// so going through the balanceChangedEvents next is not needed theoretically, but leave it for now
 		// The best decision would be keeping the validators balance in the db,
 		// so fetching it from state in updateOnPowerExponentEvent() can be removed
-		err = s.updateOnPowerExponentEvent(&fullValidatorSet, powerExponentUpdatedEvents[eventsCount-1], currentHeader)
+		err = s.updateOnPowerExponentEvent(
+			&fullValidatorSet,
+			powerExponentUpdatedEvents[eventsCount-1],
+			// currentHeader,
+		)
 		if err != nil {
 			return err
 		}
@@ -289,10 +293,15 @@ func (s *stakeManager) updateWithReceipts(
 		)
 
 		// update the stake
-		fullValidatorSet.Validators.setStake(event.Account, event.NewBalance, fullValidatorSet.VotingPowerExponent)
+		fullValidatorSet.Validators.setStake(
+			event.Account,
+			event.NewBalance,
+			fullValidatorSet.VotingPowerExponent,
+		)
 	}
 
 	blockNumber := blockHeader.Number
+
 	for addr, data := range fullValidatorSet.Validators {
 		if data.BlsKey == nil {
 			blsKey, err := s.getBlsKey(data.Address)
@@ -486,7 +495,8 @@ func (s *stakeManager) ProcessLog(header *types.Header, log *ethgo.Log, dbTx *bo
 		}
 
 		if doesMatch {
-			if err := s.updateOnPowerExponentEvent(&fullValidatorSet, &powerExponentUpdatedEvent, header); err != nil {
+			// if err := s.updateOnPowerExponentEvent(&fullValidatorSet, &powerExponentUpdatedEvent, header); err != nil {
+			if err := s.updateOnPowerExponentEvent(&fullValidatorSet, &powerExponentUpdatedEvent); err != nil {
 				return err
 			}
 		} else {
@@ -513,23 +523,17 @@ func (s *stakeManager) ProcessLog(header *types.Header, log *ethgo.Log, dbTx *bo
 func (s *stakeManager) updateOnPowerExponentEvent(
 	fullValidatorSet *validatorSetState,
 	powerExponentUpdatedEvent *contractsapi.PowerExponentUpdatedEvent,
-	header *types.Header,
+	// header *types.Header,
 ) error {
 	// Update the power exponent
 	fullValidatorSet.VotingPowerExponent = powerExponentUpdatedEvent.NewPowerExponent
 
-	systemState, err := s.getSystemStateForBlock(header)
-	if err != nil {
-		return err
-	}
-
 	for addr := range fullValidatorSet.Validators {
-		balance, err := systemState.GetValidatorBalance(addr)
-		if err != nil {
-			return err
-		}
-
-		fullValidatorSet.Validators.setStake(addr, balance, fullValidatorSet.VotingPowerExponent)
+		fullValidatorSet.Validators.setStake(
+			addr,
+			fullValidatorSet.Validators[addr].StakedBalance,
+			fullValidatorSet.VotingPowerExponent,
+		)
 	}
 
 	return nil
@@ -573,16 +577,21 @@ func (sc *validatorStakeMap) setStake(
 	stakedBalance *big.Int,
 	exponent *big.Int,
 ) {
-	votingPower := sc.calcVotingPower(stakedBalance, &BigNumDecimal{Numerator: exponent, Denominator: big.NewInt(10000)})
+	votingPower := sc.calcVotingPower(
+		stakedBalance,
+		&BigNumDecimal{Numerator: exponent, Denominator: big.NewInt(10000)},
+	)
 	isActive := votingPower.Cmp(bigZero) > 0
 	if metadata, exists := (*sc)[address]; exists {
+		metadata.StakedBalance = stakedBalance
 		metadata.VotingPower = votingPower
 		metadata.IsActive = isActive
 	} else {
 		(*sc)[address] = &validator.ValidatorMetadata{
-			VotingPower: votingPower,
-			Address:     address,
-			IsActive:    isActive,
+			VotingPower:   votingPower,
+			Address:       address,
+			StakedBalance: stakedBalance,
+			IsActive:      isActive,
 		}
 	}
 }

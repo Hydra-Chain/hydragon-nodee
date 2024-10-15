@@ -288,10 +288,11 @@ func generateUpdatedValidatorVotingPower(
 
 	return &validator.ValidatorSetDelta{
 		Updated: validator.AccountSet{&validator.ValidatorMetadata{
-			Address:     currValidator.Address,
-			BlsKey:      currValidator.BlsKey,
-			VotingPower: new(big.Int).Mul(currValidator.VotingPower, big.NewInt(2)),
-			IsActive:    true,
+			Address:       currValidator.Address,
+			BlsKey:        currValidator.BlsKey,
+			StakedBalance: new(big.Int).Mul(currValidator.StakedBalance, big.NewInt(2)),
+			VotingPower:   new(big.Int).Mul(currValidator.VotingPower, big.NewInt(2)),
+			IsActive:      true,
 		}},
 	}
 }

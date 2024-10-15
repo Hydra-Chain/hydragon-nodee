@@ -26,13 +26,15 @@ func generateRandomBytes(t *testing.T) (result []byte) {
 func TestValidatorMetadata_Equals(t *testing.T) {
 	t.Parallel()
 
-	v := NewTestValidator(t, "A", 10)
+	v := NewTestValidator(t, "A", InitialMinStake, InitialVotingPower)
 	validatorAcc := v.ValidatorMetadata()
 	// proper validator metadata instance doesn't equal to nil
 	require.False(t, validatorAcc.Equals(nil))
 	// same instances of validator metadata are equal
 	require.True(t, validatorAcc.Equals(v.ValidatorMetadata()))
-
+	// update staked balance => validator metadata instances aren't equal
+	validatorAcc.StakedBalance = new(big.Int).SetInt64(5000)
+	require.False(t, validatorAcc.StakedBalance.Cmp(v.ValidatorMetadata().StakedBalance) == 0)
 	// update voting power => validator metadata instances aren't equal
 	validatorAcc.VotingPower = new(big.Int).SetInt64(50)
 	require.False(t, validatorAcc.Equals(v.ValidatorMetadata()))
@@ -56,19 +58,34 @@ func TestValidatorMetadata_CalculateVPower(t *testing.T) {
 		expDenominator string
 		result         string
 	}{
-		{"1", "8500", "10000", "0"},                                    // 0.000000000000000001 Coins
-		{"999999999999999999", "8500", "10000", "0"},                   // 0.999999999999999999 Coins
-		{"1000000000000000000", "8500", "10000", "1"},                  // 1 Coin
-		{"2000000000000000000", "8500", "10000", "1"},                  // 2 Coins
-		{"3000000000000000000", "8500", "10000", "2"},                  // 3 Coins
-		{"4000000000000000000", "8500", "10000", "3"},                  // 4 Coins
-		{"5000000000000000000", "8500", "10000", "3"},                  // 5 Coins
-		{"6000000000000000000", "8500", "10000", "4"},                  // 6 Coins
-		{"7000000000000000000", "8500", "10000", "5"},                  // 7 Coins
-		{"10000000000000000000", "8500", "10000", "7"},                 // 10 Coins
-		{"25000000000000000000", "8500", "10000", "15"},                // 25 Coins
-		{"50000000000000000000", "8500", "10000", "27"},                // 50 Coins
-		{"128324324324324324324", "8500", "10000", "61"},               // 128,324324324324324324 Coins
+		{
+			"1",
+			"8500",
+			"10000",
+			"0",
+		}, // 0.000000000000000001 Coins
+		{
+			"999999999999999999",
+			"8500",
+			"10000",
+			"0",
+		}, // 0.999999999999999999 Coins
+		{"1000000000000000000", "8500", "10000", "1"},   // 1 Coin
+		{"2000000000000000000", "8500", "10000", "1"},   // 2 Coins
+		{"3000000000000000000", "8500", "10000", "2"},   // 3 Coins
+		{"4000000000000000000", "8500", "10000", "3"},   // 4 Coins
+		{"5000000000000000000", "8500", "10000", "3"},   // 5 Coins
+		{"6000000000000000000", "8500", "10000", "4"},   // 6 Coins
+		{"7000000000000000000", "8500", "10000", "5"},   // 7 Coins
+		{"10000000000000000000", "8500", "10000", "7"},  // 10 Coins
+		{"25000000000000000000", "8500", "10000", "15"}, // 25 Coins
+		{"50000000000000000000", "8500", "10000", "27"}, // 50 Coins
+		{
+			"128324324324324324324",
+			"8500",
+			"10000",
+			"61",
+		}, // 128,324324324324324324 Coins
 		{"300000000000000000000", "8500", "10000", "127"},              // 300 Coins
 		{"750000000000000000000", "8500", "10000", "277"},              // 750 Coins
 		{"1500000000000000000000", "8500", "10000", "500"},             // 1500 Coins
@@ -93,7 +110,11 @@ func TestValidatorMetadata_CalculateVPower(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		quorumSize := CalculateVPower(createInt(c.stakedBalance), createInt(c.expNumerator), createInt(c.expDenominator))
+		quorumSize := CalculateVPower(
+			createInt(c.stakedBalance),
+			createInt(c.expNumerator),
+			createInt(c.expDenominator),
+		)
 		require.Equal(t, createInt(c.result), quorumSize)
 	}
 }
@@ -101,7 +122,7 @@ func TestValidatorMetadata_CalculateVPower(t *testing.T) {
 func TestValidatorMetadata_EqualAddressAndBlsKey(t *testing.T) {
 	t.Parallel()
 
-	v := NewTestValidator(t, "A", 10)
+	v := NewTestValidator(t, "A", InitialMinStake, InitialVotingPower)
 	validatorAcc := v.ValidatorMetadata()
 	// proper validator metadata instance doesn't equal to nil
 	require.False(t, validatorAcc.EqualAddressAndBlsKey(nil))
@@ -116,7 +137,16 @@ func TestValidatorMetadata_EqualAddressAndBlsKey(t *testing.T) {
 func TestAccountSet_GetAddresses(t *testing.T) {
 	t.Parallel()
 
-	address1, address2, address3 := types.Address{4, 3}, types.Address{68, 123}, types.Address{168, 123}
+	address1, address2, address3 := types.Address{
+		4,
+		3,
+	}, types.Address{
+		68,
+		123,
+	}, types.Address{
+		168,
+		123,
+	}
 	ac := AccountSet{
 		&ValidatorMetadata{Address: address1},
 		&ValidatorMetadata{Address: address2},
@@ -207,7 +237,12 @@ func TestAccountSet_ApplyDelta(t *testing.T) {
 					[]string{"A", "B", "C", "D"},
 					nil,
 					nil,
-					map[string]uint64{"A": 15000, "B": 15000, "C": 15000, "D": 15000},
+					map[string]uint64{
+						"A": InitialVotingPower,
+						"B": InitialVotingPower,
+						"C": InitialVotingPower,
+						"D": InitialVotingPower,
+					},
 					"",
 				},
 				{
@@ -217,7 +252,7 @@ func TestAccountSet_ApplyDelta(t *testing.T) {
 					[]string{"E", "F"},
 					map[string]uint64{"A": 30, "D": 10, "E": 5},
 					[]uint64{1, 2, 5},
-					map[string]uint64{"A": 30, "D": 10, "E": 5, "F": 15000},
+					map[string]uint64{"A": 30, "D": 10, "E": 5, "F": InitialVotingPower},
 					"",
 				},
 			},
@@ -229,7 +264,7 @@ func TestAccountSet_ApplyDelta(t *testing.T) {
 					[]string{"A"},
 					nil,
 					[]uint64{0},
-					map[string]uint64{"A": 15000},
+					map[string]uint64{"A": InitialVotingPower},
 					"",
 				},
 			},
@@ -300,7 +335,12 @@ func TestAccountSet_ApplyDelta(t *testing.T) {
 				require.Equal(t, len(step.expected), snapshot.Len())
 				for validatorAlias, votingPower := range step.expected {
 					v := vals.GetValidator(validatorAlias).ValidatorMetadata()
-					require.True(t, snapshot.ContainsAddress(v.Address), "validator '%s' not found in snapshot", validatorAlias)
+					require.True(
+						t,
+						snapshot.ContainsAddress(v.Address),
+						"validator '%s' not found in snapshot",
+						validatorAlias,
+					)
 					require.Equal(t, new(big.Int).SetUint64(votingPower), v.VotingPower)
 				}
 			}

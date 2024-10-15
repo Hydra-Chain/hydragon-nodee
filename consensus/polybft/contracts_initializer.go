@@ -15,9 +15,6 @@ import (
 )
 
 var (
-	initialMinStake, _       = new(big.Int).SetString("15000000000000000000000", 10)
-	minDelegation      int64 = 1e18
-
 	contractCallGasLimit uint64 = 100_000_000
 )
 
@@ -64,7 +61,7 @@ func initHydraStaking(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 	initFn := &contractsapi.InitializeHydraStakingFn{
 		InitialStakers:      initialStakers,
 		Governance:          polyBFTConfig.Governance,
-		NewMinStake:         initialMinStake,
+		NewMinStake:         validator.InitialMinStake,
 		NewLiquidToken:      contracts.LiquidityTokenContract,
 		HydraChainAddr:      contracts.HydraChainContract,
 		AprCalculatorAddr:   contracts.APRCalculatorContract,
@@ -196,7 +193,10 @@ func initDAOIncentiveVault(polybftConfig PolyBFTConfig, transition *state.Transi
 
 	input, err := initFn.EncodeAbi()
 	if err != nil {
-		return fmt.Errorf("HydraVault.initialize (DAOIncentiveVault) params encoding failed: %w", err)
+		return fmt.Errorf(
+			"HydraVault.initialize (DAOIncentiveVault) params encoding failed: %w",
+			err,
+		)
 	}
 
 	return callContract(

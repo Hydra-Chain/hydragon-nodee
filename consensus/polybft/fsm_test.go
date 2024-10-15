@@ -1021,7 +1021,9 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 	)
 }
 
-func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeRewards(t *testing.T) {
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeRewards(
+	t *testing.T,
+) {
 	t.Parallel()
 
 	validators := validator.NewTestValidators(t, 5)
@@ -1067,7 +1069,9 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDist
 	)
 }
 
-func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeDAOIncentive(t *testing.T) {
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeDAOIncentive(
+	t *testing.T,
+) {
 	t.Parallel()
 
 	validators := validator.NewTestValidators(t, 5)
@@ -1313,7 +1317,9 @@ func TestFSM_VerifyStateTransaction_StartOfEpochInvalidSyncValidatorsDataTxErr(t
 	)
 }
 
-func TestFSM_VerifyStateTransaction_StartOfEpochSingleSyncValidatorsDataTxRequiredErr(t *testing.T) {
+func TestFSM_VerifyStateTransaction_StartOfEpochSingleSyncValidatorsDataTxRequiredErr(
+	t *testing.T,
+) {
 	t.Parallel()
 
 	validators := validator.NewTestValidators(t, 5)
@@ -1637,7 +1643,7 @@ func TestFSM_ValidateCommit_InvalidHash(t *testing.T) {
 	_, err := fsm.BuildProposal(0)
 	require.NoError(t, err)
 
-	nonValidatorAcc := validator.NewTestValidator(t, "non_validator", 1)
+	nonValidatorAcc := validator.NewTestValidator(t, "non_validator", big.NewInt(1), 1)
 	wrongSignature, err := nonValidatorAcc.MustSign([]byte("Foo"), signer.DomainCheckpointManager).
 		Marshal()
 	require.NoError(t, err)
@@ -1887,10 +1893,11 @@ func TestFSM_Validate_EpochEndingBlock_MismatchInDeltas(t *testing.T) {
 
 	newValidatorDelta := &validator.ValidatorSetDelta{
 		Added: validator.AccountSet{&validator.ValidatorMetadata{
-			Address:     types.BytesToAddress([]byte{0, 1, 2, 3}),
-			BlsKey:      privateKey.PublicKey(),
-			VotingPower: new(big.Int).SetUint64(1),
-			IsActive:    true,
+			Address:       types.BytesToAddress([]byte{0, 1, 2, 3}),
+			BlsKey:        privateKey.PublicKey(),
+			StakedBalance: new(big.Int).SetUint64(1000),
+			VotingPower:   new(big.Int).SetUint64(1),
+			IsActive:      true,
 		}},
 	}
 
@@ -1957,10 +1964,11 @@ func TestFSM_Validate_EpochEndingBlock_UpdatingValidatorSetInNonEpochEndingBlock
 
 	newValidatorDelta := &validator.ValidatorSetDelta{
 		Added: validator.AccountSet{&validator.ValidatorMetadata{
-			Address:     types.BytesToAddress([]byte{0, 1, 2, 3}),
-			BlsKey:      privateKey.PublicKey(),
-			VotingPower: new(big.Int).SetUint64(1),
-			IsActive:    true,
+			Address:       types.BytesToAddress([]byte{0, 1, 2, 3}),
+			BlsKey:        privateKey.PublicKey(),
+			StakedBalance: new(big.Int).SetUint64(1000),
+			VotingPower:   new(big.Int).SetUint64(1),
+			IsActive:      true,
 		}},
 	}
 
@@ -2384,7 +2392,7 @@ func TestFSM_Insert_InvalidNode(t *testing.T) {
 	require.NoError(t, err)
 
 	// create test account outside of validator set
-	nonValidatorAccount := validator.NewTestValidator(t, "non_validator", 1)
+	nonValidatorAccount := validator.NewTestValidator(t, "non_validator", big.NewInt(1), 1)
 	nonValidatorSignature, err := nonValidatorAccount.MustSign(proposalHash, signer.DomainCheckpointManager).
 		Marshal()
 	require.NoError(t, err)

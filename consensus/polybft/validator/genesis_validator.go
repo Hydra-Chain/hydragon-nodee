@@ -31,7 +31,12 @@ type genesisValidatorRaw struct {
 }
 
 func (v *GenesisValidator) MarshalJSON() ([]byte, error) {
-	raw := &genesisValidatorRaw{Address: v.Address, BlsKey: v.BlsKey, MultiAddr: v.MultiAddr, BlsSignature: v.BlsSignature}
+	raw := &genesisValidatorRaw{
+		Address:      v.Address,
+		BlsKey:       v.BlsKey,
+		MultiAddr:    v.MultiAddr,
+		BlsSignature: v.BlsSignature,
+	}
 	raw.Stake = common.EncodeBigInt(v.Stake)
 
 	return json.Marshal(raw)
@@ -123,20 +128,32 @@ func GetInitialStakers(initialValidators []*GenesisValidator) ([]*contractsapi.S
 }
 
 // ToValidatorMetadata creates ValidatorMetadata instance
-func (v *GenesisValidator) ToValidatorMetadata(expNum *big.Int, expDen *big.Int) (*ValidatorMetadata, error) {
+func (v *GenesisValidator) ToValidatorMetadata(
+	expNum *big.Int,
+	expDen *big.Int,
+) (*ValidatorMetadata, error) {
 	blsKey, err := v.UnmarshalBLSPublicKey()
 	if err != nil {
 		return nil, err
 	}
 
 	vpower := CalculateVPower(v.Stake, expNum, expDen)
-	fmt.Println("Validator metadata set", "address", v.Address, "stake is", v.Stake, "voting power is", vpower)
+	fmt.Println(
+		"Validator metadata set",
+		"address",
+		v.Address,
+		"stake is",
+		v.Stake,
+		"voting power is",
+		vpower,
+	)
 
 	metadata := &ValidatorMetadata{
-		Address:     v.Address,
-		BlsKey:      blsKey,
-		VotingPower: vpower,
-		IsActive:    true,
+		Address:       v.Address,
+		BlsKey:        blsKey,
+		StakedBalance: v.Stake,
+		VotingPower:   vpower,
+		IsActive:      true,
 	}
 
 	return metadata, nil

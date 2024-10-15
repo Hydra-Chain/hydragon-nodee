@@ -17,6 +17,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var InitialVotingPower = uint64(150)
+
 type TestValidators struct {
 	Validators map[string]*TestValidator
 }
@@ -32,28 +34,32 @@ func NewTestValidators(tb testing.TB, validatorsCount int) *TestValidators {
 	return NewTestValidatorsWithAliases(tb, aliases)
 }
 
-func NewTestValidatorsWithAliases(tb testing.TB, aliases []string, votingPowers ...[]uint64) *TestValidators {
+func NewTestValidatorsWithAliases(
+	tb testing.TB,
+	aliases []string,
+	votingPowers ...[]uint64,
+) *TestValidators {
 	tb.Helper()
 
 	validators := map[string]*TestValidator{}
 
 	for i, alias := range aliases {
-		votingPower := uint64(15000)
+		votingPower := InitialVotingPower
 		if len(votingPowers) == 1 {
 			votingPower = votingPowers[0][i]
 		}
 
-		validators[alias] = NewTestValidator(tb, alias, votingPower)
+		validators[alias] = NewTestValidator(tb, alias, InitialMinStake, votingPower)
 	}
 
 	return &TestValidators{Validators: validators}
 }
 
-func (v *TestValidators) Create(t *testing.T, alias string, votingPower uint64) {
+func (v *TestValidators) Create(t *testing.T, alias string, stake uint64, votingPower uint64) {
 	t.Helper()
 
 	if _, ok := v.Validators[alias]; !ok {
-		v.Validators[alias] = NewTestValidator(t, alias, votingPower)
+		v.Validators[alias] = NewTestValidator(t, alias, InitialMinStake, votingPower)
 	}
 }
 
@@ -135,18 +141,25 @@ func (v *TestValidators) UpdateVotingPowers(votingPowersMap map[string]uint64) A
 }
 
 type TestValidator struct {
-	Alias       string
-	Account     *wallet.Account
-	VotingPower uint64
+	Alias         string
+	Account       *wallet.Account
+	StakedBalance *big.Int
+	VotingPower   uint64
 }
 
-func NewTestValidator(tb testing.TB, alias string, votingPower uint64) *TestValidator {
+func NewTestValidator(
+	tb testing.TB,
+	alias string,
+	stake *big.Int,
+	votingPower uint64,
+) *TestValidator {
 	tb.Helper()
 
 	return &TestValidator{
-		Alias:       alias,
-		VotingPower: votingPower,
-		Account:     generateTestAccount(tb),
+		Alias:         alias,
+		Account:       generateTestAccount(tb),
+		StakedBalance: stake,
+		VotingPower:   votingPower,
 	}
 }
 
@@ -185,9 +198,10 @@ func (v *TestValidator) ParamsValidator() *GenesisValidator {
 
 func (v *TestValidator) ValidatorMetadata() *ValidatorMetadata {
 	return &ValidatorMetadata{
-		Address:     types.Address(v.Account.Ecdsa.Address()),
-		BlsKey:      v.Account.Bls.PublicKey(),
-		VotingPower: new(big.Int).SetUint64(v.VotingPower),
+		Address:       types.Address(v.Account.Ecdsa.Address()),
+		BlsKey:        v.Account.Bls.PublicKey(),
+		StakedBalance: v.StakedBalance,
+		VotingPower:   new(big.Int).SetUint64(v.VotingPower),
 	}
 }
 
@@ -210,7 +224,9 @@ func generateTestAccount(tb testing.TB) *wallet.Account {
 }
 
 // CreateValidatorSetDelta calculates ValidatorSetDelta based on the provided old and new validator sets
-func CreateValidatorSetDelta(oldValidatorSet, newValidatorSet AccountSet) (*ValidatorSetDelta, error) {
+func CreateValidatorSetDelta(
+	oldValidatorSet, newValidatorSet AccountSet,
+) (*ValidatorSetDelta, error) {
 	var addedValidators, updatedValidators AccountSet
 
 	oldValidatorSetMap := make(map[types.Address]*ValidatorMetadata)
@@ -228,8 +244,10 @@ func CreateValidatorSetDelta(oldValidatorSet, newValidatorSet AccountSet) (*Vali
 		oldValidator, validatorExists := oldValidatorSetMap[newValidator.Address]
 		if validatorExists {
 			if !oldValidator.EqualAddressAndBlsKey(newValidator) {
-				return nil, fmt.Errorf("validator '%s' found in both old and new validator set, but its BLS keys differ",
-					newValidator.Address.String())
+				return nil, fmt.Errorf(
+					"validator '%s' found in both old and new validator set, but its BLS keys differ",
+					newValidator.Address.String(),
+				)
 			}
 
 			// If it is, then discard it from removed validators...

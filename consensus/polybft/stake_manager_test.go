@@ -28,7 +28,7 @@ func TestStakeManager_PostBlock(t *testing.T) {
 		block                = uint64(10)
 		firstValidator       = uint64(0)
 		secondValidator      = uint64(1)
-		stakeAmount          = new(big.Int).Mul(big.NewInt(1e18), big.NewInt(155050))
+		stakeAmount          = validator.InitialMinStake
 		hydraChainAddr       = types.StringToAddress("0x0005")
 		vPowerExp            = big.NewInt(5000)
 		vPowerExpDenominator = big.NewInt(10000)
@@ -118,6 +118,7 @@ func TestStakeManager_PostBlock(t *testing.T) {
 		require.Equal(t, bigZero, firstValidatorMeta.VotingPower)
 		require.False(t, firstValidatorMeta.IsActive)
 	})
+
 	t.Run("PostBlock - add stake to one validator", func(t *testing.T) {
 		t.Parallel()
 
@@ -139,7 +140,9 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		// insert initial full validator set
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
-			Validators:          newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
+			Validators: newValidatorStakeMap(
+				validators.GetPublicIdentities(initialSetAliases...),
+			),
 			BlockNumber:         block - 1,
 			VotingPowerExponent: vPowerExp,
 		}, nil))
@@ -216,7 +219,9 @@ func TestStakeManager_PostBlock(t *testing.T) {
 		state := newTestState(t)
 		// insert initial full validator set
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
-			Validators:          newValidatorStakeMap(validators.GetPublicIdentities(initialSetAliases...)),
+			Validators: newValidatorStakeMap(
+				validators.GetPublicIdentities(initialSetAliases...),
+			),
 			BlockNumber:         block - 1,
 			VotingPowerExponent: vPowerExp,
 		}, nil))
@@ -287,10 +292,6 @@ func TestStakeManager_PostBlock(t *testing.T) {
 
 		validators := validator.NewTestValidatorsWithAliases(t, allAliases)
 		validatorSet := validators.GetPublicIdentities(initialSetAliases...)
-
-		for _, data := range validatorSet {
-			systemStateMockVar.On("GetValidatorBalance", data.Address).Return(stakeAmount, nil).Once()
-		}
 
 		state := newTestState(t)
 
@@ -379,7 +380,12 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 	t.Run("UpdateValidatorSet - only update", func(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorToUpdate := fullValidatorSet[0]
-		validatorToUpdate.VotingPower = big.NewInt(11)
+		validatorToUpdate.StakedBalance = new(
+			big.Int,
+		).Mul(validatorToUpdate.StakedBalance, big.NewInt(2))
+		validatorToUpdate.VotingPower = new(
+			big.Int,
+		).Mul(validatorToUpdate.VotingPower, big.NewInt(2))
 
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
@@ -391,6 +397,7 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 		require.Len(t, updateDelta.Updated, 1)
 		require.Len(t, updateDelta.Removed, 0)
 		require.Equal(t, updateDelta.Updated[0].Address, validatorToUpdate.Address)
+		require.Equal(t, updateDelta.Updated[0].StakedBalance, validatorToUpdate.StakedBalance)
 		require.Equal(
 			t,
 			updateDelta.Updated[0].VotingPower.Uint64(),
@@ -429,11 +436,14 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 		require.Len(t, updateDelta.Updated, 0)
 		require.Len(t, updateDelta.Removed, 0)
 		require.Equal(t, addedValidator.Address(), updateDelta.Added[0].Address)
+		require.Equal(t, addedValidator.StakedBalance, updateDelta.Added[0].StakedBalance)
 		require.Equal(t, addedValidator.VotingPower, updateDelta.Added[0].VotingPower.Uint64())
 	})
+
 	t.Run("UpdateValidatorSet - remove some stake", func(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorToUpdate := fullValidatorSet[2]
+		validatorToUpdate.StakedBalance = big.NewInt(5000)
 		validatorToUpdate.VotingPower = big.NewInt(5)
 		require.NoError(t, state.StakeStore.insertFullValidatorSet(validatorSetState{
 			Validators: newValidatorStakeMap(fullValidatorSet),
@@ -448,6 +458,7 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 		require.Len(t, updateDelta.Updated, 1)
 		require.Len(t, updateDelta.Removed, 0)
 		require.Equal(t, updateDelta.Updated[0].Address, validatorToUpdate.Address)
+		require.Equal(t, updateDelta.Updated[0].StakedBalance, validatorToUpdate.StakedBalance)
 		require.Equal(
 			t,
 			updateDelta.Updated[0].VotingPower.Uint64(),
@@ -471,6 +482,7 @@ func TestStakeManager_UpdateValidatorSet(t *testing.T) {
 		require.Len(t, updateDelta.Updated, 0)
 		require.Len(t, updateDelta.Removed, 1)
 	})
+
 	t.Run("UpdateValidatorSet - voting power negative", func(t *testing.T) {
 		fullValidatorSet := validators.GetPublicIdentities().Copy()
 		validatorsToUpdate := fullValidatorSet[4]
@@ -555,6 +567,7 @@ func TestStakeCounter_ShouldBeDeterministic(t *testing.T) {
 			for i, si := range currentSlice {
 				initialSi := initialSlice[i]
 				require.Equal(t, si.Address, initialSi.Address)
+				require.Equal(t, si.StakedBalance, initialSi.StakedBalance)
 				require.Equal(t, si.VotingPower.Uint64(), initialSi.VotingPower.Uint64())
 			}
 		}
@@ -569,7 +582,7 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 		hydraStakingAddr     = types.StringToAddress("0xf005")
 		hydraChainAddr       = types.StringToAddress("0xf006")
 		epochID              = uint64(120)
-		stakeAmount          = new(big.Int).Mul(big.NewInt(1e18), big.NewInt(155050))
+		stakeAmount          = validator.InitialMinStake
 		stakeAmountTwo       = new(big.Int).Mul(stakeAmount, big.NewInt(2))
 		stakeAmountThree     = new(big.Int).Mul(stakeAmount, big.NewInt(3))
 		initialVPowerExp     = big.NewInt(5000)
@@ -596,16 +609,6 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 	sysStateMock.On("GetEpoch").Return(epochID, nil).Once()
 	sysStateMock.On("GetVotingPowerExponent").Return(initialVPowerExp, nil).Once()
 
-	for index, addr := range addresses {
-		if index == len(addresses)-1 {
-			sysStateMock.On("GetValidatorBalance", addr).Return(stakeAmountThree, nil).Once()
-		} else if index == len(addresses)-2 {
-			sysStateMock.On("GetValidatorBalance", addr).Return(stakeAmountTwo, nil).Once()
-		} else {
-			sysStateMock.On("GetValidatorBalance", addr).Return(stakeAmount, nil).Once()
-		}
-	}
-
 	polyBackendMock := new(polybftBackendMock)
 	polyBackendMock.On("GetValidatorsWithTx", uint64(0), []*types.Header(nil), mock.Anything).
 		Return(accountSet, nil).
@@ -614,8 +617,8 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 	bcMock := new(blockchainMock)
 	bcMock.On("GetStateProviderForBlock", header0).Return(contractProvider, nil).Once()
 	bcMock.On("CurrentHeader", mock.Anything).Return(currentHeader, true).Once()
-	bcMock.On("GetStateProviderForBlock", currentHeader).Return(contractProvider, nil).Twice()
-	bcMock.On("GetSystemState", contractProvider).Return(sysStateMock, nil).Times(3)
+	bcMock.On("GetStateProviderForBlock", currentHeader).Return(contractProvider, nil).Once()
+	bcMock.On("GetSystemState", contractProvider).Return(sysStateMock, nil).Times(2)
 	bcMock.On("GetHeaderByNumber", uint64(0)).
 		Return(header0, true).
 		Once()
