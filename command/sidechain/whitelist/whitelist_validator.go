@@ -80,7 +80,11 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	governanceAccount, err := sidechainHelper.GetAccount(params.accountDir, params.accountConfig, params.insecureLocalStore)
+	governanceAccount, err := sidechainHelper.GetAccount(
+		params.accountDir,
+		params.accountConfig,
+		params.insecureLocalStore,
+	)
 	if err != nil {
 		return fmt.Errorf("enlist validator failed: %w", err)
 	}
@@ -96,10 +100,9 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	})
 
 	txn := &ethgo.Transaction{
-		From:     governanceAccount.Ecdsa.Address(),
-		Input:    encoded,
-		To:       (*ethgo.Address)(&contracts.HydraChainContract),
-		GasPrice: sidechainHelper.DefaultGasPrice,
+		From:  governanceAccount.Ecdsa.Address(),
+		Input: encoded,
+		To:    (*ethgo.Address)(&contracts.HydraChainContract),
 	}
 
 	receipt, err := txRelayer.SendTransaction(txn, governanceAccount.Ecdsa)
