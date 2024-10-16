@@ -685,58 +685,68 @@ func TestFSM_VerifyStateTransaction_InvalidCommitEpochSystemTxsIndex(t *testing.
 	)
 }
 
-// H_MODIFY: Removed because test is not valid anymore
-// H: TODO: Check is the test fixed and if still irrelevant - remove
-// func TestFSM_BuildProposal_EpochEndingBlock_FailToCreateValidatorsDelta(t *testing.T) {
-// 	t.Parallel()
+func TestFSM_BuildProposal_EpochEndingBlock_FailToCreateValidatorsDelta(t *testing.T) {
+	t.Parallel()
 
-// 	const (
-// 		accountCount      = 6
-// 		signaturesCount   = 4
-// 		parentBlockNumber = 49
-// 	)
+	const (
+		accountCount      = 6
+		signaturesCount   = 4
+		parentBlockNumber = 49
+	)
 
-// 	testValidators := newTestValidators(t, accountCount)
-// 	allAccounts := testValidators.getPublicIdentities()
-// 	extra := createTestExtra(allAccounts, AccountSet{}, accountCount-1, signaturesCount, signaturesCount)
+	testValidators := validator.NewTestValidators(t, accountCount)
+	allAccounts := testValidators.GetPublicIdentities()
+	extra := createTestExtraObject(
+		allAccounts,
+		validator.AccountSet{},
+		accountCount-1,
+		signaturesCount,
+		signaturesCount,
+	)
 
-// 	parent := &types.Header{Number: parentBlockNumber, ExtraData: extra}
+	newValidatorDelta := &validator.ValidatorSetDelta{
+		// this will prompt an error since this validator won't be in the validatorSet
+		Updated: validator.NewTestValidators(t, 1).ToValidatorSet().Accounts(),
+	}
 
-// 	transition := &state.Transition{}
-// 	blockBuilderMock := new(blockBuilderMock)
-// 	blockBuilderMock.On("WriteTx", mock.Anything).Return(error(nil)).Once()
-// 	blockBuilderMock.On("GetState").Return(transition).Once()
-// 	blockBuilderMock.On("Reset").Return(error(nil)).Once()
-// 	blockBuilderMock.On("Fill").Once()
+	parent := &types.Header{Number: parentBlockNumber, ExtraData: extra.MarshalRLPTo((nil))}
 
-// 	systemStateMock := new(systemStateMock)
-// 	systemStateMock.On("GetValidatorSet").Return(nil, errors.New("failed to get validators set")).Once()
+	blockBuilderMock := new(blockBuilderMock)
+	blockBuilderMock.On("WriteTx", mock.Anything).Return(error(nil)).Times(4)
+	blockBuilderMock.On("Reset").Return(error(nil)).Once()
+	blockBuilderMock.On("Fill").Once()
 
-// 	blockChainMock := new(blockchainMock)
-// 	blockChainMock.On("GetStateProvider", mock.Anything).
-// 		Return(NewStateProvider(transition)).Once()
-// 	blockChainMock.On("GetSystemState", mock.Anything, mock.Anything).Return(systemStateMock).Once()
+	fsm := &fsm{parent: parent,
+		blockBuilder:     blockBuilderMock,
+		config:           &PolyBFTConfig{},
+		isEndOfEpoch:     true,
+		validators:       testValidators.ToValidatorSet(),
+		commitEpochInput: createTestCommitEpochInput(t, 0, allAccounts, 10),
+		distributeRewardsInput: createTestDistributeRewardsInput(
+			t,
+			0,
+			allAccounts,
+			10,
+		),
+		fundRewardWalletInput:       createTestFundRewardWalletInput(t),
+		rewardWalletFundAmount:      createTestRewardWalletFundAmount(t),
+		distributeDAOIncentiveInput: createTestDistributeDAOIncentiveInput(t),
+		exitEventRootHash:           types.ZeroHash,
+		newValidatorsDelta:          newValidatorDelta,
+		logger:                      hclog.NewNullLogger(),
+	}
 
-// 	fsm := &fsm{parent: parent,
-// 		blockBuilder:      blockBuilderMock,
-// 		config:            &PolyBFTConfig{},
-// 		backend:           blockChainMock,
-// 		isEndOfEpoch:      true,
-// 		validators:        testValidators.toValidatorSet(),
-// 		commitEpochInput:  createTestCommitEpochInputWithVals(t, 0, allAccounts, 10),
-// 		exitEventRootHash: types.ZeroHash,
-// 		logger:            hclog.NewNullLogger(),
-// 	}
+	proposal, err := fsm.BuildProposal(0)
+	assert.ErrorContains(
+		t,
+		err,
+		"incorrect delta provided",
+	)
+	assert.Nil(t, proposal)
 
-// 	proposal, err := fsm.BuildProposal(0)
-// 	assert.ErrorContains(t, err, "failed to retrieve validator set for current block: failed to get validators set")
-// 	assert.Nil(t, proposal)
-
-// 	blockBuilderMock.AssertNotCalled(t, "Build")
-// 	blockBuilderMock.AssertExpectations(t)
-// 	systemStateMock.AssertExpectations(t)
-// 	blockChainMock.AssertExpectations(t)
-// }
+	blockBuilderMock.AssertNotCalled(t, "Build")
+	blockBuilderMock.AssertExpectations(t)
+}
 
 // H_MODIFY: Commitment is not used in our implementation
 // func TestFSM_VerifyStateTransactions_CommitmentTransactionAndSprintIsFalse(t *testing.T) {
@@ -1021,7 +1031,9 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingDistributeVaultFundsTx(t *
 	)
 }
 
-func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeRewards(t *testing.T) {
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeRewards(
+	t *testing.T,
+) {
 	t.Parallel()
 
 	validators := validator.NewTestValidators(t, 5)
@@ -1067,7 +1079,9 @@ func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDist
 	)
 }
 
-func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeDAOIncentive(t *testing.T) {
+func TestFSM_VerifyStateTransactions_EndOfEpochMissingRewardWalletFundTxWhenDistributeDAOIncentive(
+	t *testing.T,
+) {
 	t.Parallel()
 
 	validators := validator.NewTestValidators(t, 5)
@@ -1313,7 +1327,9 @@ func TestFSM_VerifyStateTransaction_StartOfEpochInvalidSyncValidatorsDataTxErr(t
 	)
 }
 
-func TestFSM_VerifyStateTransaction_StartOfEpochSingleSyncValidatorsDataTxRequiredErr(t *testing.T) {
+func TestFSM_VerifyStateTransaction_StartOfEpochSingleSyncValidatorsDataTxRequiredErr(
+	t *testing.T,
+) {
 	t.Parallel()
 
 	validators := validator.NewTestValidators(t, 5)

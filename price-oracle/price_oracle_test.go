@@ -64,13 +64,19 @@ func TestIsValidator(t *testing.T) {
 			validators:          nil,
 			getValidatorsError:  errors.New("failed to get validators"),
 			expectedIsValidator: false,
-			expectedError:       fmt.Errorf("failed to query current validator set, block number %d, error %w", block.Number, errors.New("failed to get validators")),
+			expectedError: fmt.Errorf(
+				"failed to query current validator set, block number %d, error %w",
+				block.Number,
+				errors.New("failed to get validators"),
+			),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockPolybftBackend.On("GetValidators", tt.block.Number, mock.Anything).Return(tt.validators, tt.getValidatorsError).Once()
+			mockPolybftBackend.On("GetValidators", tt.block.Number, mock.Anything).
+				Return(tt.validators, tt.getValidatorsError).
+				Once()
 
 			priceOracle := &PriceOracle{
 				polybftBackend: mockPolybftBackend,
@@ -328,8 +334,10 @@ func TestShouldExecuteVote(t *testing.T) {
 		expectedError      error
 	}{
 		{
-			name:              "Not in voting time",
-			header:            &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 0, 30, 0, 0, time.UTC).Unix())},
+			name: "Not in voting time",
+			header: &types.Header{
+				Timestamp: uint64(time.Date(2024, 10, 21, 0, 30, 0, 0, time.UTC).Unix()),
+			},
 			hasExecutedForDay: false,
 			shouldMockState:   false,
 			stateShouldVote:   false,
@@ -337,8 +345,10 @@ func TestShouldExecuteVote(t *testing.T) {
 			expectedError:     nil,
 		},
 		{
-			name:              "Should not vote because it has executed the required action for the day",
-			header:            &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			name: "Should not vote because it has executed the required action for the day",
+			header: &types.Header{
+				Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix()),
+			},
 			hasExecutedForDay: true,
 			shouldMockState:   false,
 			stateShouldVote:   false,
@@ -346,8 +356,10 @@ func TestShouldExecuteVote(t *testing.T) {
 			expectedError:     nil,
 		},
 		{
-			name:              "Should not vote based on state",
-			header:            &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			name: "Should not vote based on state",
+			header: &types.Header{
+				Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix()),
+			},
 			hasExecutedForDay: false,
 			shouldMockState:   true,
 			stateShouldVote:   false,
@@ -355,8 +367,10 @@ func TestShouldExecuteVote(t *testing.T) {
 			expectedError:     nil,
 		},
 		{
-			name:               "Error in shouldVote",
-			header:             &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			name: "Error in shouldVote",
+			header: &types.Header{
+				Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix()),
+			},
 			hasExecutedForDay:  false,
 			shouldMockState:    true,
 			stateShouldVote:    false,
@@ -365,8 +379,10 @@ func TestShouldExecuteVote(t *testing.T) {
 			expectedError:      errors.New("should vote error"),
 		},
 		{
-			name:              "Should vote",
-			header:            &types.Header{Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix())},
+			name: "Should vote",
+			header: &types.Header{
+				Timestamp: uint64(time.Date(2024, 10, 21, 1, 0, 0, 0, time.UTC).Unix()),
+			},
 			hasExecutedForDay: false,
 			shouldMockState:   true,
 			stateShouldVote:   true,
@@ -383,8 +399,12 @@ func TestShouldExecuteVote(t *testing.T) {
 
 			if tt.shouldMockState {
 				// Mock the GetPriceOracleState and shouldVote methods
-				mockStateProvider.On("GetPriceOracleState", tt.header, mockAccount).Return(mockState, nil).Once()
-				mockState.On("shouldVote", dayNumber).Return(tt.stateShouldVote, "", tt.stateShouldVoteErr).Once()
+				mockStateProvider.On("GetPriceOracleState", tt.header, mockAccount).
+					Return(mockState, nil).
+					Once()
+				mockState.On("shouldVote", dayNumber).
+					Return(tt.stateShouldVote, "", tt.stateShouldVoteErr).
+					Once()
 			}
 
 			// Call the function under test
@@ -457,9 +477,21 @@ func TestVote(t *testing.T) {
 		if priceVotedEventABI.Match(log) {
 			event, err := priceVotedEventABI.ParseLog(log)
 			require.NoError(t, err)
-			require.Equal(t, expectedPrice.String(), event["price"].(*big.Int).String())                    //nolint:forcetypeassert
-			require.Equal(t, account.Ecdsa.Address().String(), event["validator"].(ethgo.Address).String()) //nolint:forcetypeassert
-			require.Equal(t, big.NewInt(1), event["day"].(*big.Int))                                        //nolint:forcetypeassert
+			require.Equal(
+				t,
+				expectedPrice.String(),
+				event["price"].(*big.Int).String(),
+			) //nolint:forcetypeassert
+			require.Equal(
+				t,
+				account.Ecdsa.Address().String(),
+				event["validator"].(ethgo.Address).String(),
+			) //nolint:forcetypeassert
+			require.Equal(
+				t,
+				big.NewInt(1),
+				event["day"].(*big.Int),
+			) //nolint:forcetypeassert
 			foundVoteLog = true
 		}
 	}
@@ -532,7 +564,9 @@ func TestVote_NegativeScenarios(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Mock the SendTransaction to return the mock receipt and error
-			mockTxRelayer.On("SendTransaction", mock.Anything, account.Ecdsa).Return(tt.mockReceipt, tt.mockError).Once()
+			mockTxRelayer.On("SendTransaction", mock.Anything, account.Ecdsa).
+				Return(tt.mockReceipt, tt.mockError).
+				Once()
 
 			// Call the vote function
 			err := priceOracle.vote(expectedPrice)
@@ -606,9 +640,21 @@ func TestExecuteVote(t *testing.T) {
 		if priceVotedEventABI.Match(log) {
 			event, err := priceVotedEventABI.ParseLog(log)
 			require.NoError(t, err)
-			require.Equal(t, expectedPrice.String(), event["price"].(*big.Int).String())                    //nolint:forcetypeassert
-			require.Equal(t, account.Ecdsa.Address().String(), event["validator"].(ethgo.Address).String()) //nolint:forcetypeassert
-			require.Equal(t, big.NewInt(1), event["day"].(*big.Int))                                        //nolint:forcetypeassert
+			require.Equal(
+				t,
+				expectedPrice.String(),
+				event["price"].(*big.Int).String(),
+			) //nolint:forcetypeassert
+			require.Equal(
+				t,
+				account.Ecdsa.Address().String(),
+				event["validator"].(ethgo.Address).String(),
+			) //nolint:forcetypeassert
+			require.Equal(
+				t,
+				big.NewInt(1),
+				event["day"].(*big.Int),
+			) //nolint:forcetypeassert
 			foundVoteLog = true
 		}
 	}
@@ -647,8 +693,7 @@ func TestExecuteVote_PriceFeedError(t *testing.T) {
 	require.Contains(t, err.Error(), "price feed error")
 
 	// Check if the hasExecutedForDay not updated
-	dayNumber := calcDayNumber(header.Timestamp)
-	require.False(t, hasExecutedForDay[dayNumber])
+	require.True(t, len(hasExecutedForDay) == 0)
 
 	// Assert that the mocks were called as expected
 	mockPriceFeed.AssertExpectations(t)
@@ -671,7 +716,8 @@ func TestExecuteVote_VoteError(t *testing.T) {
 	mockPriceFeed.On("GetPrice", header).Return(expectedPrice, nil)
 
 	// Mock the SendTransaction to return an error
-	mockTxRelayer.On("SendTransaction", mock.Anything, account.Ecdsa).Return((*ethgo.Receipt)(nil), errors.New("vote error"))
+	mockTxRelayer.On("SendTransaction", mock.Anything, account.Ecdsa).
+		Return((*ethgo.Receipt)(nil), errors.New("vote error"))
 
 	// Call the executeVote method
 	err := priceOracle.executeVote(header)
@@ -681,8 +727,7 @@ func TestExecuteVote_VoteError(t *testing.T) {
 	require.Contains(t, err.Error(), "vote: failed vote error")
 
 	// Check if the hasExecutedForDay not updated
-	dayNumber := calcDayNumber(header.Timestamp)
-	require.False(t, hasExecutedForDay[dayNumber])
+	require.True(t, len(hasExecutedForDay) == 0)
 
 	// Assert that the mocks were called as expected
 	mockPriceFeed.AssertExpectations(t)

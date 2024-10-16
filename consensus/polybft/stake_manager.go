@@ -27,6 +27,8 @@ var (
 	validatorTypeABI = abi.MustNewType(
 		"tuple(uint256[4] blsKey, uint256 stake, bool isWhitelisted, bool isActive)",
 	)
+	// DefaultDenominator is the default denominator for voting power exponent and the APR calculations in the contracts
+	DefaultDenominator = big.NewInt(10000)
 )
 
 // StakeManager interface provides functions for handling stake change of validators
@@ -182,44 +184,50 @@ func (s *stakeManager) init(dbTx *bolt.Tx) error {
 		return err
 	}
 
+	checkForBalanceChanges := true
 	eventsCount := len(powerExponentUpdatedEvents)
 	if eventsCount > 0 {
-		// TODO: Here the voting powers would be updated based on the latest balances in the contract,
-		// so going through the balanceChangedEvents next is not needed theoretically, but leave it for now
-		// The best decision would be keeping the validators balance in the db,
-		// so fetching it from state in updateOnPowerExponentEvent() can be removed
-		err = s.updateOnPowerExponentEvent(&fullValidatorSet, powerExponentUpdatedEvents[eventsCount-1], currentHeader)
+		err = s.updateOnPowerExponentEvent(
+			&fullValidatorSet,
+			powerExponentUpdatedEvents[eventsCount-1],
+			currentHeader,
+		)
 		if err != nil {
 			return err
 		}
+
+		// skip the check for balanceChanged events
+		checkForBalanceChanges = false
 	}
 
-	// then check for balance changed events
-	balanceChangedEventsGetter := &eventsGetter[*contractsapi.BalanceChangedEvent]{
-		receiptsGetter: receiptsGetter{
-			blockchain: s.blockchain,
-		},
-		isValidLogFn: func(l *types.Log) bool {
-			return l.Address == s.hydraStakingContract
-		},
-		parseEventFn: func(h *types.Header, l *ethgo.Log) (*contractsapi.BalanceChangedEvent, bool, error) {
-			var balanceChangedEvent contractsapi.BalanceChangedEvent
-			doesMatch, err := balanceChangedEvent.ParseLog(l)
+	// check for balance changed events only if there are no voting power changes
+	if checkForBalanceChanges {
+		balanceChangedEventsGetter := &eventsGetter[*contractsapi.BalanceChangedEvent]{
+			receiptsGetter: receiptsGetter{
+				blockchain: s.blockchain,
+			},
+			isValidLogFn: func(l *types.Log) bool {
+				return l.Address == s.hydraStakingContract
+			},
+			parseEventFn: func(h *types.Header, l *ethgo.Log) (*contractsapi.BalanceChangedEvent, bool, error) {
+				var balanceChangedEvent contractsapi.BalanceChangedEvent
+				doesMatch, err := balanceChangedEvent.ParseLog(l)
 
-			return &balanceChangedEvent, doesMatch, err
-		},
-	}
+				return &balanceChangedEvent, doesMatch, err
+			},
+		}
 
-	stakeChangedEvents, err := balanceChangedEventsGetter.getEventsFromBlocksRange(
-		fullValidatorSet.BlockNumber+1,
-		currentBlockNumber,
-	)
-	if err != nil {
-		return err
-	}
+		stakeChangedEvents, err := balanceChangedEventsGetter.getEventsFromBlocksRange(
+			fullValidatorSet.BlockNumber+1,
+			currentBlockNumber,
+		)
+		if err != nil {
+			return err
+		}
 
-	if err := s.updateWithReceipts(&fullValidatorSet, stakeChangedEvents, currentHeader); err != nil {
-		return err
+		if err := s.updateWithReceipts(&fullValidatorSet, stakeChangedEvents, currentHeader); err != nil {
+			return err
+		}
 	}
 
 	// we should save new state even if number of events is zero
@@ -289,7 +297,11 @@ func (s *stakeManager) updateWithReceipts(
 		)
 
 		// update the stake
-		fullValidatorSet.Validators.setStake(event.Account, event.NewBalance, fullValidatorSet.VotingPowerExponent)
+		fullValidatorSet.Validators.setStake(
+			event.Account,
+			event.NewBalance,
+			fullValidatorSet.VotingPowerExponent,
+		)
 	}
 
 	blockNumber := blockHeader.Number
@@ -573,7 +585,10 @@ func (sc *validatorStakeMap) setStake(
 	stakedBalance *big.Int,
 	exponent *big.Int,
 ) {
-	votingPower := sc.calcVotingPower(stakedBalance, &BigNumDecimal{Numerator: exponent, Denominator: big.NewInt(10000)})
+	votingPower := sc.calcVotingPower(
+		stakedBalance,
+		&BigNumDecimal{Numerator: exponent, Denominator: DefaultDenominator},
+	)
 	isActive := votingPower.Cmp(bigZero) > 0
 	if metadata, exists := (*sc)[address]; exists {
 		metadata.VotingPower = votingPower

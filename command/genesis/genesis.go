@@ -117,6 +117,13 @@ func setFlags(cmd *cobra.Command) {
 		"admin for proxy contracts",
 	)
 
+	cmd.Flags().StringVar(
+		&params.secretsConfigPath,
+		command.SecretsConfigFlag,
+		command.DefaultSecretsConfigPath,
+		command.DefaultSecretsConfigPathDesc,
+	)
+
 	// PoS
 	{
 		cmd.Flags().BoolVar(

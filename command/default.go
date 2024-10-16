@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/umbracle/ethgo"
 
@@ -18,6 +19,9 @@ const (
 	DefaultGenesisGasLimit           = 5242880 // 0x500000
 	DefaultGenesisBaseFeeEM          = chain.GenesisBaseFeeEM
 	DefaultGenesisBaseFeeChangeDenom = chain.BaseFeeChangeDenom
+	DefaultSecretsConfigPath         = "./secretsManagerConfig.json"
+	DefaultSecretsConfigPathDesc     = "the path to the SecretsManager config file. " +
+		"Used for Coingecko API key and others. If omitted, the local FS secrets manager is used"
 )
 
 var (
@@ -30,6 +34,8 @@ var (
 		DefaultGenesisBaseFeeEM,
 		DefaultGenesisBaseFeeChangeDenom,
 	)
+	// DefaultNumerator is the default numerator for the voting power exponent
+	DefaultNumerator = big.NewInt(5000)
 )
 
 const (

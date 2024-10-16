@@ -105,10 +105,9 @@ func setFlags(cmd *cobra.Command) {
 
 	cmd.Flags().StringVar(
 		&params.rawConfig.SecretsConfigPath,
-		secretsConfigFlag,
-		"./secretsManagerConfig.json",
-		"the path to the SecretsManager config file. Used for Coingecko API key and others. "+
-			"If omitted, the local FS secrets manager is used",
+		command.SecretsConfigFlag,
+		command.DefaultSecretsConfigPath,
+		command.DefaultSecretsConfigPathDesc,
 	)
 
 	cmd.Flags().StringVar(
@@ -148,7 +147,10 @@ func setFlags(cmd *cobra.Command) {
 		"the client's max number of inbound peers allowed",
 	)
 	// override default usage value
-	cmd.Flag(maxInboundPeersFlag).DefValue = fmt.Sprintf("%d", defaultConfig.Network.MaxInboundPeers)
+	cmd.Flag(maxInboundPeersFlag).DefValue = fmt.Sprintf(
+		"%d",
+		defaultConfig.Network.MaxInboundPeers,
+	)
 	cmd.MarkFlagsMutuallyExclusive(maxPeersFlag, maxInboundPeersFlag)
 
 	cmd.Flags().Int64Var(
@@ -158,7 +160,10 @@ func setFlags(cmd *cobra.Command) {
 		"the client's max number of outbound peers allowed",
 	)
 	// override default usage value
-	cmd.Flag(maxOutboundPeersFlag).DefValue = fmt.Sprintf("%d", defaultConfig.Network.MaxOutboundPeers)
+	cmd.Flag(maxOutboundPeersFlag).DefValue = fmt.Sprintf(
+		"%d",
+		defaultConfig.Network.MaxOutboundPeers,
+	)
 	cmd.MarkFlagsMutuallyExclusive(maxPeersFlag, maxOutboundPeersFlag)
 
 	cmd.Flags().Uint64Var(

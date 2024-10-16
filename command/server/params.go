@@ -31,7 +31,6 @@ const (
 	maxSlotsFlag                 = "max-slots"
 	maxEnqueuedFlag              = "max-enqueued"
 	blockGasTargetFlag           = "block-gas-target"
-	secretsConfigFlag            = "secrets-config"
 	restoreFlag                  = "restore"
 	devIntervalFlag              = "dev-interval"
 	devFlag                      = "dev"

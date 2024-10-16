@@ -307,9 +307,18 @@ func GenerateExtraDataPolyBft(validators []*validator.ValidatorMetadata) ([]byte
 	return extra.MarshalRLPTo(nil), nil
 }
 
+func getCGAPIKey(secretsManagerConfig *secrets.SecretsManagerConfig) (string, error) {
+	apiKey, ok := secretsManagerConfig.Extra[secrets.CoinGeckoAPIKey].(string)
+	if !ok {
+		return "", fmt.Errorf(secrets.CoinGeckoAPIKey + " is not a string")
+	}
+
+	return apiKey, nil
+}
+
 // getPricesData fetches the prices for the last 310 days from CoinGecko and unmarshal it.
 // It accepts decimal place for currency price value.
-func getCGPricesData(precision int) (*PricesDataCoinGecko, error) {
+func getCGPricesData(apiKey string, precision int) (*PricesDataCoinGecko, error) {
 	now := time.Now().UTC()
 	from := now.AddDate(0, 0, -310)
 	apiURL := fmt.Sprintf(
@@ -324,9 +333,8 @@ func getCGPricesData(precision int) (*PricesDataCoinGecko, error) {
 		return nil, err
 	}
 
-	// TODO: Remove hardcoded Coingecko API key
 	// Add the key in the header
-	req.Header.Add("x-cg-demo-api-key", "CG-M6fdZBrNeR3njQQtBmkUBhkg")
+	req.Header.Add("x-cg-demo-api-key", apiKey)
 
 	body, err := common.FetchData(req)
 	if err != nil {
@@ -340,7 +348,10 @@ func getCGPricesData(precision int) (*PricesDataCoinGecko, error) {
 	}
 
 	if len(pricesData.Prices) != 310 {
-		return nil, fmt.Errorf("failed to fetch prices data: expected 310 prices, got %d", len(pricesData.Prices))
+		return nil, fmt.Errorf(
+			"failed to fetch prices data: expected 310 prices, got %d",
+			len(pricesData.Prices),
+		)
 	}
 
 	return pricesData, nil

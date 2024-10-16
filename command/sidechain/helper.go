@@ -39,9 +39,16 @@ func ValidateSecretFlags(dataDir, config string) error {
 }
 
 // GetAccount resolves secrets manager and returns an account object
-func GetAccount(accountDir, accountConfig string, insecureLocalStore bool) (*wallet.Account, error) {
+func GetAccount(
+	accountDir, accountConfig string,
+	insecureLocalStore bool,
+) (*wallet.Account, error) {
 	// resolve secrets manager instance and allow usage of insecure local secrets manager
-	secretsManager, err := polybftsecrets.GetSecretsManager(accountDir, accountConfig, insecureLocalStore)
+	secretsManager, err := polybftsecrets.GetSecretsManager(
+		accountDir,
+		accountConfig,
+		insecureLocalStore,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -53,36 +60,3 @@ func GetAccount(accountDir, accountConfig string, insecureLocalStore bool) (*wal
 func GetAccountFromDir(accountDir string, insecureLocalStore bool) (*wallet.Account, error) {
 	return GetAccount(accountDir, "", insecureLocalStore)
 }
-
-// Hydra TODO: Fix it to get validator info from child chain
-// // GetValidatorInfo queries CustomSupernetManager, StakeManager and RewardPool smart contracts
-// // to retrieve validator info for given address
-// func GetValidatorInfo(validatorAddr ethgo.Address, supernetManager, stakeManager types.Address,
-// 	chainID int64, rootRelayer, childRelayer txrelayer.TxRelayer) (*polybft.ValidatorInfo, error) {
-// 	validatorInfo, err := rootHelper.GetValidatorInfo(validatorAddr, supernetManager, stakeManager,
-// 		chainID, rootRelayer)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	withdrawableFn := contractsapi.RewardPool.Abi.GetMethod("pendingRewards")
-
-// 	encode, err := withdrawableFn.Encode([]interface{}{validatorAddr})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	response, err := childRelayer.Call(ethgo.ZeroAddress, ethgo.Address(contracts.RewardPoolContract), encode)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// withdrawableRewards, err := common.ParseUint256orHex(&response)
-// if err != nil {
-// 	return nil, err
-// }
-
-// 	validatorInfo.WithdrawableRewards = withdrawableRewards
-
-// 	return validatorInfo, nil
-// }
