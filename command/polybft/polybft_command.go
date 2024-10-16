@@ -5,6 +5,7 @@ import (
 
 	"github.com/0xPolygon/polygon-edge/command/sidechain/registration"
 	"github.com/0xPolygon/polygon-edge/command/sidechain/staking"
+	terminateban "github.com/0xPolygon/polygon-edge/command/sidechain/terminate-ban"
 	"github.com/0xPolygon/polygon-edge/command/sidechain/whitelist"
 
 	"github.com/0xPolygon/polygon-edge/command/sidechain/commission"
@@ -22,18 +23,20 @@ func GetCommand() *cobra.Command {
 
 	// Hydra modification: modify sidechain commands and remove rootchain commands
 	polybftCmd.AddCommand(
-		// sidechain (validator set) command to stake on child chain
+		// sidechain (hydra staking) command to stake on child chain
 		staking.GetCommand(),
-		// sidechain (validator set) command to unstake on child chain
+		// sidechain (hydra staking) command to unstake on child chain
 		unstaking.GetCommand(),
-		// sidechain (validator set) command to withdraw stake on child chain
+		// sidechain (hydra staking) command to withdraw stake on child chain
 		sidechainWithdraw.GetCommand(),
-		// sidechain (reward pool) command to withdraw pending rewards
+		// sidechain (hydra staking) command to withdraw pending rewards
 		rewards.GetCommand(),
-		// sidechain (validator set) command to register validator
+		// sidechain (hydra chain) command to register validator
 		registration.GetCommand(),
-		// sidechain (validator set) command to whitelist validators
+		// sidechain (hydra chain) command to whitelist validators
 		whitelist.GetCommand(),
+		// sidechain (hydra chain) command to terminate ban for validator
+		terminateban.GetCommand(),
 		// sidechain (hydra delegation) command to set commission
 		commission.GetCommand(),
 	)

@@ -177,6 +177,21 @@ func (s *SyncValidatorsDataHydraChainFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraChain.Abi.Methods["syncValidatorsData"], buf, s)
 }
 
+type TerminateBanProcedureHydraChainFn struct {
+}
+
+func (t *TerminateBanProcedureHydraChainFn) Sig() []byte {
+	return HydraChain.Abi.Methods["terminateBanProcedure"].ID()
+}
+
+func (t *TerminateBanProcedureHydraChainFn) EncodeAbi() ([]byte, error) {
+	return HydraChain.Abi.Methods["terminateBanProcedure"].Encode(t)
+}
+
+func (t *TerminateBanProcedureHydraChainFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraChain.Abi.Methods["terminateBanProcedure"], buf, t)
+}
+
 type NewValidatorEvent struct {
 	Validator types.Address `abi:"validator"`
 	BlsKey    [4]*big.Int   `abi:"blsKey"`
