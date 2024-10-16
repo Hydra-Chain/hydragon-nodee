@@ -1,4 +1,4 @@
-package whitelist
+package terminateban
 
 import (
 	"fmt"
@@ -18,23 +18,21 @@ import (
 )
 
 var (
-	whitelistFn       = contractsapi.HydraChain.Abi.Methods["addToWhitelist"]
-	whitelistEventABI = contractsapi.HydraChain.Abi.Events["AddedToWhitelist"]
+	params terminateBanParams
 )
 
-var params whitelistParams
-
 func GetCommand() *cobra.Command {
-	registerCmd := &cobra.Command{
-		Use:     "whitelist-validator",
-		Short:   "whitelist a new validator",
+	terminateBanCmd := &cobra.Command{
+		Use:     "terminate-ban",
+		Short:   "Terminates the temporary ban for validator",
 		PreRunE: runPreRun,
 		RunE:    runCommand,
 	}
 
-	setFlags(registerCmd)
+	helper.RegisterJSONRPCFlag(terminateBanCmd)
+	setFlags(terminateBanCmd)
 
-	return registerCmd
+	return terminateBanCmd
 }
 
 func setFlags(cmd *cobra.Command) {
@@ -52,13 +50,6 @@ func setFlags(cmd *cobra.Command) {
 		polybftsecrets.AccountConfigFlagDesc,
 	)
 
-	cmd.Flags().StringVar(
-		&params.newValidatorAddress,
-		newValidatorAddressFlag,
-		"",
-		"account address of a possible validator",
-	)
-
 	cmd.Flags().BoolVar(
 		&params.insecureLocalStore,
 		sidechain.InsecureLocalStoreFlag,
@@ -67,7 +58,6 @@ func setFlags(cmd *cobra.Command) {
 	)
 
 	cmd.MarkFlagsMutuallyExclusive(polybftsecrets.AccountDirFlag, polybftsecrets.AccountConfigFlag)
-	helper.RegisterJSONRPCFlag(cmd)
 }
 
 func runPreRun(cmd *cobra.Command, _ []string) error {
@@ -80,59 +70,45 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	governanceAccount, err := sidechainHelper.GetAccount(
+	validatorAccount, err := sidechainHelper.GetAccount(
 		params.accountDir,
 		params.accountConfig,
 		params.insecureLocalStore,
 	)
 	if err != nil {
-		return fmt.Errorf("enlist validator failed: %w", err)
+		return err
 	}
 
 	txRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(params.jsonRPC),
 		txrelayer.WithReceiptTimeout(150*time.Millisecond))
 	if err != nil {
-		return fmt.Errorf("enlist validator failed: %w", err)
+		return err
 	}
 
-	encoded, err := whitelistFn.Encode([]interface{}{
-		[]types.Address{types.StringToAddress(params.newValidatorAddress)},
-	})
+	encoded, err := contractsapi.HydraChain.Abi.Methods["terminateBanProcedure"].Encode(
+		[]interface{}{},
+	)
+	if err != nil {
+		return err
+	}
 
 	txn := &ethgo.Transaction{
-		From:  governanceAccount.Ecdsa.Address(),
+		From:  validatorAccount.Ecdsa.Address(),
 		Input: encoded,
 		To:    (*ethgo.Address)(&contracts.HydraChainContract),
 	}
 
-	receipt, err := txRelayer.SendTransaction(txn, governanceAccount.Ecdsa)
+	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
 	if err != nil {
-		return fmt.Errorf("enlist validator failed %w", err)
+		return err
 	}
 
 	if receipt.Status == uint64(types.ReceiptFailed) {
-		return fmt.Errorf("enlist validator transaction failed on block %d", receipt.BlockNumber)
+		return fmt.Errorf("staking transaction failed on block %d", receipt.BlockNumber)
 	}
 
-	result := &enlistResult{}
-	foundLog := false
-
-	for _, log := range receipt.Logs {
-		if whitelistEventABI.Match(log) {
-			event, err := whitelistEventABI.ParseLog(log)
-			if err != nil {
-				return err
-			}
-
-			result.newValidatorAddress = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
-			foundLog = true
-
-			break
-		}
-	}
-
-	if !foundLog {
-		return fmt.Errorf("could not find an appropriate log in receipt that enlistment happened")
+	result := &terminateBanResult{
+		validatorAddress: validatorAccount.Ecdsa.Address().String(),
 	}
 
 	outputter.WriteCommandResult(result)

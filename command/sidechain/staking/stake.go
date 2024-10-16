@@ -96,7 +96,11 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	validatorAccount, err := sidechainHelper.GetAccount(params.accountDir, params.accountConfig, params.insecureLocalStore)
+	validatorAccount, err := sidechainHelper.GetAccount(
+		params.accountDir,
+		params.accountConfig,
+		params.insecureLocalStore,
+	)
 	if err != nil {
 		return err
 	}
@@ -133,11 +137,10 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	txn := &ethgo.Transaction{
-		From:     validatorAccount.Ecdsa.Address(),
-		Input:    encoded,
-		To:       contractAddr,
-		Value:    parsedValue,
-		GasPrice: sidechainHelper.DefaultGasPrice,
+		From:  validatorAccount.Ecdsa.Address(),
+		Input: encoded,
+		To:    contractAddr,
+		Value: parsedValue,
 	}
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
@@ -185,7 +188,9 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	if !foundLog {
-		return fmt.Errorf("could not find an appropriate log in receipt that stake or delegate happened")
+		return fmt.Errorf(
+			"could not find an appropriate log in receipt that stake or delegate happened",
+		)
 	}
 
 	outputter.WriteCommandResult(result)

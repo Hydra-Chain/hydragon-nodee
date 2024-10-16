@@ -52,6 +52,7 @@ func main() {
 				"register",
 				"distributeDAOIncentive",
 				"syncValidatorsData",
+				"terminateBanProcedure",
 			},
 			[]string{
 				"NewValidator",
