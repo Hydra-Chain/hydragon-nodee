@@ -166,9 +166,9 @@ We do the following configuration:
   server --data-dir ./node --chain genesis.json --grpc-address 127.0.0.1:9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545 --prometheus 0.0.0.0:5001 --log-level DEBUG json-rpc-block-range-limit 0
   ```
 
-```
-docker run -p 1478:1478 -v /path/on/host:/app/node <optional env.list path> hydrag-devnet
-```
+  ```
+  docker run -p 1478:1478 -v /path/on/host:/app/node <optional env.list path> hydrag-devnet
+  ```
 
 If secrets env variables are not added, new secrets will be automatically created for you.
 

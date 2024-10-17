@@ -56,9 +56,9 @@ Use the Makefile to build the source.
 make build
 ```
 
-**CGO_ENABLED=0**: This environment variable disables CGO, which is a feature in Go that allows for the creation of Go packages that call C code. Setting CGO_ENABLED=0 makes the build static, meaning it does not depend on C libraries at runtime, enhancing portability across different environments without needing those C libraries installed.
+**CGO_ENABLED=0**: This environment variable disables CGO, a Go feature that allows Go packages to call C code. Setting CGO_ENABLED=0 creates a **static build**, meaning the resulting binary won’t rely on C libraries at runtime, increasing portability across different environments without needing C libraries installed.
 
-**go build**: This is the Go command to compile packages and dependencies into a binary executable.
+**go build**: This command compiles the Go packages and their dependencies into a binary executable.
 
 **-o hydra**: The -o flag specifies the output file name for the compiled binary. In this case, the binary will be named `hydra`.
 
@@ -98,29 +98,29 @@ Successful execution results in a summary of your generated and initialized secr
 
 ```
 [SECRETS GENERATED]
-network-key, validator-key, validator-bls-key, validator-bls-signature
+network-private-key, evm-private-key, validator-bls-private-key, validator-bls-signature
 
 [SECRETS INIT]
-Public key (address) = 0x58835Fe9f000B49fAd7146E0Eb4DF295715EaE63
-BLS Public key       = 048649f153a668b86043b1ab6e2d33a91cff389df100666c5aeb5c4ab8c6e8e20fada19085edf4a6dd0814251b4c9ac42c158d407e754066cf6e77d18a20a1ab0c8bd814a06489eafdbc03f17b12dd786001313493b4f880bc5c0a1cf6bcac871d28a030c6f1b3673b686f67b5e24ca8cf88cd6838e9c77ab44f2a1bdc33bde9
-Node ID              = 16Uiu2HAmQ1kj6B9PM1K5DorkwHhgWLzKSiL6VEZLxharhCbNTXKU
+EVM Address              = 0x3adE0971cc813A3F4e1BDaA225ab612bE57e2eaa
+Validator BLS Public key = 179d7cfe2568c1cd2ba8988f3ab355008e9a3e07c89eb61210ab6f8a69e6845a218d5a91afd0681563e55330924d3f2f03769a3e6e3aa3bbad5cda3c74e10b1c2ee80f1335d2a86f2ba28641fd9a169e399f4de888e331eb413b8a69f87bbb8913dd09c7e6a997e649de5d23cf6eadd3d57926beaa2f2ead37084aed3b3230c3
+Node ID                  = 16Uiu2HAm66TZf6DnK2qjLCRLQZiHttGpsHCGtdNxLb1eMgWNM6cD
 ```
 
 #### Output the secret and public data for the validator
 
-There could be need to retrieve the secrets data (private keys) after the node has been initialized. They can be outputted using the following command:
+There may be situations where you need to retrieve the secret data (such as private keys) after initializing the node. You can retrieve the private keys using the following command:
 ```
 hydra secrets output-private --data-dir node-secrets
 ```
 
-Then you will be prompted to enter the password you set when you initialized the secrets.
+You’ll then be prompted to enter the password you set during the secrets initialization process.
 
-The same process goes for the public keys and the Node ID, but with the following command:
+The same steps apply for retrieving public keys and the Node ID. Use the following command to output this information:
 ```
 hydra secrets output-public --data-dir node-secrets
 ```
 
-More information about the commands can be found by running them with only the `--help` flag.
+For more details on available commands and their usage, you can append the `--help` flag to any of them.
 
 ### Configuring your node
 
@@ -282,7 +282,7 @@ In the Faucet section, users have the option to request a fixed amount of test H
 - Navigate to [testnetapp.hydrachain.org/faucet](https://testnetapp.hydrachain.org/faucet) to access the Faucet section of our platform.
 - Here, users can connect their wallet and request HYDRA coins.
 - To connect a self-custody wallet (e.g., Metamask), click the `Connect` button located in the top right corner or within the Faucet form.
-- Once the wallet is connected, Click on `Request HYDRA` to receive 100 HYDRA to the connected wallet. Please be aware that there is a 2-hour cooldown before additional coins can be requested.
+- Once the wallet is connected, Click on `Request HYDRA` to receive 16000 HYDRA to the connected wallet. Please be aware that there is a 2-hour cooldown before additional coins can be requested.
 
 ### Delegation
 
