@@ -205,7 +205,7 @@ To reduce the risk of stalling caused by validators facing temporary issues or a
 
   Congratulations, you’re back in action!
   
-  ***Note:** Keep in mind that if malicious behavior is detected, a manual ban can be initiated by the Hydragon DAO.*
+  ***Note:** Please keep in mind that if malicious behavior is detected, a manual ban can be initiated by the Hydragon DAO. Furthermore, if the conditions for initiating a ban and enforcing the ban are met, a user can execute the relevant functions by interacting with the contract via the explorer or programmatically.*
 
 
 ### Command Line Interface
