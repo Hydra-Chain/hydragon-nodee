@@ -97,6 +97,11 @@ Stake tx is made in this step as well
 ./hydra hydragon commission --data-dir ./test-add-chain-1 --commission 10 --jsonrpc http://127.0.0.1:10001 --insecure
 ```
 
+6. Re-activating the validator, if a ban took place:
+```
+./hydra hydragon terminate-ban --data-dir ./test-add-chain-1 --jsonrpc http://127.0.0.1:10001 --insecure
+```
+
 ### LEGACY local setup
 
 1. Generate secrets

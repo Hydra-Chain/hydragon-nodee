@@ -146,14 +146,14 @@ hydra secrets generate --type encrypted-local --name node --extra "coingecko-api
 Run your node with the following command from its directory:
 
 ```
-hydra server --data-dir ./node-secrets --chain ./genesis.json --grpc-address :9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545  --secrets-config ./secretsManagerConfig.json
+hydra server --data-dir ./node-secrets --chain ./genesis.json --grpc-address :9632 --libp2p 0.0.0.0:1478 --jsonrpc 0.0.0.0:8545 --secrets-config ./secretsManagerConfig.json
 ```
 
-This process may take some time, as the node needs to fully sync with the blockchain. Once the syncing process is complete, you will need to restart the node by stopping it and running the same command again.
+This process may take some time, as the node needs to fully sync with the blockchain. Once the syncing process is complete, you can proceed with the next steps.
 
 ### Prepare account to be a validator
 
-Once your node is operational and fully synced, you're ready to become a validator. This requires:
+After your node is operational and fully synced, you're ready to become a validator. This requires:
 
 - Funding Your Account: Obtain sufficient Hydra by visiting the [Faucet](#faucet) section. You can obtain funds to a second metamask account and transfer them to the validator address. Or alternatively you can import the private key of your validator into Metamask to operate with it directly.
 
@@ -189,6 +189,24 @@ Additionally, you can update the commission if you need to.
 ```
 hydra hydragon commission --data-dir ./node-secrets --commission 10 --jsonrpc http://localhost:8545
 ```
+
+### Ban Validator
+To reduce the risk of stalling caused by validators experiencing temporary issues or acting maliciously, we’ve implemented an ejection and ban mechanism. Anyone who recongizes a suspicious activity, and the rules are met, can execute the ban process. Below is an outline of how the system works (specific conditions are detailed in our [genesis contracts](https://github.com/Hydra-Chain/hydragon-core-contracts)):
+  1. **Initial Ejection**: If your validator stops proposing or participating in consensus whether due to hardware failure, software issues, or malicious intent—the ban procedure will be initiated. The validator will be ejected, allowing time for recovery. If no action is taken, a ban may follow. The threshold to trigger this process is initially set at 18,000 blocks (~2 hours), depending on block creation speed.
+  2. **Ban Procedure**: After ejection, you can rejoin by resolving the issue and running the appropriate command (explained [below](#re-activate)). However, if you fail to act within the final threshold (86,400 seconds or ~24 hours), your validator will be permanently banned. This will result in a penalty, a small reward for the reporter, and the remaining funds being prepared for withdrawal. Once banned, you will no longer be able to participate as a validator.
+
+  #### Re-activate
+
+  After resolving the encountered issues, you should restart the node to sync with the blockchain. Once synced, you can reactivate by running the following command:
+
+  ```
+  hydra hydragon terminate-ban --data-dir ./node-secrets --jsonrpc http://localhost:8545
+  ```
+
+  Congratulations, you’re back in action!
+  
+  ***Note:** Please keep in mind that if malicious behavior is detected, a manual ban can be initiated by the Hydragon DAO. Furthermore, if the conditions for initiating a ban and enforcing the ban are met, a user can execute the relevant functions by interacting with the contract via the explorer or programmatically.*
+
 
 ### Command Line Interface
 
