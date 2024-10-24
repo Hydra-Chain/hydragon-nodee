@@ -24,12 +24,12 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hydra -a -installsuffix cgo ma
 sudo mv hydra /usr/local/bin
 ```
 
-## Build devnet node docker image
+## Build the hydra client's docker image
 
 1. Build node source code
 
 ```
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hydra -a -installsuffix cgo  main.go
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hydra -a -installsuffix cgo main.go
 ```
 
 2. Build node image
@@ -46,21 +46,21 @@ Use Docker Desktop or:
 docker push rsantev/hydra-client:latest
 ```
 
-4. Build hydrag devnet image
+1. Build hydragon devnet (or testnet) image
 
 ```
-docker build --platform linux/amd64 -t rsantev/hydrag-devnet:latest ./h_devnet
+docker build --platform linux/amd64 -t rsantev/hydragon-devnet:latest ./h_devnet
 ```
 
-5. Push hydrag devnet image to DockerHub
+5. Push hydragon devnet image to DockerHub
 
 ```
-docker push rsantev/hydrag-devnet:latest
+docker push rsantev/hydragon-devnet:latest
 ```
 
 ### Build devnet cluster docker image
 
-4. Build hydrag devnet cluster image
+4. Build hydragon devnet cluster image
 
 ```
 cd h_devnet/devnet_cluster \
