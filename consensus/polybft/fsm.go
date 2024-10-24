@@ -233,6 +233,18 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 				err,
 			)
 		}
+	} else if f.isStartOfEpoch && f.syncValidatorsDataInput != nil {
+		tx, err := f.createSyncValidatorsDataTx()
+		if err != nil {
+			return nil, err
+		}
+
+		if err := f.blockBuilder.WriteTx(tx); err != nil {
+			return nil, fmt.Errorf(
+				"failed to apply sync validators data transaction: %w",
+				err,
+			)
+		}
 	}
 
 	if f.config.IsBridgeEnabled() {
@@ -251,18 +263,6 @@ func (f *fsm) BuildProposal(currentRound uint64) ([]byte, error) {
 		}
 
 		extra.Validators = f.newValidatorsDelta
-	} else if f.isStartOfEpoch && f.syncValidatorsDataInput != nil {
-		tx, err := f.createSyncValidatorsDataTx()
-		if err != nil {
-			return nil, err
-		}
-
-		if err := f.blockBuilder.WriteTx(tx); err != nil {
-			return nil, fmt.Errorf(
-				"failed to apply sync validators data transaction: %w",
-				err,
-			)
-		}
 	}
 
 	currentValidatorsHash, err := f.validators.Accounts().Hash()
