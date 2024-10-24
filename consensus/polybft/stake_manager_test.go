@@ -621,18 +621,18 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 		Once()
 	bcMock.On("GetHeaderByNumber", uint64(1)).
 		Return(&types.Header{Number: 1, Hash: header1Hash}, true).
-		Twice()
+		Once()
 	bcMock.On("GetHeaderByNumber", uint64(2)).
 		Return(&types.Header{Number: 2, Hash: header2Hash}, true).
-		Twice()
+		Once()
 	bcMock.On("GetHeaderByNumber", uint64(3)).
 		Return(&types.Header{Number: 3, Hash: header3Hash}, true).
-		Twice()
+		Once()
 	bcMock.On("GetHeaderByNumber", uint64(4)).
 		Return(&types.Header{Number: 4, Hash: header4Hash}, true).
-		Twice()
+		Once()
 
-	bcMock.On("GetReceiptsByHash", header1Hash).Return([]*types.Receipt(nil), nil).Twice()
+	bcMock.On("GetReceiptsByHash", header1Hash).Return([]*types.Receipt(nil), nil).Once()
 	bcMock.On("GetReceiptsByHash", header2Hash).Return([]*types.Receipt{
 		{
 			Status: &success,
@@ -655,7 +655,7 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 				),
 			},
 		},
-	}, nil).Twice()
+	}, nil).Once()
 	bcMock.On("GetReceiptsByHash", header3Hash).Return([]*types.Receipt{
 		{
 			Status: &success,
@@ -668,7 +668,7 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 				),
 			},
 		},
-	}, nil).Twice()
+	}, nil).Once()
 	bcMock.On("GetReceiptsByHash", header4Hash).Return([]*types.Receipt{{},
 		{
 			Status: &success,
@@ -680,7 +680,7 @@ func TestStakeManager_UpdateOnInit(t *testing.T) {
 				),
 			},
 		},
-	}, nil).Twice()
+	}, nil).Once()
 
 	_, err := newStakeManager(
 		hclog.NewNullLogger(),
