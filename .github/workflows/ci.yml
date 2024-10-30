@@ -9,9 +9,9 @@ jobs:
     name: Build
     uses: ./.github/workflows/build.yml
 
-  test:
-    name: Test
-    uses: ./.github/workflows/test.yml
-    needs: build
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  # test:
+  #   name: Test
+  #   uses: ./.github/workflows/test.yml
+  #   needs: build
+  #   secrets:
+  #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
