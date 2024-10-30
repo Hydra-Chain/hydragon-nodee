@@ -148,7 +148,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	chainConfig := &chain.Chain{
 		Name: p.name,
 		Params: &chain.Params{
-			ChainID: int64(p.chainID),
+			ChainID: int64(p.chainID), //nolint:gosec
 			Forks:   enabledForks,
 			Engine: map[string]interface{}{
 				string(server.PolyBFTConsensus): polyBftConfig,
@@ -156,8 +156,6 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		},
 		Bootnodes: p.bootnodes,
 	}
-
-	burnContractAddr := types.ZeroAddress
 
 	if p.isBurnContractEnabled() {
 		chainConfig.Params.BurnContract = make(map[uint64]types.Address, 1)
@@ -169,8 +167,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 
 		if !p.nativeTokenConfig.IsMintable {
 			// burn contract can be specified on arbitrary address for non-mintable native tokens
-			burnContractAddr = burnContractInfo.Address
-			chainConfig.Params.BurnContract[burnContractInfo.BlockNumber] = burnContractAddr
+			chainConfig.Params.BurnContract[burnContractInfo.BlockNumber] = burnContractInfo.Address
 			chainConfig.Params.BurnContractDestinationAddress = burnContractInfo.DestinationAddress
 		} else {
 			// burnt funds are sent to zero address when dealing with mintable native tokens

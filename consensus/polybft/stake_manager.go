@@ -185,6 +185,7 @@ func (s *stakeManager) init(dbTx *bolt.Tx) error {
 	}
 
 	checkForBalanceChanges := true
+
 	eventsCount := len(powerExponentUpdatedEvents)
 	if eventsCount > 0 {
 		err = s.updateOnPowerExponentEvent(
@@ -305,6 +306,7 @@ func (s *stakeManager) updateWithReceipts(
 	}
 
 	blockNumber := blockHeader.Number
+
 	for addr, data := range fullValidatorSet.Validators {
 		if data.BlsKey == nil {
 			blsKey, err := s.getBlsKey(data.Address)
@@ -358,7 +360,7 @@ func (s *stakeManager) UpdateValidatorSet(
 		oldActiveMap[validator.Address] = validator
 		// remove existing validators from the validators list if they did not make it to the list
 		if _, exists := addressesSet[validator.Address]; !exists {
-			removedBitmap.Set(uint64(i))
+			removedBitmap.Set(uint64(i)) //nolint:gosec
 		}
 	}
 
@@ -405,6 +407,7 @@ func (s *stakeManager) UpdateValidatorSet(
 // getBlsKey returns bls key for validator from the supernet contract
 func (s *stakeManager) getBlsKey(address types.Address) (*bls.PublicKey, error) {
 	header := s.blockchain.CurrentHeader()
+
 	systemState, err := s.getSystemStateForBlock(header)
 	if err != nil {
 		return nil, err
@@ -478,6 +481,7 @@ func (s *stakeManager) ProcessLog(header *types.Header, log *ethgo.Log, dbTx *bo
 
 	// Check if it is a BalanceChanged event
 	var balanceChangedEvent contractsapi.BalanceChangedEvent
+
 	doesMatch, err := balanceChangedEvent.ParseLog(log)
 	if err != nil {
 		return err
@@ -492,6 +496,7 @@ func (s *stakeManager) ProcessLog(header *types.Header, log *ethgo.Log, dbTx *bo
 	} else {
 		// If not BalanceChanged, check for PowerExponentUpdated event
 		var powerExponentUpdatedEvent contractsapi.PowerExponentUpdatedEvent
+
 		doesMatch, err = powerExponentUpdatedEvent.ParseLog(log)
 		if err != nil {
 			return err
@@ -589,7 +594,9 @@ func (sc *validatorStakeMap) setStake(
 		stakedBalance,
 		&BigNumDecimal{Numerator: exponent, Denominator: DefaultDenominator},
 	)
+
 	isActive := votingPower.Cmp(bigZero) > 0
+
 	if metadata, exists := (*sc)[address]; exists {
 		metadata.VotingPower = votingPower
 		metadata.IsActive = isActive

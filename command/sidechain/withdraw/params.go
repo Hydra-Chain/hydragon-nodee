@@ -24,9 +24,9 @@ func (w *withdrawParams) validateFlags() error {
 }
 
 type withdrawResult struct {
-	ValidatorAddress string   `json:"validatorAddress"`
+	ValidatorAddress string `json:"validatorAddress"`
 	Amount           string `json:"amount"`
-	BlockNumber      uint64   `json:"blockNumber"`
+	BlockNumber      uint64 `json:"blockNumber"`
 }
 
 func (r *withdrawResult) GetOutput() string {

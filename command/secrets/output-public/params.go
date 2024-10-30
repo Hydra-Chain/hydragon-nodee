@@ -22,6 +22,7 @@ func (or *outputResult) initPublicData(outputParams *outputprivate.OutputParams)
 	if err != nil {
 		return err
 	}
+
 	or.validatorAddress = validatorAddress
 
 	// fetch the public bls key
@@ -29,6 +30,7 @@ func (or *outputResult) initPublicData(outputParams *outputprivate.OutputParams)
 	if err != nil {
 		return err
 	}
+
 	or.blsPublicKey = blsPublicKey
 
 	// fetch the node id
@@ -36,6 +38,7 @@ func (or *outputResult) initPublicData(outputParams *outputprivate.OutputParams)
 	if err != nil {
 		return err
 	}
+
 	or.nodeID = nodeID
 
 	return nil

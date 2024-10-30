@@ -7,6 +7,7 @@ import (
 
 	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/0xPolygon/polygon-edge/command"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/secrets"
 	"github.com/0xPolygon/polygon-edge/secrets/helper"
@@ -145,7 +146,7 @@ func (ip *initParams) setFlags(cmd *cobra.Command) {
 	cmd.Flags().Int64Var(
 		&ip.chainID,
 		chainIDFlag,
-		command.DefaultChainID,
+		polybft.DefaultChainID,
 		"the ID of the chain",
 	)
 
@@ -156,12 +157,14 @@ func (ip *initParams) setFlags(cmd *cobra.Command) {
 	// num flag should be used with data-dir flag only so it should not be used with config flag.
 	cmd.MarkFlagsMutuallyExclusive(numFlag, AccountConfigFlag)
 
-	// Encryptedlocal secrets manager with preset keys can be setup for a single bunch of secrets only, so num flag is not allowed.
+	// Encryptedlocal secrets manager with preset keys can be setup for a single bunch of secrets only,
+	// so num flag is not allowed.
 	cmd.MarkFlagsMutuallyExclusive(numFlag, networkKeyFlag)
 	cmd.MarkFlagsMutuallyExclusive(numFlag, blsKeyFlag)
 	cmd.MarkFlagsMutuallyExclusive(numFlag, ecdsaKeyFlag)
 
-	// network-key, ecdsa-key and bls-key flags should be used with data-dir flag only because they are related to local FS.
+	// network-key, ecdsa-key and bls-key flags should be used with data-dir flag only because they are related
+	// to local FS.
 	cmd.MarkFlagsMutuallyExclusive(AccountConfigFlag, networkKeyFlag)
 	cmd.MarkFlagsMutuallyExclusive(AccountConfigFlag, blsKeyFlag)
 	cmd.MarkFlagsMutuallyExclusive(AccountConfigFlag, ecdsaKeyFlag)
@@ -218,10 +221,8 @@ func (ip *initParams) initKeys(secretsManager secrets.SecretsManager) ([]string,
 			}
 
 			generated = append(generated, secrets.NetworkKey)
-		} else {
-			if ip.networkKey != "" {
-				return generated, fmt.Errorf("network-key already exists")
-			}
+		} else if ip.networkKey != "" {
+			return generated, fmt.Errorf("network-key already exists")
 		}
 	}
 
@@ -231,7 +232,8 @@ func (ip *initParams) initKeys(secretsManager secrets.SecretsManager) ([]string,
 			err error
 		)
 
-		if !secretsManager.HasSecret(secrets.ValidatorKey) && !secretsManager.HasSecret(secrets.ValidatorBLSKey) {
+		if !secretsManager.HasSecret(secrets.ValidatorKey) &&
+			!secretsManager.HasSecret(secrets.ValidatorBLSKey) {
 			if ip.ecdsaKey != "" && ip.blsKey != "" {
 				blsKey, err := bls.UnmarshalPrivateKey([]byte(ip.blsKey))
 				if err != nil {

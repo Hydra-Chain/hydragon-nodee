@@ -91,5 +91,10 @@ func (p priceOracleStateProvider) GetPriceOracleState(
 		return nil, err
 	}
 
-	return newPriceOracleState(p.blockchain.GetSystemState(provider), contracts.PriceOracleContract, provider, validatorAccount), nil
+	return newPriceOracleState(
+		p.blockchain.GetSystemState(provider),
+		contracts.PriceOracleContract,
+		provider,
+		validatorAccount,
+	), nil
 }

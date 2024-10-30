@@ -576,7 +576,6 @@ func Test_GetIbftExtraClean(t *testing.T) {
 
 	extraTwo := &Extra{}
 	require.NoError(t, extraTwo.UnmarshalRLP(extraClean))
-	require.True(t, extra.Validators.Equals(extra.Validators))
 	require.Equal(t, extra.Checkpoint.BlockRound, extraTwo.Checkpoint.BlockRound)
 	require.Equal(t, extra.Checkpoint.EpochNumber, extraTwo.Checkpoint.EpochNumber)
 	require.Equal(t, extra.Checkpoint.CurrentValidatorsHash, extraTwo.Checkpoint.CurrentValidatorsHash)
