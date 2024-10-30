@@ -506,10 +506,8 @@ func TestInsertHeaders(t *testing.T) {
 			if len(forks) != 0 {
 				if len(forks) != len(expectedForks) {
 					t.Fatalf("forks length dont match, expected %d but found %d", len(expectedForks), len(forks))
-				} else {
-					if !reflect.DeepEqual(forks, expectedForks) {
-						t.Fatal("forks dont match")
-					}
+				} else if !reflect.DeepEqual(forks, expectedForks) {
+					t.Fatal("forks dont match")
 				}
 			}
 
