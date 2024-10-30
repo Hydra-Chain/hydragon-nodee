@@ -13,7 +13,6 @@ import (
 const (
 	DefaultGenesisFileName           = "genesis.json"
 	DefaultChainName                 = "hydra-chain"
-	DefaultChainID                   = 187
 	DefaultConsensus                 = server.PolyBFTConsensus
 	DefaultGenesisGasUsed            = 458752  // 0x70000
 	DefaultGenesisGasLimit           = 5242880 // 0x500000

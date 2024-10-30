@@ -25,22 +25,23 @@ func decodeStateTransaction(txData []byte) (contractsapi.StateTransactionInput, 
 		obj                    contractsapi.StateTransactionInput
 	)
 
-	if bytes.Equal(sig, commitEpochFn.Sig()) {
+	switch {
+	case bytes.Equal(sig, commitEpochFn.Sig()):
 		// commit epoch
 		obj = &contractsapi.CommitEpochHydraChainFn{}
-	} else if bytes.Equal(sig, fundRewardWalletFn.Sig()) {
+	case bytes.Equal(sig, fundRewardWalletFn.Sig()):
 		// fund reward wallet
 		obj = &contractsapi.FundRewardWalletFn{}
-	} else if bytes.Equal(sig, distributeRewardsFn.Sig()) {
+	case bytes.Equal(sig, distributeRewardsFn.Sig()):
 		// distribute rewards
 		obj = &contractsapi.DistributeRewardsForHydraStakingFn{}
-	} else if bytes.Equal(sig, distributeVaultFundsFn.Sig()) {
+	case bytes.Equal(sig, distributeVaultFundsFn.Sig()):
 		// distribute vault funds
 		obj = &contractsapi.DistributeDAOIncentiveHydraChainFn{}
-	} else if bytes.Equal(sig, SyncValidatorsDataFn.Sig()) {
+	case bytes.Equal(sig, SyncValidatorsDataFn.Sig()):
 		// sync the validators voting power data
 		obj = &contractsapi.SyncValidatorsDataHydraChainFn{}
-	} else {
+	default:
 		return nil, fmt.Errorf("unknown state transaction")
 	}
 

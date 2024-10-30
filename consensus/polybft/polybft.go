@@ -30,9 +30,10 @@ import (
 )
 
 const (
-	minSyncPeers = 2
-	pbftProto    = "/pbft/0.2"
-	bridgeProto  = "/bridge/0.2"
+	minSyncPeers   = 2
+	pbftProto      = "/pbft/0.2"
+	bridgeProto    = "/bridge/0.2"
+	DefaultChainID = 8844
 )
 
 var (
@@ -474,7 +475,7 @@ func (p *Polybft) Initialize() error {
 		p.config.Logger.Named("syncer"),
 		p.config.Network,
 		p.config.Blockchain,
-		time.Duration(p.config.BlockTime)*3*time.Second,
+		time.Duration(p.config.BlockTime)*3*time.Second, //nolint:gosec
 	)
 
 	// set blockchain backend
@@ -489,7 +490,7 @@ func (p *Polybft) Initialize() error {
 	}
 
 	// set block time
-	p.blockTime = time.Duration(p.config.BlockTime)
+	p.blockTime = time.Duration(p.config.BlockTime) //nolint:gosec
 
 	// initialize polybft consensus data directory
 	p.dataDir = filepath.Join(p.config.Config.Path, "hydragon")

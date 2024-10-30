@@ -284,7 +284,8 @@ func generateType(
 
 		var typ string
 
-		if elem.Kind() == abi.KindTuple {
+		switch {
+		case elem.Kind() == abi.KindTuple:
 			// Struct
 			nestedType, err := generateNestedType(generatedData, tupleElem.Name, elem, res)
 			if err != nil {
@@ -292,7 +293,7 @@ func generateType(
 			}
 
 			typ = nestedType
-		} else if elem.Kind() == abi.KindSlice && elem.Elem().Kind() == abi.KindTuple {
+		case elem.Kind() == abi.KindSlice && elem.Elem().Kind() == abi.KindTuple:
 			// []Struct
 			nestedType, err := generateNestedType(generatedData, getInternalType(tupleElem.Name, elem), elem.Elem(), res)
 			if err != nil {
@@ -300,7 +301,7 @@ func generateType(
 			}
 
 			typ = "[]" + nestedType
-		} else if elem.Kind() == abi.KindArray && elem.Elem().Kind() == abi.KindTuple {
+		case elem.Kind() == abi.KindArray && elem.Elem().Kind() == abi.KindTuple:
 			// [n]Struct
 			nestedType, err := generateNestedType(generatedData, getInternalType(tupleElem.Name, elem), elem.Elem(), res)
 			if err != nil {
@@ -308,12 +309,12 @@ func generateType(
 			}
 
 			typ = "[" + strconv.Itoa(elem.Size()) + "]" + nestedType
-		} else if elem.Kind() == abi.KindAddress {
+		case elem.Kind() == abi.KindAddress:
 			// for address use the native `types.Address` type instead of `ethgo.Address`. Note that
 			// this only works for simple types and not for []address inputs. This is good enough since
 			// there are no kinds like that in our smart contracts.
 			typ = "types.Address"
-		} else {
+		default:
 			// for the rest of the types use the go type returned by abi
 			typ = elem.GoType().String()
 		}
@@ -321,15 +322,15 @@ func generateType(
 		// []byte and [n]byte get rendered as []uint68 and [n]uint8, since we do not have any
 		// uint8 internally in polybft, we can use regexp to replace those values with the
 		// correct byte representation
-		typ = strings.Replace(typ, "[32]uint8", "types.Hash", -1)
-		typ = strings.Replace(typ, "]uint8", "]byte", -1)
+		typ = strings.ReplaceAll(typ, "[32]uint8", "types.Hash")
+		typ = strings.ReplaceAll(typ, "]uint8", "]byte")
 
 		// Trim the leading _ from name if it exists
 		fieldName := strings.TrimPrefix(tupleElem.Name, "_")
 
 		// Replacement of Id for ID to make the linter happy
 		fieldName = strings.Title(fieldName)
-		fieldName = strings.Replace(fieldName, "Id", "ID", -1)
+		fieldName = strings.ReplaceAll(fieldName, "Id", "ID")
 
 		str = append(str, fmt.Sprintf("%s %s `abi:\"%s\"`", fieldName, typ, tupleElem.Name))
 	}
