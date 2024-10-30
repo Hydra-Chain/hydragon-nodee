@@ -124,6 +124,10 @@ func testDifficulty(t *testing.T, m PlaceholderStorage) {
 	}
 
 	for indx, cc := range cases {
+		if indx < 0 {
+			t.Fatalf("Cannot convert negative int to uint64: %d", indx)
+		}
+
 		batch := NewBatchWriter(s)
 
 		h := &types.Header{
