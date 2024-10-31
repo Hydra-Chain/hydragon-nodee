@@ -26,7 +26,7 @@ jobs:
 
       - name: Build HydraGon
         # run: go build -tags netgo -ldflags="-s -w -linkmode external -extldflags "-static" -X \"github.com/0xPolygon/polygon-edge/versioning.Version=${GITHUB_REF_NAME}\" -X \"github.com/0xPolygon/polygon-edge/versioning.Commit=${GITHUB_SHA}\"" && tar -czvf polygon-edge.tar.gz polygon-edge
-        run: go build -o hydra -a -installsuffix cgo main.go
+        run: go build -o hydra -a -installsuffix cgo main.go -tags netgo -ldflags="-s -w -linkmode external -extldflags "-static" -X \"github.com/Hydra-Chain/hydragon-node/versioning.Version=${GITHUB_REF_NAME}\" -X \"github.com/Hydra-Chain/hydragon-node/versioning.Commit=${GITHUB_SHA}\"" && tar -czvf hydra.tar.gz hydra
         env:
           CC: gcc
           CXX: g++
@@ -38,12 +38,12 @@ jobs:
         id: hydra_build_failure
         run: echo "build_output=false" >> $GITHUB_OUTPUT
 
-      # - name: 'Upload Artifact'
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: polygon-edge
-      #     path: polygon-edge.tar.gz
-      #     retention-days: 3
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: hydra
+          path: hydra.tar.gz
+          retention-days: 1 # change with 3
 
   # go_build_reproducibility:
   #   name: Verify Build Reproducibility
