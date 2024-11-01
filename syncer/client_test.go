@@ -231,7 +231,6 @@ func TestStatusPubSub(t *testing.T) {
 }
 
 func TestPeerConnectionUpdateEventCh(t *testing.T) {
-	t.Skip()
 	t.Parallel()
 
 	var (
