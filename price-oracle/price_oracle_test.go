@@ -18,6 +18,10 @@ import (
 	"github.com/umbracle/ethgo"
 )
 
+func setup() {
+	hasExecutedForDay = make(map[uint64]bool)
+}
+
 func TestIsValidator(t *testing.T) {
 	mockPolybftBackend := new(MockPolybftBackend)
 	validators := validator.NewTestValidatorsWithAliases(
@@ -672,6 +676,8 @@ func TestExecuteVote(t *testing.T) {
 }
 
 func TestExecuteVote_PriceFeedError(t *testing.T) {
+	setup()
+
 	header := &types.Header{Timestamp: 100000}
 
 	mockPriceFeed := new(MockPriceFeed)
@@ -700,6 +706,8 @@ func TestExecuteVote_PriceFeedError(t *testing.T) {
 }
 
 func TestExecuteVote_VoteError(t *testing.T) {
+	setup()
+
 	mockPriceFeed := new(MockPriceFeed)
 	mockTxRelayer := new(MockTxRelayer)
 	account := validator.NewTestValidator(t, "X", 1000).Account
