@@ -42,7 +42,7 @@ jobs:
         with:
           name: hydra
           path: hydra.tar.gz
-          retention-days: 1 # change with 3
+          retention-days: 3
 
   go_build_reproducibility:
     name: Verify Build Reproducibility
