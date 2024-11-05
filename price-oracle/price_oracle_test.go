@@ -90,6 +90,7 @@ func TestIsValidator(t *testing.T) {
 			isValidator, err := priceOracle.isValidator(tt.block)
 
 			require.Equal(t, tt.expectedIsValidator, isValidator)
+
 			if tt.expectedError != nil {
 				require.EqualError(t, err, tt.expectedError.Error())
 			} else {
@@ -416,6 +417,7 @@ func TestShouldExecuteVote(t *testing.T) {
 
 			// Assert the results
 			require.Equal(t, tt.expectedResult, result)
+
 			if tt.expectedError != nil {
 				require.EqualError(t, err, tt.expectedError.Error())
 			} else {
@@ -496,6 +498,7 @@ func TestVote(t *testing.T) {
 				big.NewInt(1),
 				event["day"].(*big.Int), //nolint:forcetypeassert
 			)
+
 			foundVoteLog = true
 		}
 	}
@@ -659,6 +662,7 @@ func TestExecuteVote(t *testing.T) {
 				big.NewInt(1),
 				event["day"].(*big.Int), //nolint:forcetypeassert
 			)
+
 			foundVoteLog = true
 		}
 	}

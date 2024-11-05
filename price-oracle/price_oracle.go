@@ -200,6 +200,7 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 
 	// then check if the contract is in a proper state to vote
 	dayNumber := calcDayNumber(header.Timestamp)
+
 	shouldVote, falseReason, err := state.shouldVote(dayNumber)
 	if err != nil {
 		return false, err

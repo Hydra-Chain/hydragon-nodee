@@ -160,6 +160,7 @@ func (v *TestValidator) Key() *wallet.Key {
 
 func (v *TestValidator) ParamsValidator() *GenesisValidator {
 	blskey := v.Account.Bls.PublicKey().Marshal()
+
 	blsSignature, err := signer.MakeKOSKSignature(
 		v.Account.Bls,
 		types.Address(v.Account.Ecdsa.Address()),

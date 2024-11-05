@@ -17,6 +17,7 @@ func TestBlake2f(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if !bytes.Equal(c.Expected, out) {
 			t.Fatal("bad")
 		}

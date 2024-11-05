@@ -101,6 +101,7 @@ func (a *AddressList) runInputCall(caller types.Address, input []byte,
 
 	// write operation
 	var updateRole Role
+
 	switch {
 	case bytes.Equal(sig, SetAdminFunc.ID()):
 		updateRole = AdminRole

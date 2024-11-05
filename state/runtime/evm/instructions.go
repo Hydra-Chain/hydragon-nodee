@@ -69,9 +69,11 @@ func opSDiv(c *state) {
 	} else {
 		neg := a.Sign() != b.Sign()
 		b.Div(a.Abs(a), b.Abs(b))
+
 		if neg {
 			b.Neg(b)
 		}
+
 		toU256(b)
 	}
 }
@@ -99,9 +101,11 @@ func opSMod(c *state) {
 	} else {
 		neg := a.Sign() < 0
 		b.Mod(a.Abs(a), b.Abs(b))
+
 		if neg {
 			b.Neg(b)
 		}
+
 		toU256(b)
 	}
 }
@@ -465,6 +469,7 @@ func opSload(c *state) {
 	loc := c.top()
 
 	var gas uint64
+
 	switch {
 	case c.config.Istanbul:
 		// eip-1884
@@ -578,6 +583,7 @@ func opBalance(c *state) {
 	addr, _ := c.popAddr()
 
 	var gas uint64
+
 	switch {
 	case c.config.Istanbul:
 		// eip-1884
@@ -1095,6 +1101,7 @@ func opCreate(op OpCode) instruction {
 		result := c.host.Callx(contract, c.host)
 
 		v := c.push1()
+
 		switch {
 		case op == CREATE && c.config.Homestead && errors.Is(result.Err, runtime.ErrCodeStoreOutOfGas):
 			v.Set(zero)
@@ -1264,6 +1271,7 @@ func (c *state) buildCallContract(op OpCode) (*runtime.Contract, uint64, uint64,
 
 			return nil, 0, 0, nil
 		}
+
 		gas = initialGas.Uint64()
 	}
 

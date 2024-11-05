@@ -200,6 +200,7 @@ func (d *Dispatcher) handleSubscribe(req Request, conn wsConn) (string, Error) {
 	}
 
 	var filterID string
+
 	switch subscribeMethod {
 	case "newHeads":
 		filterID = d.filterManager.NewBlockFilter(conn)
@@ -208,6 +209,7 @@ func (d *Dispatcher) handleSubscribe(req Request, conn wsConn) (string, Error) {
 		if err != nil {
 			return "", NewInternalError(err.Error())
 		}
+
 		filterID = d.filterManager.NewLogFilter(logQuery, conn)
 	case "newPendingTransactions":
 		filterID = d.filterManager.NewPendingTxFilter(conn)

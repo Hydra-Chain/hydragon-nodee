@@ -777,7 +777,9 @@ func Test_opCall(t *testing.T) {
 		test := tt
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
+
 			state, closeFn := getState()
+
 			defer closeFn()
 
 			state.gas = test.initState.gas

@@ -50,9 +50,9 @@ type Hash [HashLength]byte
 type Address [AddressLength]byte
 
 func BytesToHash(b []byte) Hash {
+	minimum := min(len(b), HashLength)
+
 	var h Hash
-	size := len(b)
-	minimum := min(size, HashLength)
 
 	copy(h[HashLength-minimum:], b[len(b)-minimum:])
 

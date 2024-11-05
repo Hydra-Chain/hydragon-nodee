@@ -51,6 +51,7 @@ func (p *Prompt) GenerateMnemonic(generator MnemonicGenerator) (string, error) {
 	fmt.Println("\nWe must generate a mnemonic which will represent your node account.")
 	fmt.Println("\nKeep it safe and do not share it with anyone.")
 	fmt.Println("\nYou will need this mnemonic to recover your node account if you lose it.")
+
 	start, err := p.DefaultPrompt("Do you want to start the process? [y/n]", "y")
 	if err != nil {
 		return "", err
@@ -67,6 +68,7 @@ func (p *Prompt) GenerateMnemonic(generator MnemonicGenerator) (string, error) {
 	}
 
 	fmt.Println("\nHere is your mnemonic. Please copy it and store it in a safe place.")
+
 	repeatMnemonic, err := p.DefaultPrompt(
 		"Please re-type the mnemonic to confirm that you have backed it up in a safe location.",
 		"",
@@ -77,10 +79,6 @@ func (p *Prompt) GenerateMnemonic(generator MnemonicGenerator) (string, error) {
 
 	if repeatMnemonic != mnemonic {
 		return "", errors.New("mnemonic mismatch")
-	}
-
-	if err != nil {
-		return "", err
 	}
 
 	return mnemonic, nil
@@ -95,6 +93,7 @@ func (p *Prompt) InputPassword(verify bool) ([]byte, error) {
 		}
 
 		fmt.Print("Enter password: ")
+
 		bytePassword, err := p.readPassword()
 		if err != nil {
 			return nil, err
@@ -112,6 +111,7 @@ func (p *Prompt) InputPassword(verify bool) ([]byte, error) {
 func (p *Prompt) ConfirmPassword(password []byte) (pass []byte, err error) {
 	return p.promptUntil(func() ([]byte, error) {
 		fmt.Print("\nConfirm password: ")
+
 		rePassword, err := p.readPassword()
 		if err != nil {
 			return nil, fmt.Errorf("error reading password: %w", err)
@@ -131,16 +131,18 @@ func (p *Prompt) readPassword() ([]byte, error) {
 
 // DefaultPrompt prompts the user for any text and performs no validation. If nothing is entered it returns the default.
 func (p *Prompt) DefaultPrompt(promptText, defaultValue string) (string, error) {
-	var response string
 	if defaultValue != "" {
 		fmt.Printf("%s %s:\n", promptText, fmt.Sprintf("(default: %s)", defaultValue))
 	} else {
 		fmt.Printf("%s:\n", promptText)
 	}
 
+	var response string
+
 	scanner := bufio.NewScanner(os.Stdin)
 	if ok := scanner.Scan(); ok {
 		item := scanner.Text()
+
 		response = strings.TrimRight(item, "\r\n")
 		if response == "" {
 			return defaultValue, nil
@@ -180,6 +182,7 @@ func (p *Prompt) promptUntil(action func() (res []byte, err error)) (res []byte,
 		res, err := action()
 		if err != nil {
 			fmt.Printf("\n %s \n", err)
+
 			agree, err := p.tryAgain()
 			if err != nil {
 				return nil, err

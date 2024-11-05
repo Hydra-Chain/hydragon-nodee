@@ -40,6 +40,7 @@ var _ blockchainBackend = (*MockBlockchainBackend)(nil)
 
 func (m *MockBlockchainBackend) CurrentHeader() *types.Header {
 	args := m.Called()
+
 	header, ok := args.Get(0).(*types.Header)
 	if !ok {
 		panic("Expected *types.Header but got a different type")
@@ -52,6 +53,7 @@ func (m *MockBlockchainBackend) GetStateProviderForBlock(
 	block *types.Header,
 ) (contract.Provider, error) {
 	args := m.Called(block)
+
 	provider, ok := args.Get(0).(contract.Provider)
 	if !ok {
 		panic("Expected contract.Provider but got a different type")
@@ -62,6 +64,7 @@ func (m *MockBlockchainBackend) GetStateProviderForBlock(
 
 func (m *MockBlockchainBackend) GetSystemState(provider contract.Provider) polybft.SystemState {
 	args := m.Called(provider)
+
 	state, ok := args.Get(0).(polybft.SystemState)
 	if !ok {
 		panic("Expected polybft.SystemState but got a different type")
@@ -72,6 +75,7 @@ func (m *MockBlockchainBackend) GetSystemState(provider contract.Provider) polyb
 
 func (m *MockBlockchainBackend) SubscribeEvents() blockchain.Subscription {
 	args := m.Called()
+
 	subsciption, ok := args.Get(0).(blockchain.Subscription)
 	if !ok {
 		panic("Expected blockchain.Subscription but got a different type")
@@ -93,6 +97,7 @@ func (m *MockPolybftBackend) GetValidators(
 	parents []*types.Header,
 ) (validator.AccountSet, error) {
 	args := m.Called(blockNumber, parents)
+
 	accSet, ok := args.Get(0).(validator.AccountSet)
 	if !ok {
 		panic("Expected validator.AccountSet but got a different type")
@@ -117,6 +122,7 @@ func (m *MockTxRelayer) SendTransaction(
 	key ethgo.Key,
 ) (*ethgo.Receipt, error) {
 	args := m.Called(txn, key)
+
 	receipt, ok := args.Get(0).(*ethgo.Receipt)
 	if !ok {
 		panic("Expected *ethgo.Receipt but got a different type")
@@ -127,6 +133,7 @@ func (m *MockTxRelayer) SendTransaction(
 
 func (m *MockTxRelayer) SendTransactionLocal(txn *ethgo.Transaction) (*ethgo.Receipt, error) {
 	args := m.Called(txn)
+
 	receipt, ok := args.Get(0).(*ethgo.Receipt)
 	if !ok {
 		panic("Expected *ethgo.Receipt but got a different type")
@@ -137,6 +144,7 @@ func (m *MockTxRelayer) SendTransactionLocal(txn *ethgo.Transaction) (*ethgo.Rec
 
 func (m *MockTxRelayer) Client() *jsonrpc.Client {
 	args := m.Called()
+
 	client, ok := args.Get(0).(*jsonrpc.Client)
 	if !ok {
 		panic("Expected *jsonrpc.Client but got a different type")
@@ -168,6 +176,7 @@ func (m *MockStateProvider) GetPriceOracleState(
 	validatorAccount *wallet.Account,
 ) (PriceOracleState, error) {
 	args := m.Called(header, validatorAccount)
+
 	state, ok := args.Get(0).(PriceOracleState)
 	if !ok {
 		panic("Expected PriceOracleState but got a different type")
@@ -183,6 +192,7 @@ type MockPriceFeed struct {
 
 func (m *MockPriceFeed) GetPrice(header *types.Header) (*big.Int, error) {
 	args := m.Called(header)
+
 	price, ok := args.Get(0).(*big.Int)
 	if !ok {
 		panic("Expected *big.Int but got a different type")

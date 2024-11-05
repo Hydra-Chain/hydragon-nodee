@@ -8,7 +8,7 @@ linters:
   disable-all: true
   enable:
     - whitespace # Tool for detection of leading and trailing whitespace
-#    - wsl # Forces you to use empty lines
+    - wsl # Forces you to use empty lines
     - wastedassign # Finds wasted assignment statements
     - unconvert # Unnecessary type conversions
     - tparallel # Detects inappropriate usage of t.Parallel() method in your Go test codes
