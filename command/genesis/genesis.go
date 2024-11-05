@@ -9,7 +9,6 @@ import (
 	"github.com/0xPolygon/polygon-edge/command/genesis/predeploy"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	"github.com/0xPolygon/polygon-edge/consensus/ibft"
-	"github.com/0xPolygon/polygon-edge/consensus/polybft"
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/validators"
 )
@@ -44,7 +43,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().Uint64Var(
 		&params.chainID,
 		chainIDFlag,
-		polybft.DefaultChainID,
+		command.DefaultChainID,
 		"the ID of the chain",
 	)
 
@@ -333,7 +332,7 @@ func setLegacyFlags(cmd *cobra.Command) {
 	cmd.Flags().Uint64Var(
 		&params.chainID,
 		chainIDFlagLEGACY,
-		polybft.DefaultChainID,
+		command.DefaultChainID,
 		"the ID of the chain",
 	)
 
