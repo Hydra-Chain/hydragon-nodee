@@ -611,7 +611,7 @@ func (t *Transition) apply(msg *types.Transaction) (*runtime.ExecutionResult, er
 		result = t.Call2(msg.From, *msg.To, msg.Input, value, gasLeft)
 	}
 
-	// H: In case call is not successful and the amount is not transfered,
+	// H: In case call is not successful and the amount is not transferred,
 	// remove it from the system address
 	if areCoinsMinted && result != nil && result.Failed() {
 		err := t.state.SubBalance(msg.From, msg.Value)

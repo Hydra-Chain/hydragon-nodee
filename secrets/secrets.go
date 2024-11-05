@@ -36,7 +36,7 @@ const (
 	ValidatorBLSSignature = "validator-bls-signature"
 
 	// CoinGeckoAPIKey is the API key for the coingecko endpoints
-	CoinGeckoAPIKey = "coingecko-api-key"
+	CoinGeckoAPIKey = "coingecko-api-key" //nolint:gosec
 )
 
 // Define constant file names for the local StorageManager

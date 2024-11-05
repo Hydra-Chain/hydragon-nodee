@@ -239,7 +239,7 @@ func (c *consensusRuntime) initStakeManager(logger hcf.Logger, dbTx *bolt.Tx) er
 		wallet.NewEcdsaSigner(c.config.Key),
 		contracts.HydraStakingContract,
 		contracts.HydraChainContract,
-		int(c.config.PolyBFTConfig.MaxValidatorSetSize), //nolint:gosec
+		int(c.config.PolyBFTConfig.MaxValidatorSetSize),
 		c.config.polybftBackend,
 		dbTx,
 		c.config.blockchain,
@@ -690,7 +690,7 @@ func (c *consensusRuntime) calculateStateTxsInput(
 			EndBlock:   new(big.Int).SetUint64(currentBlock.Number + 1),
 			EpochRoot:  types.Hash{},
 		},
-		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)), //nolint:gosec
+		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
 		Uptime:    uptime,
 	}
 

@@ -167,11 +167,13 @@ func (v *TestValidator) ParamsValidator() *GenesisValidator {
 		signer.DomainHydraChain,
 	)
 	if err != nil {
+		//nolint:gocritic // It should be fixed in the future.
 		panic(fmt.Sprintf("BUG: failed to sign validator params: %v", err))
 	}
 
 	signatureBytes, err := blsSignature.Marshal()
 	if err != nil {
+		//nolint:gocritic // It should be fixed in the future.
 		panic(fmt.Sprintf("BUG: failed to marshal validator params signature: %v", err))
 	}
 

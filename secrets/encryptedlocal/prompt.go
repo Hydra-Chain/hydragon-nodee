@@ -15,10 +15,11 @@ import (
 
 var (
 	ErrInvalidPassword = errors.New(
-		"Password must contain at least one number, one uppercase letter, one special character, and be at least 8 characters long",
+		"password must contain at least one number, one uppercase letter, one special character," +
+			" and be at least 8 characters long",
 	)
-	ErrPasswordMismatch    = errors.New("Passwords do not match")
-	ErrTerminatedOperation = errors.New("Operation terminated")
+	ErrPasswordMismatch    = errors.New("passwords do not match")
+	ErrTerminatedOperation = errors.New("operation terminated")
 )
 
 type Prompt struct {
@@ -61,6 +62,9 @@ func (p *Prompt) GenerateMnemonic(generator MnemonicGenerator) (string, error) {
 	}
 
 	mnemonic, err := generator.GenerateMnemonic()
+	if err != nil {
+		return "", err
+	}
 
 	fmt.Println("\nHere is your mnemonic. Please copy it and store it in a safe place.")
 	repeatMnemonic, err := p.DefaultPrompt(
@@ -141,6 +145,7 @@ func (p *Prompt) DefaultPrompt(promptText, defaultValue string) (string, error) 
 		if response == "" {
 			return defaultValue, nil
 		}
+
 		return response, nil
 	}
 
@@ -205,6 +210,7 @@ func (p *Prompt) tryAgain() (agree bool, err error) {
 		return false, nil
 	default:
 		fmt.Println("Invalid input")
+
 		return p.tryAgain()
 	}
 }

@@ -113,6 +113,7 @@ func baseOnSetHandler(
 		esm.logger.Error(
 			"The secret value you entered does not match the original value. Please try again.",
 		)
+
 		return nil, errors.New("secret value mismatch")
 	} else {
 		esm.logger.Info("The secret value you entered matches the original value. Continuing.")

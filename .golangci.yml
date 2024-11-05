@@ -8,7 +8,7 @@ linters:
   disable-all: true
   enable:
     - whitespace # Tool for detection of leading and trailing whitespace
-    - wsl # Forces you to use empty lines
+#    - wsl # Forces you to use empty lines
     - wastedassign # Finds wasted assignment statements
     - unconvert # Unnecessary type conversions
     - tparallel # Detects inappropriate usage of t.Parallel() method in your Go test codes
@@ -21,7 +21,6 @@ linters:
     - misspell # Misspelled English words in comments
     - makezero # Finds slice declarations with non-zero initial length
     - lll # Long lines
-    - importas # Enforces consistent import aliases
     - gosec # Security problems
     - gofmt # Whether the code was gofmt-ed
     - goimports # Unused imports
@@ -44,13 +43,20 @@ linters-settings:
   gocritic:
     enabled-checks:
       - ruleguard
+    disabled-checks:
+      - unslice # It should be enabled in the future.
     settings:
       ruleguard:
         rules: "./gorules/rules.go"
+  gosec:
+    excludes:
+      - G115
+  lll:
+    line-length: 150
 
 issues:
-  new-from-rev: origin/develop # report only new issues with reference to develop branch
-  whole-files: true
+  max-issues-per-linter: 0
+  max-same-issues: 0
   exclude-dirs:
     - tests
   exclude-rules:
@@ -66,7 +72,6 @@ issues:
         - unparam
         - lll
         - predeclared
-        - wsl
         - wastedassign
         - nolintlint
     - path: gen_sc_data\.go
@@ -79,3 +84,10 @@ issues:
     - EXC0013 # Package comment should be of the form "(.+)...
     - EXC0014 # Comment on exported (.+) should be of the form "(.+)..."
     - EXC0015 # Should have a package comment
+
+output:
+  sort-results: true
+  show-stats: true
+  sort-order:
+    - linter
+    - file

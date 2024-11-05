@@ -479,14 +479,14 @@ func (t *Txn) delete(node Node, search []byte) (Node, bool) {
 }
 
 func prefixLen(k1, k2 []byte) int {
-	max := len(k1)
-	if l := len(k2); l < max {
-		max = l
+	maximum := len(k1)
+	if l := len(k2); l < maximum {
+		maximum = l
 	}
 
 	var i int
 
-	for i = 0; i < max; i++ {
+	for i = 0; i < maximum; i++ {
 		if k1[i] != k2[i] {
 			break
 		}

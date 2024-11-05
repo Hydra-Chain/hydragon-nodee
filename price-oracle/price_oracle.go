@@ -299,9 +299,9 @@ func (p *PriceOracle) vote(price *big.Int) error {
 				return fmt.Errorf("failed to parse log: %w", err)
 			}
 
-			result.price = event["price"].(*big.Int).String()
-			result.validatorAddress = event["validator"].(ethgo.Address).String()
-			result.day = event["day"].(*big.Int).Uint64()
+			result.price = event["price"].(*big.Int).String()                     //nolint:forcetypeassert
+			result.validatorAddress = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
+			result.day = event["day"].(*big.Int).Uint64()                         //nolint:forcetypeassert
 
 			foundVoteLog = true
 		}
@@ -341,7 +341,7 @@ func isVotingTime(timestamp uint64) bool {
 
 // isBlockOlderThan checks if the block is older than the given number of minutes
 func isBlockOlderThan(header *types.Header, minutes int64) bool {
-	return time.Now().UTC().Unix()-int64(header.Timestamp) > minutes*60 //nolint:gosec
+	return time.Now().UTC().Unix()-int64(header.Timestamp) > minutes*60
 }
 
 func calcDayNumber(timestamp uint64) uint64 {

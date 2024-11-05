@@ -484,17 +484,17 @@ func TestVote(t *testing.T) {
 			require.Equal(
 				t,
 				expectedPrice.String(),
-				event["price"].(*big.Int).String(),
+				event["price"].(*big.Int).String(), //nolint:forcetypeassert
 			)
 			require.Equal(
 				t,
 				account.Ecdsa.Address().String(),
-				event["validator"].(ethgo.Address).String(),
+				event["validator"].(ethgo.Address).String(), //nolint:forcetypeassert
 			)
 			require.Equal(
 				t,
 				big.NewInt(1),
-				event["day"].(*big.Int),
+				event["day"].(*big.Int), //nolint:forcetypeassert
 			)
 			foundVoteLog = true
 		}
@@ -647,17 +647,17 @@ func TestExecuteVote(t *testing.T) {
 			require.Equal(
 				t,
 				expectedPrice.String(),
-				event["price"].(*big.Int).String(),
+				event["price"].(*big.Int).String(), //nolint:forcetypeassert
 			)
 			require.Equal(
 				t,
 				account.Ecdsa.Address().String(),
-				event["validator"].(ethgo.Address).String(),
+				event["validator"].(ethgo.Address).String(), //nolint:forcetypeassert
 			)
 			require.Equal(
 				t,
 				big.NewInt(1),
-				event["day"].(*big.Int),
+				event["day"].(*big.Int), //nolint:forcetypeassert
 			)
 			foundVoteLog = true
 		}

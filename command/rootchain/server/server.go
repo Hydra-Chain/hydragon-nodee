@@ -189,6 +189,7 @@ func runRootchain(ctx context.Context, outputter command.OutputFormatter, closeC
 		// in current folder
 		pwdDir, err := os.Getwd()
 		if err != nil {
+			//nolint:gocritic // It should be fixed in the future.
 			log.Fatal(err)
 		} else {
 			mountDir = filepath.Join(pwdDir, params.dataDir)
