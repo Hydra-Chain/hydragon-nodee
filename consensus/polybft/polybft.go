@@ -30,10 +30,9 @@ import (
 )
 
 const (
-	minSyncPeers   = 2
-	pbftProto      = "/pbft/0.2"
-	bridgeProto    = "/bridge/0.2"
-	DefaultChainID = 8844
+	minSyncPeers = 2
+	pbftProto    = "/pbft/0.2"
+	bridgeProto  = "/bridge/0.2"
 )
 
 var (

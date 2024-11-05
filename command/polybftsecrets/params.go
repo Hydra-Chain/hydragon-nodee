@@ -7,7 +7,6 @@ import (
 
 	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/0xPolygon/polygon-edge/command"
-	"github.com/0xPolygon/polygon-edge/consensus/polybft"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/secrets"
 	"github.com/0xPolygon/polygon-edge/secrets/helper"
@@ -146,7 +145,7 @@ func (ip *initParams) setFlags(cmd *cobra.Command) {
 	cmd.Flags().Int64Var(
 		&ip.chainID,
 		chainIDFlag,
-		polybft.DefaultChainID,
+		command.DefaultChainID,
 		"the ID of the chain",
 	)
 
