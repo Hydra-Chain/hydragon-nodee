@@ -49,7 +49,6 @@ var (
 	// /ip6/<any loopback>/tcp/<port>
 	// /dns/foobar.com/tcp/<port>
 	loopbackRegex = regexp.MustCompile(
-		//nolint:lll
 		fmt.Sprintf(`^\/ip4\/127(?:\.[0-9]+){0,2}\.[0-9]+\/tcp\/\d+$|^\/ip4\/localhost\/tcp\/\d+$|^\/ip6\/(?:0*\:)*?:?0*1\/tcp\/\d+$|%s`, DNSRegex),
 	)
 

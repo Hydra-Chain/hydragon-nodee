@@ -347,6 +347,7 @@ func (txn *Txn) IncrNonce(addr types.Address) error {
 
 			return
 		}
+
 		object.Account.Nonce++
 	})
 
@@ -430,6 +431,7 @@ func (txn *Txn) Suicide(addr types.Address) bool {
 			suicided = true
 			object.Suicide = true
 		}
+
 		if object != nil {
 			object.Account.Balance = new(big.Int)
 		}
@@ -555,6 +557,7 @@ func (txn *Txn) CleanDeleteObjects(deleteEmptyObjects bool) error {
 		if !ok {
 			return false
 		}
+
 		if a.Suicide || a.Empty() && deleteEmptyObjects {
 			remove = append(remove, k)
 		}
@@ -610,22 +613,22 @@ func (txn *Txn) Commit(deleteEmptyObjects bool) ([]*Object, error) {
 			DirtyCode: a.DirtyCode,
 			Code:      a.Code,
 		}
+
 		if a.Deleted {
 			obj.Deleted = true
-		} else {
-			if a.Txn != nil {
-				a.Txn.Root().Walk(func(k []byte, v interface{}) bool {
-					store := &StorageObject{Key: k}
-					if v == nil {
-						store.Deleted = true
-					} else {
-						store.Val = v.([]byte) //nolint:forcetypeassert
-					}
-					obj.Storage = append(obj.Storage, store)
+		} else if a.Txn != nil {
+			a.Txn.Root().Walk(func(k []byte, v interface{}) bool {
+				store := &StorageObject{Key: k}
+				if v == nil {
+					store.Deleted = true
+				} else {
+					store.Val = v.([]byte) //nolint:forcetypeassert
+				}
 
-					return false
-				})
-			}
+				obj.Storage = append(obj.Storage, store)
+
+				return false
+			})
 		}
 
 		objs = append(objs, obj)

@@ -138,6 +138,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrInvalidTxType", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -157,6 +158,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrTxTypeNotSupported London hardfork not enabled", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.forks.RemoveFork(chain.London)
 
@@ -177,6 +179,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrNegativeValue", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -190,6 +193,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrBlockLimitExceeded", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -206,6 +210,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrExtractSignature", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -218,6 +223,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrInvalidSender", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(addr1, 0, 1)
@@ -234,6 +240,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrUnderpriced", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.priceLimit = 1000000
 
@@ -248,6 +255,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrInvalidAccountState", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.store = faultyMockStore{}
 
@@ -264,6 +272,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrTxPoolOverflow", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		// fill the pool
@@ -280,6 +289,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("FillTxPoolToTheLimit", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		// fill the pool leaving only 1 slot
@@ -296,6 +306,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrIntrinsicGas", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -310,6 +321,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrAlreadyKnown", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -327,6 +339,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrAlreadyKnown", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -349,6 +362,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrOversizedData", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -369,6 +383,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrNonceTooLow", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		// faultyMockStore.GetNonce() == 99999
@@ -384,6 +399,7 @@ func TestAddTxErrors(t *testing.T) {
 
 	t.Run("ErrInsufficientFunds", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 
 		tx := newTx(defaultAddr, 0, 1)
@@ -530,6 +546,7 @@ func TestAddTxHighPressure(t *testing.T) {
 			pool.SetSigner(&mockSigner{})
 
 			pool.getOrCreateAccount(addr1)
+
 			pool.accounts.get(addr1).nextNonce = 5
 
 			//	mock high pressure
@@ -557,6 +574,7 @@ func TestAddTxHighPressure(t *testing.T) {
 			pool.SetSigner(&mockSigner{})
 
 			pool.getOrCreateAccount(addr1)
+
 			pool.accounts.get(addr1).nextNonce = 5
 
 			//	mock high pressure
@@ -2154,6 +2172,7 @@ func Test_TxPool_validateTx(t *testing.T) {
 
 	t.Run("tx input larger than the TxPoolMaxInitCodeSize", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.forks = chain.AllForksEnabled.Copy()
 
@@ -2173,6 +2192,7 @@ func Test_TxPool_validateTx(t *testing.T) {
 
 	t.Run("tx input the same as TxPoolMaxInitCodeSize", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.forks = chain.AllForksEnabled.Copy()
 
@@ -2297,6 +2317,7 @@ func Test_TxPool_validateTx(t *testing.T) {
 
 	t.Run("eip-1559 tx placed without eip-1559 fork enabled", func(t *testing.T) {
 		t.Parallel()
+
 		pool := setupPool()
 		pool.forks = chain.AllForksEnabled.Copy()
 		pool.forks.RemoveFork(chain.London)
@@ -2587,10 +2608,13 @@ func TestResetAccounts_Enqueued(t *testing.T) {
 		// setup prestate
 		totalTx := 0
 		expectedPromoted := uint64(0)
+
 		for addr, txs := range allTxs {
 			expectedPromoted += expected.accounts[addr].promoted
+
 			for _, tx := range txs {
 				totalTx++
+
 				assert.NoError(t, pool.addTx(local, tx))
 			}
 		}
@@ -2682,10 +2706,13 @@ func TestResetAccounts_Enqueued(t *testing.T) {
 		// setup prestate
 		expectedEnqueuedTx := 0
 		expectedPromotedTx := uint64(0)
+
 		for addr, txs := range allTxs {
 			expectedPromotedTx += expected.accounts[addr].promoted
+
 			for _, tx := range txs {
 				expectedEnqueuedTx++
+
 				assert.NoError(t, pool.addTx(local, tx))
 			}
 		}
@@ -2871,6 +2898,7 @@ func TestExecutablesOrder(t *testing.T) {
 			)
 
 			expectedPromotedTx := 0
+
 			for _, txs := range test.allTxs {
 				for _, tx := range txs {
 					expectedPromotedTx++
@@ -2889,6 +2917,7 @@ func TestExecutablesOrder(t *testing.T) {
 			pool.Prepare()
 
 			var successful []*types.Transaction
+
 			for {
 				tx := pool.Peek()
 				if tx == nil {
@@ -3068,6 +3097,7 @@ func TestRecovery(t *testing.T) {
 			// setup prestate
 			totalTx := 0
 			expectedEnqueued := uint64(0)
+
 			for addr, txs := range test.allTxs {
 				// preset nonce so promotions can happen
 				acc := pool.getOrCreateAccount(addr)
@@ -3078,6 +3108,7 @@ func TestRecovery(t *testing.T) {
 				// send txs
 				for _, sTx := range txs {
 					totalTx++
+
 					assert.NoError(t, pool.addTx(local, sTx.tx))
 				}
 			}
@@ -3090,6 +3121,7 @@ func TestRecovery(t *testing.T) {
 
 			func() {
 				pool.Prepare()
+
 				for {
 					tx := pool.Peek()
 					if tx == nil {
@@ -3288,9 +3320,11 @@ func TestGetTxs(t *testing.T) {
 
 			// send txs
 			expectedPromotedTx := 0
+
 			for _, txs := range test.allTxs {
 				nonce := uint64(0)
 				promotable := uint64(0)
+
 				for _, tx := range txs {
 					// send all txs
 					if tx.Nonce == nonce+promotable {
@@ -3385,6 +3419,7 @@ func TestSetSealing(t *testing.T) {
 
 			// Set initial value
 			pool.sealing.Store(false)
+
 			if test.initialValue {
 				pool.sealing.Store(true)
 			}

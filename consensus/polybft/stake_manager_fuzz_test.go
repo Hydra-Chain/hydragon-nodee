@@ -99,7 +99,9 @@ func FuzzTestStakeManagerPostBlock(f *testing.F) {
 		systemStateMockVar := new(systemStateMock)
 		vPowerExp := big.NewInt(5000)
 		systemStateMockVar.On("GetVotingPowerExponent").Return(vPowerExp, nil).Maybe()
+
 		bcMock := new(blockchainMock)
+
 		for i := 0; i < int(data.BlockID); i++ {
 			bcMock.On("CurrentHeader").Return(&types.Header{Number: 0})
 			bcMock.On("GetHeaderByNumber", mock.Anything).

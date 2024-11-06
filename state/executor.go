@@ -567,8 +567,10 @@ func (t *Transition) apply(msg *types.Transaction) (*runtime.ExecutionResult, er
 	// System transactions are verified at a higher level in fsm
 	// The above ensures fresh balance can be added only when consensus rules are met
 	areCoinsMinted := false
+
 	if msg.From == contracts.SystemCaller && msg.Value.Cmp(big.NewInt(0)) > 0 {
 		t.state.AddBalance(msg.From, msg.Value)
+
 		areCoinsMinted = true
 	}
 
@@ -608,10 +610,11 @@ func (t *Transition) apply(msg *types.Transaction) (*runtime.ExecutionResult, er
 		if err := t.state.IncrNonce(msg.From); err != nil {
 			return nil, err
 		}
+
 		result = t.Call2(msg.From, *msg.To, msg.Input, value, gasLeft)
 	}
 
-	// H: In case call is not successful and the amount is not transfered,
+	// H: In case call is not successful and the amount is not transferred,
 	// remove it from the system address
 	if areCoinsMinted && result != nil && result.Failed() {
 		err := t.state.SubBalance(msg.From, msg.Value)

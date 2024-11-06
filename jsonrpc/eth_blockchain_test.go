@@ -90,6 +90,7 @@ func TestEth_Block_GetBlockTransactionCountByNumber(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		block.Transactions = append(block.Transactions, []*types.Transaction{{Nonce: 0, From: addr0}}...)
 	}
+
 	store.add(block)
 
 	eth := newTestEthEndpoint(store)
@@ -191,6 +192,7 @@ func TestEth_GetTransactionReceipt(t *testing.T) {
 		eth := newTestEthEndpoint(store)
 		block := newTestBlock(1, hash4)
 		store.add(block)
+
 		txn0 := newTestTransaction(uint64(0), addr0)
 		txn1 := newTestTransaction(uint64(1), addr1)
 		block.Transactions = []*types.Transaction{txn0, txn1}
@@ -216,7 +218,9 @@ func TestEth_GetTransactionReceipt(t *testing.T) {
 				},
 			},
 		}
+
 		receipt1.SetStatus(types.ReceiptSuccess)
+
 		receipt2 := &types.Receipt{
 			Logs: []*types.Log{
 				{
@@ -228,6 +232,7 @@ func TestEth_GetTransactionReceipt(t *testing.T) {
 			},
 		}
 		receipt2.SetStatus(types.ReceiptSuccess)
+
 		store.receipts[hash4] = []*types.Receipt{receipt1, receipt2}
 
 		res, err := eth.GetTransactionReceipt(txn1.Hash)

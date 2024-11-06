@@ -792,7 +792,7 @@ func (f *fsm) Insert(
 
 		signatures = append(signatures, s)
 
-		bitmap.Set(uint64(index)) //nolint:gosec
+		bitmap.Set(uint64(index))
 	}
 
 	aggregatedSignature, err := signatures.Aggregate().Marshal()
@@ -1006,10 +1006,10 @@ func validateHeaderFields(parent *types.Header, header *types.Header, blockTimeD
 		return fmt.Errorf("invalid number")
 	}
 	// verify time is from the future
-	if header.Timestamp > (uint64(time.Now().UTC().Unix()) + blockTimeDrift) { //nolint:gosec
+	if header.Timestamp > (uint64(time.Now().UTC().Unix()) + blockTimeDrift) {
 		return fmt.Errorf(
 			"block from the future. block timestamp: %s, configured block time drift %d seconds",
-			time.Unix(int64(header.Timestamp), 0).Format(time.RFC3339), //nolint:gosec
+			time.Unix(int64(header.Timestamp), 0).Format(time.RFC3339),
 			blockTimeDrift,
 		)
 	}

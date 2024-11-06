@@ -1074,13 +1074,13 @@ func (b *Blockchain) verifyGasLimit(header *types.Header, parentHeader *types.He
 	}
 
 	// Find the absolute delta between the limits
-	diff := int64(parentHeader.GasLimit) - int64(header.GasLimit) //nolint:gosec
+	diff := int64(parentHeader.GasLimit) - int64(header.GasLimit)
 	if diff < 0 {
 		diff *= -1
 	}
 
 	limit := parentHeader.GasLimit / blockGasTargetDivisor
-	if uint64(diff) > limit { //nolint:gosec
+	if uint64(diff) > limit {
 		return fmt.Errorf(
 			"invalid gas limit, limit = %d, want %d +- %d",
 			header.GasLimit,
