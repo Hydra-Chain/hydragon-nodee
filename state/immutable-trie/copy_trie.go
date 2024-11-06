@@ -57,7 +57,7 @@ func copyTrieHash(nodeHash []byte, storage Storage, batchWriter Batch, agg []byt
 		return err
 	}
 
-	//copy whole bytes of nodes
+	// copy whole bytes of nodes
 	batchWriter.Put(nodeHash, data)
 
 	return copyTrieNode(node, storage, batchWriter, agg, isStorage)
@@ -84,7 +84,7 @@ func copyTrieNode(node Node, storage Storage, batchWriter Batch, agg []byte, isS
 		}
 
 	case *ValueNode:
-		//if node represens stored value, then we need to copy it
+		// if node represens stored value, then we need to copy it
 		if n.hash {
 			return copyTrieHash(n.buf, storage, batchWriter, agg, isStorage)
 		}
@@ -195,6 +195,7 @@ func hashChecker(node Node, h *hasher, a *fastrlp.Arena, d int, storage Storage)
 				if err != nil {
 					return nil, err
 				}
+
 				val.Set(v)
 			}
 		}
@@ -207,6 +208,7 @@ func hashChecker(node Node, h *hasher, a *fastrlp.Arena, d int, storage Storage)
 			if err != nil {
 				return nil, err
 			}
+
 			val.Set(v)
 		}
 

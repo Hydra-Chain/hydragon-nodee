@@ -69,9 +69,11 @@ func opSDiv(c *state) {
 	} else {
 		neg := a.Sign() != b.Sign()
 		b.Div(a.Abs(a), b.Abs(b))
+
 		if neg {
 			b.Neg(b)
 		}
+
 		toU256(b)
 	}
 }
@@ -99,9 +101,11 @@ func opSMod(c *state) {
 	} else {
 		neg := a.Sign() < 0
 		b.Mod(a.Abs(a), b.Abs(b))
+
 		if neg {
 			b.Neg(b)
 		}
+
 		toU256(b)
 	}
 }
@@ -465,12 +469,14 @@ func opSload(c *state) {
 	loc := c.top()
 
 	var gas uint64
-	if c.config.Istanbul {
+
+	switch {
+	case c.config.Istanbul:
 		// eip-1884
 		gas = 800
-	} else if c.config.EIP150 {
+	case c.config.EIP150:
 		gas = 200
-	} else {
+	default:
 		gas = 50
 	}
 
@@ -505,12 +511,13 @@ func opSStore(c *state) {
 
 	switch status {
 	case runtime.StorageUnchanged:
-		if c.config.Istanbul {
+		switch {
+		case c.config.Istanbul:
 			// eip-2200
 			cost = 800
-		} else if legacyGasMetering {
+		case legacyGasMetering:
 			cost = 5000
-		} else {
+		default:
 			cost = 200
 		}
 
@@ -518,12 +525,13 @@ func opSStore(c *state) {
 		cost = 5000
 
 	case runtime.StorageModifiedAgain:
-		if c.config.Istanbul {
+		switch {
+		case c.config.Istanbul:
 			// eip-2200
 			cost = 800
-		} else if legacyGasMetering {
+		case legacyGasMetering:
 			cost = 5000
-		} else {
+		default:
 			cost = 200
 		}
 
@@ -575,12 +583,14 @@ func opBalance(c *state) {
 	addr, _ := c.popAddr()
 
 	var gas uint64
-	if c.config.Istanbul {
+
+	switch {
+	case c.config.Istanbul:
 		// eip-1884
 		gas = 700
-	} else if c.config.EIP150 {
+	case c.config.EIP150:
 		gas = 400
-	} else {
+	default:
 		gas = 20
 	}
 
@@ -626,14 +636,6 @@ func opCallValue(c *state) {
 	} else {
 		v.Set(zero)
 	}
-}
-
-func min(i, j uint64) uint64 {
-	if i < j {
-		return i
-	}
-
-	return j
 }
 
 func opCallDataLoad(c *state) {
@@ -1013,7 +1015,7 @@ func opSwap(n int) instruction {
 }
 
 func opLog(size int) instruction {
-	size = size - 1
+	size--
 
 	return func(c *state) {
 		if c.inStaticCall() {
@@ -1099,13 +1101,15 @@ func opCreate(op OpCode) instruction {
 		result := c.host.Callx(contract, c.host)
 
 		v := c.push1()
-		if op == CREATE && c.config.Homestead && errors.Is(result.Err, runtime.ErrCodeStoreOutOfGas) {
+
+		switch {
+		case op == CREATE && c.config.Homestead && errors.Is(result.Err, runtime.ErrCodeStoreOutOfGas):
 			v.Set(zero)
-		} else if op == CREATE && result.Failed() && !errors.Is(result.Err, runtime.ErrCodeStoreOutOfGas) {
+		case op == CREATE && result.Failed() && !errors.Is(result.Err, runtime.ErrCodeStoreOutOfGas):
 			v.Set(zero)
-		} else if op == CREATE2 && result.Failed() {
+		case op == CREATE2 && result.Failed():
 			v.Set(zero)
-		} else {
+		default:
 			v.SetBytes(contract.Address.Bytes())
 		}
 
@@ -1254,7 +1258,7 @@ func (c *state) buildCallContract(op OpCode) (*runtime.Contract, uint64, uint64,
 
 	if c.config.EIP150 {
 		availableGas := c.gas - gasCost
-		availableGas = availableGas - availableGas/64
+		availableGas -= availableGas / 64
 
 		if !ok || availableGas < initialGas.Uint64() {
 			gas = availableGas
@@ -1267,6 +1271,7 @@ func (c *state) buildCallContract(op OpCode) (*runtime.Contract, uint64, uint64,
 
 			return nil, 0, 0, nil
 		}
+
 		gas = initialGas.Uint64()
 	}
 

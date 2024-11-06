@@ -17,12 +17,12 @@ jobs:
       build_output_failure: ${{ steps.hydra_build_failure.outputs.build_output }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         
       - name: Setup Go environment
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.20.x
+          go-version: 1.23
 
       - name: Build HydraGon
         run: go build -tags netgo -o hydra -a -installsuffix cgo -ldflags="-s -w -linkmode external -extldflags \"-static\" -X \"github.com/Hydra-Chain/hydragon-node/versioning.Version=${GITHUB_REF_NAME}\" -X \"github.com/Hydra-Chain/hydragon-node/versioning.Commit=${GITHUB_SHA}\"" main.go && tar -czvf hydra.tar.gz hydra
@@ -38,7 +38,7 @@ jobs:
         run: echo "build_output=false" >> $GITHUB_OUTPUT
 
       - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: hydra
           path: hydra.tar.gz
@@ -50,12 +50,12 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Go environment
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.20.x
+          go-version: 1.23
 
       - name: 'Reproduce builds'
         continue-on-error: true

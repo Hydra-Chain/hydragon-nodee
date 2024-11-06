@@ -48,15 +48,15 @@ func NewSigner(forks chain.ForksInTime, chainID uint64) TxSigner {
 }
 
 // encodeSignature generates a signature value based on the R, S and V value
-func encodeSignature(R, S, V *big.Int, isHomestead bool) ([]byte, error) {
-	if !ValidateSignatureValues(V, R, S, isHomestead) {
+func encodeSignature(r, s, v *big.Int, isHomestead bool) ([]byte, error) {
+	if !ValidateSignatureValues(v, r, s, isHomestead) {
 		return nil, fmt.Errorf("invalid txn signature")
 	}
 
 	sig := make([]byte, 65)
-	copy(sig[32-len(R.Bytes()):32], R.Bytes())
-	copy(sig[64-len(S.Bytes()):64], S.Bytes())
-	sig[64] = byte(V.Int64()) // here is safe to convert it since ValidateSignatureValues will validate the v value
+	copy(sig[32-len(r.Bytes()):32], r.Bytes())
+	copy(sig[64-len(s.Bytes()):64], s.Bytes())
+	sig[64] = byte(v.Int64()) // here is safe to convert it since ValidateSignatureValues will validate the v value
 
 	return sig, nil
 }
@@ -92,7 +92,7 @@ func calcTxHash(tx *types.Transaction, chainID uint64) types.Hash {
 	if tx.To == nil {
 		v.Set(a.NewNull())
 	} else {
-		v.Set(a.NewCopyBytes((*tx.To).Bytes()))
+		v.Set(a.NewCopyBytes(tx.To.Bytes()))
 	}
 
 	v.Set(a.NewBigInt(tx.Value))

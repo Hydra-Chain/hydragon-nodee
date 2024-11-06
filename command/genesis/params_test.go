@@ -159,6 +159,7 @@ func Test_validatePremineInfo(t *testing.T) {
 			t.Parallel()
 
 			p := &genesisParams{premine: c.premineRaw}
+
 			err := p.parsePremineInfo()
 			if c.expectedParseErrMsg != "" {
 				require.ErrorContains(t, err, c.expectedParseErrMsg)

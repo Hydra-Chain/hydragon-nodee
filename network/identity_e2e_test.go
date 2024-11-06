@@ -44,6 +44,7 @@ func TestIdentityHandshake(t *testing.T) {
 					},
 				},
 			}
+
 			servers, createErr := createServers(2, params)
 			if createErr != nil {
 				t.Fatalf("Unable to create servers, %v", createErr)
@@ -63,6 +64,7 @@ func TestIdentityHandshake(t *testing.T) {
 			// Server 0 -> Server 1
 			joinTimeout := DefaultJoinTimeout
 			connectTimeout := DefaultBufferTimeout
+
 			if !shouldSucceed {
 				connectTimeout = time.Second * 5
 				joinTimeout = time.Second * 5

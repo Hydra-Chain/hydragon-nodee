@@ -218,7 +218,7 @@ jobs:
         id: url
         run: |
           terraform output -raw aws_lb_ext_domain | grep -o -E '^ext[^:]*' > rpc_url.txt
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: rpc_url
           path: rpc_url.txt

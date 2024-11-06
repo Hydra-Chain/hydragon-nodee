@@ -360,7 +360,7 @@ func (s *stakeManager) UpdateValidatorSet(
 		oldActiveMap[validator.Address] = validator
 		// remove existing validators from the validators list if they did not make it to the list
 		if _, exists := addressesSet[validator.Address]; !exists {
-			removedBitmap.Set(uint64(i)) //nolint:gosec
+			removedBitmap.Set(uint64(i))
 		}
 	}
 

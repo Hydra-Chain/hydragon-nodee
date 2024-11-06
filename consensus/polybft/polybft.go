@@ -474,7 +474,7 @@ func (p *Polybft) Initialize() error {
 		p.config.Logger.Named("syncer"),
 		p.config.Network,
 		p.config.Blockchain,
-		time.Duration(p.config.BlockTime)*3*time.Second, //nolint:gosec
+		time.Duration(p.config.BlockTime)*3*time.Second,
 	)
 
 	// set blockchain backend
@@ -489,7 +489,7 @@ func (p *Polybft) Initialize() error {
 	}
 
 	// set block time
-	p.blockTime = time.Duration(p.config.BlockTime) //nolint:gosec
+	p.blockTime = time.Duration(p.config.BlockTime)
 
 	// initialize polybft consensus data directory
 	p.dataDir = filepath.Join(p.config.Config.Path, "hydragon")

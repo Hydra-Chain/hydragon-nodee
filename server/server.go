@@ -196,6 +196,7 @@ func NewServer(config *Config) (*Server, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		m.network = network
 	}
 
@@ -372,6 +373,7 @@ func NewServer(config *Config) (*Server, error) {
 		if err := m.setupConsensus(); err != nil {
 			return nil, err
 		}
+
 		m.blockchain.SetConsensus(m.consensus)
 	}
 
