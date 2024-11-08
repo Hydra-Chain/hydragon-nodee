@@ -79,6 +79,8 @@ func shuffleTxPoolEvents(
 }
 
 func TestEventSubscription_ProcessedEvents(t *testing.T) {
+	t.Parallel()
+
 	// Set up the default values
 	supportedEvents := []proto.EventType{
 		proto.EventType_ADDED,
@@ -109,54 +111,102 @@ func TestEventSubscription_ProcessedEvents(t *testing.T) {
 	}
 
 	for _, testCase := range testTable {
-		t.Run(testCase.name, func(t *testing.T) {
-			subscription := &eventSubscription{
-				eventTypes: supportedEvents,
-				outputCh:   make(chan *proto.TxPoolEvent, len(testCase.events)),
-				doneCh:     make(chan struct{}),
-				eventStore: &eventQueue{
-					events: make([]*proto.TxPoolEvent, 0),
-				},
-				notifyCh: make(chan struct{}),
-			}
-			go subscription.runLoop()
+		tc := testCase
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-			// Set the event listener
-			processed := int64(0)
-
-			go func() {
-				for range subscription.outputCh {
-					atomic.AddInt64(&processed, 1)
+			tests.TestTimeout(t, 10*time.Second, func(ctx context.Context) {
+				subscription := &eventSubscription{
+					eventTypes: supportedEvents,
+					outputCh:   make(chan *proto.TxPoolEvent, len(tc.events)),
+					doneCh:     make(chan struct{}),
+					eventStore: &eventQueue{
+						events: make([]*proto.TxPoolEvent, 0),
+					},
+					notifyCh: make(chan struct{}),
 				}
-			}()
 
-			// Fire off the events
-			var wg sync.WaitGroup
-			for _, event := range testCase.events {
+				var wg sync.WaitGroup
+
 				wg.Add(1)
 
-				go func(event *proto.TxPoolEvent) {
+				go func() {
 					defer wg.Done()
+					subscription.runLoop()
+				}()
 
-					subscription.pushEvent(event)
-				}(event)
-			}
+				processed := int64(0)
+				processingDone := make(chan struct{})
 
-			wg.Wait()
+				go func() {
+					defer close(processingDone)
 
-			eventWaitCtx, eventWaitFn := context.WithTimeout(context.Background(), 10*time.Second)
+					for {
+						select {
+						case <-ctx.Done():
+							return
+						case event, ok := <-subscription.outputCh: // Set the event listener
+							if !ok {
+								return
+							}
 
-			defer eventWaitFn()
+							if event != nil {
+								atomic.AddInt64(&processed, 1)
+							}
+						}
+					}
+				}()
 
-			if _, err := tests.RetryUntilTimeout(eventWaitCtx, func() (interface{}, bool) {
-				return nil, atomic.LoadInt64(&processed) < int64(testCase.expectedProcessed)
-			}); err != nil {
-				t.Fatalf("Unable to wait for events to be processed, %v", err)
-			}
+				// Push events and wait for each one
+				for _, event := range tc.events {
+					if err := tests.WaitFor(ctx, func() bool {
+						subscription.pushEvent(event)
 
-			subscription.close()
+						return true
+					}); err != nil {
+						t.Fatal("failed to push event:", err)
+					}
+				}
 
-			assert.Equal(t, int64(testCase.expectedProcessed), processed)
+				// Wait for all events to be processed
+				if err := tests.WaitFor(ctx, func() bool {
+					return atomic.LoadInt64(&processed) >= int64(tc.expectedProcessed)
+				}); err != nil {
+					t.Fatalf("timeout waiting for events to be processed. Expected %d, got %d",
+						tc.expectedProcessed,
+						atomic.LoadInt64(&processed))
+				}
+
+				// Cleanup
+				cleanup := make(chan struct{})
+				go func() {
+					subscription.close()
+					wg.Wait()
+					close(cleanup)
+				}()
+
+				// Wait for cleanup
+				if err := tests.WaitFor(ctx, func() bool {
+					select {
+					case <-cleanup:
+						return true
+					default:
+						return false
+					}
+				}); err != nil {
+					t.Fatal("cleanup timeout:", err)
+				}
+
+				// Final verification
+				processedCount := atomic.LoadInt64(&processed)
+				assert.Equal(t,
+					int64(tc.expectedProcessed),
+					processedCount,
+					"Expected %d processed events, got %d",
+					tc.expectedProcessed,
+					processedCount,
+				)
+			})
 		})
 	}
 }

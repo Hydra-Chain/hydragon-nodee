@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/0xPolygon/polygon-edge/helper/tests"
 	testproto "github.com/0xPolygon/polygon-edge/network/proto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
@@ -37,7 +38,7 @@ func TestSimpleGossip(t *testing.T) {
 	servers, createErr := createServers(numServers, nil)
 	require.NoError(t, createErr, "Unable to create servers")
 
-	messageCh := make(chan *testproto.GenericMessage)
+	messageCh := make(chan *testproto.GenericMessage, numServers)
 
 	t.Cleanup(func() {
 		close(messageCh)
@@ -69,33 +70,34 @@ func TestSimpleGossip(t *testing.T) {
 	publisher := servers[0]
 	publisherTopic := serverTopics[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	err := WaitForSubscribers(ctx, publisher, topicName, len(servers)-1)
-	require.NoError(t, err, "Unable to wait for subscribers")
-
-	err = publisherTopic.Publish(
-		&testproto.GenericMessage{
-			Message: sentMessage,
+	tests.TestTimeout(t, 15*time.Second, func(ctx context.Context) {
+		err := tests.WaitFor(ctx, func() bool {
+			return NumSubscribers(publisher, topicName) >= len(servers)-1
 		})
-	require.NoError(t, err, "Unable to publish message")
+		require.NoError(t, err, "Unable to wait for subscribers")
 
-	messagesGossiped := 0
+		err = publisherTopic.Publish(
+			&testproto.GenericMessage{
+				Message: sentMessage,
+			})
+		require.NoError(t, err, "Unable to publish message")
 
-	for {
-		select {
-		case <-time.After(time.Second * 15):
-			t.Fatalf("Multicast messages not received before timeout")
-		case message := <-messageCh:
-			if message.Message == sentMessage {
-				messagesGossiped++
-				if messagesGossiped == len(servers) {
-					return
+		messagesGossiped := 0
+
+		for {
+			select {
+			case <-ctx.Done():
+				t.Fatalf("Multicast messages not received before timeout")
+			case message := <-messageCh:
+				if message.Message == sentMessage {
+					messagesGossiped++
+					if messagesGossiped == len(servers) {
+						return
+					}
 				}
 			}
 		}
-	}
+	})
 }
 
 func Test_RepeatedClose(t *testing.T) {
