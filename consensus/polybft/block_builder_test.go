@@ -30,7 +30,6 @@ func TestBlockBuilder_BuildBlockTxOneFailedTxAndOneTakesTooMuchGas(t *testing.T)
 	)
 
 	accounts := [6]*wallet.Account{}
-
 	for i := range accounts {
 		accounts[i] = generateTestAccount(t)
 	}
@@ -67,7 +66,6 @@ func TestBlockBuilder_BuildBlockTxOneFailedTxAndOneTakesTooMuchGas(t *testing.T)
 	}
 
 	hash, err := executor.WriteGenesis(balanceMap, types.ZeroHash)
-
 	require.NoError(t, err)
 	require.NotEqual(t, types.ZeroHash, hash)
 
@@ -80,7 +78,6 @@ func TestBlockBuilder_BuildBlockTxOneFailedTxAndOneTakesTooMuchGas(t *testing.T)
 	for i, acc := range accounts {
 		receiver := types.Address(acc.Ecdsa.Address())
 		privateKey, err := acc.GetEcdsaPrivateKey()
-
 		require.NoError(t, err)
 
 		tx := &types.Transaction{
@@ -129,7 +126,6 @@ func TestBlockBuilder_BuildBlockTxOneFailedTxAndOneTakesTooMuchGas(t *testing.T)
 	fb, err := bb.Build(func(h *types.Header) {
 		// fake the logs for bloom
 		rs := bb.Receipts()
-
 		if len(rs) == 3 {
 			rs[0].Logs = []*types.Log{
 				{Address: types.StringToAddress("ff7783")},

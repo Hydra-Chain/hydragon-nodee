@@ -271,3 +271,38 @@ func GenerateAddTxnReq(params GenerateTxReqParams) (*txpoolOp.AddTxnReq, error) 
 
 	return msg, nil
 }
+
+// TestTimeout wraps a test with a timeout
+func TestTimeout(t *testing.T, timeout time.Duration, fn func(context.Context)) {
+    ctx, cancel := context.WithTimeout(context.Background(), timeout)
+    defer cancel()
+
+    done := make(chan struct{})
+    go func() {
+        fn(ctx)
+        close(done)
+    }()
+
+    select {
+    case <-done:
+    case <-ctx.Done():
+        t.Fatal("test timeout")
+    }
+}
+
+// WaitFor waits for a condition with timeout
+func WaitFor(ctx context.Context, condition func() bool) error {
+    ticker := time.NewTicker(100 * time.Millisecond)
+    defer ticker.Stop()
+
+    for {
+        select {
+        case <-ctx.Done():
+            return ctx.Err()
+        case <-ticker.C:
+            if condition() {
+                return nil
+            }
+        }
+    }
+}
