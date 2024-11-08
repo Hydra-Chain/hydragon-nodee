@@ -22,61 +22,74 @@ func TestThrottling(t *testing.T) {
 		}
 	}
 
-	var wg sync.WaitGroup
-
-	startCh := make(chan struct{})
-
-	// Function to attempt a request with context
-	attemptRequest := func(ctx context.Context, value int, sleep time.Duration, expectError bool) {
-		defer wg.Done()
-		<-startCh
-
-		res, err := th.AttemptRequest(ctx, sfn(value, sleep))
-		if expectError {
-			require.ErrorIs(t, err, errRequestLimitExceeded)
-			assert.Nil(t, res)
-		} else {
-			require.NoError(t, err)
-
-			if intValue, ok := res.(int); ok {
-				assert.Equal(t, value, intValue)
-			} else {
-				assert.Fail(t, "type assertion failed")
-			}
-		}
-	}
-
+	wg := sync.WaitGroup{}
 	wg.Add(9)
 
-	// Start goroutines
-	go attemptRequest(context.Background(), 100, time.Millisecond*500, false)
+	go func() {
+		defer wg.Done()
+
+		res, err := th.AttemptRequest(context.Background(), sfn(100, time.Millisecond*500))
+
+		require.NoError(t, err)
+		assert.Equal(t, 100, res.(int)) //nolint
+	}()
+
 	time.Sleep(time.Millisecond * 100)
 
 	for i := 2; i <= 5; i++ {
-		go attemptRequest(context.Background(), 100, time.Millisecond*1000, false)
+		go func() {
+			defer wg.Done()
+
+			res, err := th.AttemptRequest(context.Background(), sfn(100, time.Millisecond*1000))
+
+			require.NoError(t, err)
+			assert.Equal(t, 100, res.(int)) //nolint
+		}()
 	}
 
 	go func() {
 		time.Sleep(time.Millisecond * 150)
-		attemptRequest(context.Background(), 100, time.Millisecond*100, true)
+
+		defer wg.Done()
+
+		res, err := th.AttemptRequest(context.Background(), sfn(100, time.Millisecond*100))
+
+		require.ErrorIs(t, err, errRequestLimitExceeded)
+		assert.Nil(t, res)
 	}()
 
 	go func() {
 		time.Sleep(time.Millisecond * 620)
-		attemptRequest(context.Background(), 10, time.Millisecond*100, false)
+
+		defer wg.Done()
+
+		res, err := th.AttemptRequest(context.Background(), sfn(10, time.Millisecond*100))
+
+		require.NoError(t, err)
+		assert.Equal(t, 10, res.(int)) //nolint
 	}()
 
 	go func() {
 		time.Sleep(time.Millisecond * 640)
-		attemptRequest(context.Background(), 100, time.Millisecond*100, true)
+
+		defer wg.Done()
+
+		res, err := th.AttemptRequest(context.Background(), sfn(100, time.Millisecond*100))
+
+		require.ErrorIs(t, err, errRequestLimitExceeded)
+		assert.Nil(t, res)
 	}()
 
 	go func() {
 		time.Sleep(time.Millisecond * 1000)
-		attemptRequest(context.Background(), 1, time.Millisecond*100, false)
+
+		defer wg.Done()
+
+		res, err := th.AttemptRequest(context.Background(), sfn(1, time.Millisecond*100))
+
+		require.NoError(t, err)
+		assert.Equal(t, 1, res.(int)) //nolint
 	}()
 
-	// Start all requests
-	close(startCh)
 	wg.Wait()
 }
