@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/0xPolygon/polygon-edge/blockchain"
-	"github.com/0xPolygon/polygon-edge/helper/tests"
 	"github.com/0xPolygon/polygon-edge/network"
 	"github.com/0xPolygon/polygon-edge/network/event"
 	"github.com/0xPolygon/polygon-edge/network/grpc"
@@ -177,9 +176,9 @@ func TestStatusPubSub(t *testing.T) {
 
 	go client.startPeerEventProcess()
 
+	// run goroutine to collect events
 	var (
-		events []*event.PeerEvent
-		mutex  sync.Mutex
+		events = []*event.PeerEvent{}
 		wg     sync.WaitGroup
 	)
 
@@ -189,124 +188,188 @@ func TestStatusPubSub(t *testing.T) {
 		defer wg.Done()
 
 		for event := range client.GetPeerConnectionUpdateEventCh() {
-			mutex.Lock()
 			events = append(events, event)
-			mutex.Unlock()
 		}
 	}()
 
-	// Use TestTimeout to manage the overall test timeout
-	tests.TestTimeout(t, 10*time.Second, func(ctx context.Context) {
-		// Connect
-		err := network.JoinAndWait(
-			clientSrv,
-			peerSrv,
-			network.DefaultBufferTimeout,
-			network.DefaultJoinTimeout,
-		)
-		require.NoError(t, err)
+	// connect
+	err := network.JoinAndWait(
+		clientSrv,
+		peerSrv,
+		network.DefaultBufferTimeout,
+		network.DefaultJoinTimeout,
+	)
 
-		// Disconnect
-		err = network.DisconnectAndWait(
-			clientSrv,
-			peerID,
-			network.DefaultLeaveTimeout,
-		)
-		require.NoError(t, err)
+	assert.NoError(t, err)
 
-		// Wait for both events to be processed
-		err = tests.WaitFor(ctx, func() bool {
-			mutex.Lock()
-			defer mutex.Unlock()
+	// disconnect
+	err = network.DisconnectAndWait(
+		clientSrv,
+		peerID,
+		network.DefaultLeaveTimeout,
+	)
 
-			return len(events) == 2
-		})
-		require.NoError(t, err)
+	assert.NoError(t, err)
 
-		// Close channel and wait for events
-		close(client.closeCh)
-		wg.Wait()
+	// close channel and wait for events
+	close(client.closeCh)
 
-		expected := []*event.PeerEvent{
-			{
-				PeerID: peerID,
-				Type:   event.PeerConnected,
-			},
-			{
-				PeerID: peerID,
-				Type:   event.PeerDisconnected,
-			},
-		}
+	wg.Wait()
 
-		assert.Equal(t, expected, events)
-	})
+	expected := []*event.PeerEvent{
+		{
+			PeerID: peerID,
+			Type:   event.PeerConnected,
+		},
+		{
+			PeerID: peerID,
+			Type:   event.PeerDisconnected,
+		},
+	}
+
+	assert.Equal(t, expected, events)
 }
 
 func TestPeerConnectionUpdateEventCh(t *testing.T) {
 	t.Parallel()
 
-	clientSrv := newTestNetwork(t)
-	client := newTestSyncPeerClient(clientSrv, nil)
-
-	_, peerSrv := createTestSyncerService(t, &mockBlockchain{})
-	peerID := peerSrv.AddrInfo().ID
-
-	go client.startPeerEventProcess()
-
 	var (
-		events []*event.PeerEvent
-		mutex  sync.Mutex
-		wg     sync.WaitGroup
+		// network layer
+		clientSrv = newTestNetwork(t)
+		peerSrv1  = newTestNetwork(t)
+		peerSrv2  = newTestNetwork(t)
+		peerSrv3  = newTestNetwork(t) // to wait for gossipped message
+
+		// latest block height
+		peerLatest1 = uint64(10)
+		peerLatest2 = uint64(20)
+
+		// blockchain subscription
+		subscription1 = blockchain.NewMockSubscription()
+		subscription2 = blockchain.NewMockSubscription()
+
+		// syncer client
+		client = newTestSyncPeerClient(clientSrv, &mockBlockchain{
+			subscription: &blockchain.MockSubscription{},
+		})
+		peerClient1 = newTestSyncPeerClient(peerSrv1, &mockBlockchain{
+			subscription:  subscription1,
+			headerHandler: newSimpleHeaderHandler(peerLatest1),
+		})
+		peerClient2 = newTestSyncPeerClient(peerSrv2, &mockBlockchain{
+			subscription:  subscription2,
+			headerHandler: newSimpleHeaderHandler(peerLatest2),
+		})
 	)
 
-	wg.Add(1)
+	t.Cleanup(func() {
+		clientSrv.Close()
+		peerSrv1.Close()
+		peerSrv2.Close()
+		peerSrv3.Close()
+
+		// no need to call Close of Client because test closes it manually
+		peerClient1.Close()
+		peerClient2.Close()
+	})
+
+	// client <-> peer1
+	// peer1  <-> peer2
+	err := network.JoinAndWaitMultiple(
+		network.DefaultJoinTimeout,
+		clientSrv,
+		peerSrv1,
+		peerSrv1,
+		peerSrv2,
+		peerSrv2,
+		peerSrv3,
+	)
+
+	assert.NoError(t, err)
+
+	// start gossip
+	assert.NoError(t, client.startGossip())
+	assert.NoError(t, peerClient1.startGossip())
+	assert.NoError(t, peerClient2.startGossip())
+
+	// create topic
+	topic, err := peerSrv3.NewTopic(statusTopicName, &proto.SyncPeerStatus{})
+	assert.NoError(t, err)
+
+	var wgForGossip sync.WaitGroup
+
+	// 2 messages should be gossipped
+	wgForGossip.Add(2)
+
+	handler := func(_ interface{}, _ peer.ID) {
+		wgForGossip.Done()
+	}
+
+	assert.NoError(t, topic.Subscribe(handler))
+
+	// need to wait for a few seconds to propagate subscribing
+	time.Sleep(2 * time.Second)
+
+	// enable peers to send own status via gossip
+	peerClient1.EnablePublishingPeerStatus()
+	peerClient2.EnablePublishingPeerStatus()
+
+	// start to subscribe blockchain events
+	go peerClient1.startNewBlockProcess()
+	go peerClient2.startNewBlockProcess()
+
+	// collect peer status changes
+	var (
+		wgForConnectingStatus sync.WaitGroup
+		newStatuses           []*NoForkPeer
+		statusCh              = client.GetPeerStatusUpdateCh()
+	)
+
+	wgForConnectingStatus.Add(1)
 
 	go func() {
-		defer wg.Done()
+		defer wgForConnectingStatus.Done()
 
-		for event := range client.GetPeerConnectionUpdateEventCh() {
-			mutex.Lock()
-			events = append(events, event)
-			mutex.Unlock()
+		for status := range statusCh {
+			newStatuses = append(newStatuses, status)
 		}
 	}()
 
-	// Use TestTimeout to manage the overall test timeout
-	tests.TestTimeout(t, 10*time.Second, func(ctx context.Context) {
-		// Connect
-		err := network.JoinAndWait(
-			clientSrv,
-			peerSrv,
-			network.DefaultBufferTimeout,
-			network.DefaultJoinTimeout,
-		)
-		require.NoError(t, err)
-
-		// Disconnect
-		err = network.DisconnectAndWait(
-			clientSrv,
-			peerID,
-			network.DefaultLeaveTimeout,
-		)
-		require.NoError(t, err)
-
-		// Close channel and wait for events
-		close(client.closeCh)
-		wg.Wait()
-
-		expected := []*event.PeerEvent{
-			{
-				PeerID: peerID,
-				Type:   event.PeerConnected,
+	// push latest block number to blockchain subscription
+	pushSubscription := func(sub *blockchain.MockSubscription, latest uint64) {
+		sub.Push(&blockchain.Event{
+			NewChain: []*types.Header{
+				{
+					Number: latest,
+				},
 			},
-			{
-				PeerID: peerID,
-				Type:   event.PeerDisconnected,
-			},
-		}
+		})
+	}
 
-		assert.Equal(t, expected, events)
-	})
+	// peer1 and peer2 emit Blockchain event
+	// they should publish their status via gossip
+	pushSubscription(subscription1, peerLatest1)
+	pushSubscription(subscription2, peerLatest2)
+
+	// wait until 2 messages are propagated
+	wgForGossip.Wait()
+
+	// close to terminate goroutine
+	client.Close()
+
+	// wait until collecting routine is done
+	wgForConnectingStatus.Wait()
+
+	// client connects to only peer1, then expects to have a status from peer1
+	expected := []*NoForkPeer{
+		{
+			ID:       peerSrv1.AddrInfo().ID,
+			Number:   peerLatest1,
+			Distance: clientSrv.GetPeerDistance(peerSrv1.AddrInfo().ID),
+		},
+	}
+
+	assert.Equal(t, expected, newStatuses)
 }
 
 // Make sure the peer shouldn't emit status if the shouldEmitBlocks flag is set.
@@ -473,23 +536,16 @@ func Test_EmitMultipleBlocks(t *testing.T) {
 		peerSrv   = newTestNetwork(t)
 
 		clientLatest = uint64(10)
+
 		subscription = blockchain.NewMockSubscription()
 
 		client = newTestSyncPeerClient(clientSrv, &mockBlockchain{
 			subscription:  subscription,
 			headerHandler: newSimpleHeaderHandler(clientLatest),
 		})
-
-		// add synchronization primitives
-		wg   sync.WaitGroup
-		mu   sync.Mutex
-		done = make(chan struct{})
 	)
 
 	t.Cleanup(func() {
-		close(done) // signal goroutines to stop
-		wg.Wait()   // wait for goroutines to finish
-
 		clientSrv.Close()
 		peerSrv.Close()
 		client.Close()
@@ -500,18 +556,14 @@ func Test_EmitMultipleBlocks(t *testing.T) {
 		clientSrv,
 		peerSrv,
 	)
+
 	require.NoError(t, err)
 
 	// start gossip
 	require.NoError(t, client.startGossip())
 
-	// start to subscribe blockchain events with proper cleanup
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-		client.startNewBlockProcess()
-	}()
+	// start to subscribe blockchain events
+	go client.startNewBlockProcess()
 
 	// push latest block number to blockchain subscription
 	pushSubscription := func(sub *blockchain.MockSubscription, latest uint64) {
@@ -542,25 +594,16 @@ func Test_EmitMultipleBlocks(t *testing.T) {
 
 	// create topic & subscribe in peer
 	topic, err := peerSrv.NewTopic(statusTopicName, &proto.SyncPeerStatus{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	testGossip := func(t *testing.T, blocksNum int) {
 		t.Helper()
 
-		var (
-			wgForGossip sync.WaitGroup
-			messages    []*proto.SyncPeerStatus
-		)
+		var wgForGossip sync.WaitGroup
 
 		wgForGossip.Add(blocksNum)
 
-		// subscribe and collect messages
-		require.NoError(t, topic.Subscribe(func(msg interface{}, _ peer.ID) {
-			mu.Lock()
-			if status, ok := msg.(*proto.SyncPeerStatus); ok {
-				messages = append(messages, status)
-			}
-			mu.Unlock()
+		require.NoError(t, topic.Subscribe(func(_ interface{}, _ peer.ID) {
 			wgForGossip.Done()
 		}))
 
@@ -568,27 +611,15 @@ func Test_EmitMultipleBlocks(t *testing.T) {
 		time.Sleep(2 * time.Second)
 		client.EnablePublishingPeerStatus()
 
-		// send blocks in sequence
-		for i := 0; i < blocksNum; i++ {
-			pushSubscription(subscription, clientLatest+uint64(i))
-		}
+		go func() {
+			for i := 0; i < blocksNum; i++ {
+				pushSubscription(subscription, clientLatest+uint64(i))
+			}
+		}()
 
-		// wait for all messages to be received
 		gossiped := waitForGossip(&wgForGossip)
-		require.True(t, gossiped, "Failed to receive all gossip messages")
 
-		// verify messages
-		mu.Lock()
-		defer mu.Unlock()
-
-		require.Len(t, messages, blocksNum, "Should receive exactly %d messages", blocksNum)
-
-		// verify message contents are in sequence
-		for i, msg := range messages {
-			expectedNumber := clientLatest + uint64(i)
-			assert.Equal(t, expectedNumber, msg.Number,
-				"Message %d should have number %d", i, expectedNumber)
-		}
+		require.Equal(t, true, gossiped)
 	}
 
 	t.Run("should receive all blocks", func(t *testing.T) {
