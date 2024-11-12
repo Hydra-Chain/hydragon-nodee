@@ -69,8 +69,10 @@ var (
 	errSyncValidatorsDataTxDoesNotExist = errors.New(
 		"sync validators data transaction is not found in the epoch starting block",
 	)
-	errSyncValidatorsDataTxSingleExpected = errors.New("only one sync validators data transaction is allowed " +
-		"in an epoch starting block")
+	errSyncValidatorsDataTxSingleExpected = errors.New(
+		"only one sync validators data transaction is allowed " +
+			"in an epoch starting block",
+	)
 	errSyncValidatorsDataTxNotExpected = errors.New(
 		"didn't expect sync validators data transaction " +
 			"in a non epoch starting block",
@@ -903,7 +905,8 @@ func (f *fsm) verifyDistributeDAOIncentiveTx(distributeDAOIncentiveTx *types.Tra
 
 		if distributeDAOIncentiveTx.Hash != localDistributeDAOIncentiveTx.Hash {
 			return fmt.Errorf(
-				"invalid distribute DAO incentive rewards transaction. Expected '%s', but got '%s' distribute DAO incentive rewards hash",
+				"invalid distribute DAO incentive rewards transaction. Expected '%s', "+
+					"but got '%s' distribute DAO incentive rewards hash",
 				localDistributeDAOIncentiveTx.Hash,
 				distributeDAOIncentiveTx.Hash,
 			)
@@ -917,7 +920,10 @@ func (f *fsm) verifyDistributeDAOIncentiveTx(distributeDAOIncentiveTx *types.Tra
 
 // verifySyncValidatorsDataTx creates sync validators data transaction
 // and compares its hash with the one extracted from the block.
-func (f *fsm) verifySyncValidatorsDataTx(syncValidatorsDataTx *types.Transaction, txIndex int) error {
+func (f *fsm) verifySyncValidatorsDataTx(
+	syncValidatorsDataTx *types.Transaction,
+	txIndex int,
+) error {
 	if f.isStartOfEpoch {
 		expectedTxIndex := 0
 		if txIndex != expectedTxIndex {
