@@ -367,23 +367,35 @@ func (as AccountSet) ApplyDelta(validatorsDelta *ValidatorSetDelta) (AccountSet,
 	return validators, nil
 }
 
-// ExtractUpdatedValidatorsVotingPower receives ValidatorSetDelta and extracts the changed
-// validators (added, updated and removed)
+// ExtractUpdatedValidatorsVotingPower receives ValidatorSetDelta and the validator set from the last epoch,
+// then it extracts the changed validators (added, updated and removed)
 func (as AccountSet) ExtractUpdatedValidatorsVotingPower(
 	validatorsDelta *ValidatorSetDelta,
+	lastEpochValidators AccountSet,
 ) ([]*contractsapi.ValidatorPower, error) {
 	// Figure out which validators from the existing set are updated.
 	updatedValidatorsPower := make([]*contractsapi.ValidatorPower, 0)
 
-	for i, validator := range as {
-		// If a validator is removed, then append it.
-		// Otherwise, check if the validator is in the added or updated list
-		// because we are looking only for the updated ones.
-		if validatorsDelta.Removed.IsSet(uint64(i)) { //nolint:gosec
-			updatedValidatorsPower = append(updatedValidatorsPower, formatValidatorPower(validator))
-		} else if validatorsDelta.Added.ContainsAddress(validator.Address) ||
-			validatorsDelta.Updated.ContainsAddress(validator.Address) {
-			updatedValidatorsPower = append(updatedValidatorsPower, formatValidatorPower(validator))
+	// Check if we have added or updated validators first before looping through the current validators
+	// We need to loop through the current validators because they have the updated voting power
+	if validatorsDelta.Added.Len() > 0 || validatorsDelta.Updated.Len() > 0 {
+		for _, validator := range as {
+			// We check only for added or updated validators, because we need to loop through the current acc set
+			if validatorsDelta.Added.ContainsAddress(validator.Address) ||
+				validatorsDelta.Updated.ContainsAddress(validator.Address) {
+				updatedValidatorsPower = append(updatedValidatorsPower, formatValidatorPower(validator))
+			}
+		}
+	}
+
+	// If we have removed validators, then we need to loop through the last epoch validators
+	if validatorsDelta.Removed.Len() > 0 {
+		for i, validator := range lastEpochValidators {
+			// Set voting power to be 0 of the removed validators and append.
+			if validatorsDelta.Removed.IsSet(uint64(i)) {
+				validator.VotingPower = big.NewInt(0)
+				updatedValidatorsPower = append(updatedValidatorsPower, formatValidatorPower(validator))
+			}
 		}
 	}
 
