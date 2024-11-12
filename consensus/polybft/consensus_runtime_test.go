@@ -788,18 +788,11 @@ func TestConsensusRuntime_generateSyncValidatorsDataTxInputRemoved(t *testing.T)
 
 	const (
 		epoch           = 1
-		epochSize       = 10
 		epochStartBlock = 1
-		epochEndBlock   = 10
-		sprintSize      = 5
 	)
 
 	validators := validator.NewTestValidatorsWithAliases(t, []string{"A", "B", "C", "D", "E"})
 	accSet := validators.GetPublicIdentities()
-	polybftConfig := &PolyBFTConfig{
-		EpochSize:  epochSize,
-		SprintSize: sprintSize,
-	}
 
 	blockNumber := uint64(10)
 	parentHash := types.BytesToHash(big.NewInt(int64(blockNumber)).Bytes())
@@ -828,7 +821,6 @@ func TestConsensusRuntime_generateSyncValidatorsDataTxInputRemoved(t *testing.T)
 		Return(accSet)
 
 	config := &runtimeConfig{
-		PolyBFTConfig:  polybftConfig,
 		polybftBackend: polybftBackendMock,
 		Key:            validators.GetValidator("A").Key(),
 	}
@@ -873,16 +865,10 @@ func TestConsensusRuntime_generateSyncValidatorsDataTxInputAdded(t *testing.T) {
 		epoch           = 2
 		epochSize       = 10
 		epochStartBlock = 11
-		epochEndBlock   = 20
-		sprintSize      = 5
 	)
 
 	validators := validator.NewTestValidatorsWithAliases(t, []string{"A", "B", "C", "D", "E"})
 	accSet := validators.GetPublicIdentities()
-	polybftConfig := &PolyBFTConfig{
-		EpochSize:  epochSize,
-		SprintSize: sprintSize,
-	}
 
 	lastBuiltBlock, _ := createTestBlocks(
 		t,
@@ -898,7 +884,6 @@ func TestConsensusRuntime_generateSyncValidatorsDataTxInputAdded(t *testing.T) {
 		Return(accSet)
 
 	config := &runtimeConfig{
-		PolyBFTConfig:  polybftConfig,
 		blockchain:     blockchainMock,
 		polybftBackend: polybftBackendMock,
 		Key:            validators.GetValidator("A").Key(),
