@@ -372,7 +372,7 @@ func (as AccountSet) ApplyDelta(validatorsDelta *ValidatorSetDelta) (AccountSet,
 func (as AccountSet) ExtractUpdatedValidatorsVotingPower(
 	validatorsDelta *ValidatorSetDelta,
 	lastEpochValidators AccountSet,
-) ([]*contractsapi.ValidatorPower, error) {
+) []*contractsapi.ValidatorPower {
 	// Figure out which validators from the existing set are updated.
 	updatedValidatorsPower := make([]*contractsapi.ValidatorPower, 0)
 
@@ -399,7 +399,7 @@ func (as AccountSet) ExtractUpdatedValidatorsVotingPower(
 		}
 	}
 
-	return updatedValidatorsPower, nil
+	return updatedValidatorsPower
 }
 
 // Marshal marshals AccountSet to JSON

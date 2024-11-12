@@ -729,13 +729,10 @@ func (c *consensusRuntime) generateSyncValidatorsDataTxInput(
 		return nil, fmt.Errorf("cannot get validators for the previous epoch: %w", err)
 	}
 
-	updatedValidatorsVotingPower, err := currAccSet.ExtractUpdatedValidatorsVotingPower(
+	updatedValidatorsVotingPower := currAccSet.ExtractUpdatedValidatorsVotingPower(
 		parentIbftExtraData.Validators,
 		lastEpochValidators,
 	)
-	if err != nil {
-		return nil, err
-	}
 
 	syncValidatorsData := &contractsapi.SyncValidatorsDataHydraChainFn{
 		ValidatorsPower: updatedValidatorsVotingPower,
