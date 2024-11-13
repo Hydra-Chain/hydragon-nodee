@@ -26,6 +26,8 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
+          submodules: recursive
+
 
       - name: Install Go
         uses: actions/setup-go@v5
