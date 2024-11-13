@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: 'develop'
 
       - name: Install Go
         uses: actions/setup-go@v5
