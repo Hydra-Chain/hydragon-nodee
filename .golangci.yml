@@ -48,13 +48,33 @@ linters-settings:
       ruleguard:
         rules: "./gorules/rules.go"
   lll:
-    line-length: 150
+    line-length: 120
 
 issues:
-  new-from-rev: origin/develop # report only new issues with reference to develop branch
+  # report only new issues with reference to the selected revision
+  new-from-rev: d27793e73eb22c4464711b187b8c98f14f7b8b17
   whole-files: true
   exclude-dirs:
+    - archive
+    - blockchain
+    - command/bridge
+    - command/ibft
+    - command/rootchain
+    - consensus/dev
+    - consensus/ibft
+    - crypto
+    - gasprice
+    - helper/keccak
+    - helper/predeployment
+    - helper/staking
+    - jsonrpc
+    - state/immutable-trie
+    - state/runtime
+    - syncer
     - tests
+    - tracker
+    - txpool
+    - types
   exclude-rules:
     - path: testing\.go
       linters:
@@ -66,15 +86,20 @@ issues:
         - gosec
         - gocritic
         - unparam
+        - wsl
         - lll
         - predeclared
         - wastedassign
         - nolintlint
+        - forcetypeassert
     - path: gen_sc_data\.go
       linters:
         - wsl
         - lll
         - stylecheck
+    - path: system_service\.go
+      linters:
+        - gosec
   include:
     - EXC0012 # Exported (.+) should have comment( \(or a comment on this block\))? or be unexported
     - EXC0013 # Package comment should be of the form "(.+)...

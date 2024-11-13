@@ -54,6 +54,7 @@ func (ch *encryption) Encrypt(data []byte, pwd []byte) ([]byte, error) {
 
 func (ch *encryption) Decrypt(data []byte, pwd []byte) ([]byte, error) {
 	salt, data := data[len(data)-32:], data[:len(data)-32]
+
 	key, _, err := DeriveKey(pwd, salt)
 	if err != nil {
 		return nil, err
@@ -75,6 +76,7 @@ func (ch *encryption) Decrypt(data []byte, pwd []byte) ([]byte, error) {
 	}
 
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		return nil, err

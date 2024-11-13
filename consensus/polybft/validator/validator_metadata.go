@@ -301,15 +301,15 @@ func (as AccountSet) GetFilteredValidators(bitmap bitmap.Bitmap) (AccountSet, er
 	}
 
 	if bitmap.Len() > uint64(len(as)) {
-		for i := len(as); i < int(bitmap.Len()); i++ {
-			if bitmap.IsSet(uint64(i)) {
+		for i := len(as); i < int(bitmap.Len()); i++ { //nolint:gosec
+			if bitmap.IsSet(uint64(i)) { //nolint:gosec
 				return filteredValidators, errors.New("invalid bitmap filter provided")
 			}
 		}
 	}
 
 	for i, validator := range as {
-		if bitmap.IsSet(uint64(i)) {
+		if bitmap.IsSet(uint64(i)) { //nolint:gosec
 			filteredValidators = append(filteredValidators, validator)
 		}
 	}
@@ -333,7 +333,7 @@ func (as AccountSet) ApplyDelta(validatorsDelta *ValidatorSetDelta) (AccountSet,
 		// If a validator is not in the Removed set, or it is in the Removed set
 		// but it exists in the Added set as well (which should never happen),
 		// the validator should remain in the validator set.
-		if !validatorsDelta.Removed.IsSet(uint64(i)) ||
+		if !validatorsDelta.Removed.IsSet(uint64(i)) || //nolint:gosec
 			validatorsDelta.Added.ContainsAddress(validator.Address) {
 			validators = append(validators, validator)
 		}
@@ -379,7 +379,7 @@ func (as AccountSet) ExtractUpdatedValidatorsVotingPower(
 		// If a validator is removed, then append it.
 		// Otherwise, check if the validator is in the added or updated list
 		// because we are looking only for the updated ones.
-		if validatorsDelta.Removed.IsSet(uint64(i)) {
+		if validatorsDelta.Removed.IsSet(uint64(i)) { //nolint:gosec
 			updatedValidatorsPower = append(updatedValidatorsPower, formatValidatorPower(validator))
 		} else if validatorsDelta.Added.ContainsAddress(validator.Address) ||
 			validatorsDelta.Updated.ContainsAddress(validator.Address) {

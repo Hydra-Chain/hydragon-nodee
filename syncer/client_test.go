@@ -231,7 +231,6 @@ func TestStatusPubSub(t *testing.T) {
 }
 
 func TestPeerConnectionUpdateEventCh(t *testing.T) {
-	t.Skip()
 	t.Parallel()
 
 	var (
@@ -323,6 +322,7 @@ func TestPeerConnectionUpdateEventCh(t *testing.T) {
 	var (
 		wgForConnectingStatus sync.WaitGroup
 		newStatuses           []*NoForkPeer
+		statusCh              = client.GetPeerStatusUpdateCh()
 	)
 
 	wgForConnectingStatus.Add(1)
@@ -330,7 +330,7 @@ func TestPeerConnectionUpdateEventCh(t *testing.T) {
 	go func() {
 		defer wgForConnectingStatus.Done()
 
-		for status := range client.GetPeerStatusUpdateCh() {
+		for status := range statusCh {
 			newStatuses = append(newStatuses, status)
 		}
 	}()

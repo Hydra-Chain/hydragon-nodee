@@ -80,6 +80,7 @@ func getCoingeckoPrice(apiKey string) (*big.Int, error) {
 	}
 
 	var priceData PriceDataCoinGecko
+
 	err = json.Unmarshal(body, &priceData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)

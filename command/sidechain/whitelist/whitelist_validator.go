@@ -8,7 +8,6 @@ import (
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/command/sidechain"
-	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/txrelayer"
@@ -80,7 +79,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	governanceAccount, err := sidechainHelper.GetAccount(
+	governanceAccount, err := sidechain.GetAccount(
 		params.accountDir,
 		params.accountConfig,
 		params.insecureLocalStore,
@@ -98,6 +97,9 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	encoded, err := whitelistFn.Encode([]interface{}{
 		[]types.Address{types.StringToAddress(params.newValidatorAddress)},
 	})
+	if err != nil {
+		return fmt.Errorf("enlist validator failed: %w", err)
+	}
 
 	txn := &ethgo.Transaction{
 		From:  governanceAccount.Ecdsa.Address(),

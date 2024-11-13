@@ -51,6 +51,7 @@ func SecretsManagerFactory(
 
 func (esm *EncryptedLocalSecretsManager) SetSecret(name string, value []byte) error {
 	esm.logger.Info("Configuring secret", "name", name)
+
 	onSetHandler, ok := onSetHandlers[name]
 	if ok {
 		res, err := onSetHandler(esm, name, value)
@@ -101,8 +102,10 @@ func baseOnSetHandler(
 		name,
 		string(value),
 	)
+
 	confirmValue, err := esm.prompt.DefaultPrompt(
-		`Please re-type the secret key value (present above, after the "=") to confirm that you have backed it up in a safe location.`,
+		`Please re-type the secret key value (present above, after the "=") `+
+			`to confirm that you have backed it up in a safe location.`,
 		"",
 	)
 	if err != nil {
@@ -113,6 +116,7 @@ func baseOnSetHandler(
 		esm.logger.Error(
 			"The secret value you entered does not match the original value. Please try again.",
 		)
+
 		return nil, errors.New("secret value mismatch")
 	} else {
 		esm.logger.Info("The secret value you entered matches the original value. Continuing.")
@@ -146,6 +150,7 @@ func baseOnGetHandler(
 ) ([]byte, error) {
 	if esm.pwd == nil || len(esm.pwd) == 0 {
 		var err error
+
 		esm.pwd, err = esm.prompt.InputPassword(false)
 		if err != nil {
 			return nil, err

@@ -45,7 +45,7 @@ type State struct {
 }
 
 // newState creates new instance of State
-func newState(path string, logger hclog.Logger, closeCh chan struct{}) (*State, error) {
+func newState(path string, _ hclog.Logger, closeCh chan struct{}) (*State, error) {
 	db, err := bolt.Open(path, 0666, nil)
 	if err != nil {
 		return nil, err
@@ -74,12 +74,15 @@ func (s *State) initStorages() error {
 		if err := s.CheckpointStore.initialize(tx); err != nil {
 			return err
 		}
+
 		if err := s.EpochStore.initialize(tx); err != nil {
 			return err
 		}
+
 		if err := s.ProposerSnapshotStore.initialize(tx); err != nil {
 			return err
 		}
+
 		if err := s.StakeStore.initialize(tx); err != nil {
 			return err
 		}

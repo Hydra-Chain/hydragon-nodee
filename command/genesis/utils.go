@@ -342,6 +342,7 @@ func getCGPricesData(apiKey string, precision int) (*PricesDataCoinGecko, error)
 	}
 
 	var pricesData *PricesDataCoinGecko
+
 	err = json.Unmarshal(body, &pricesData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)

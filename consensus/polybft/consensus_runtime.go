@@ -211,13 +211,8 @@ func (c *consensusRuntime) initStateSyncManager(_ hcf.Logger) error {
 // initCheckpointManager initializes checkpoint manager
 // if bridge is not enabled, then a dummy checkpoint manager will be used
 func (c *consensusRuntime) initCheckpointManager(_ hcf.Logger) error {
-	if c.IsBridgeEnabled() {
-		// enable checkpoint manager
-		// Hydra: checkpoint manager is unused
-		c.checkpointManager = &dummyCheckpointManager{}
-	} else {
-		c.checkpointManager = &dummyCheckpointManager{}
-	}
+	// Hydra: checkpoint manager is unused
+	c.checkpointManager = &dummyCheckpointManager{}
 
 	c.eventProvider.Subscribe(c.checkpointManager)
 
@@ -244,7 +239,7 @@ func (c *consensusRuntime) initStakeManager(logger hcf.Logger, dbTx *bolt.Tx) er
 		wallet.NewEcdsaSigner(c.config.Key),
 		contracts.HydraStakingContract,
 		contracts.HydraChainContract,
-		int(c.config.PolyBFTConfig.MaxValidatorSetSize),
+		int(c.config.PolyBFTConfig.MaxValidatorSetSize), //nolint:gosec
 		c.config.polybftBackend,
 		dbTx,
 		c.config.blockchain,
@@ -695,7 +690,7 @@ func (c *consensusRuntime) calculateStateTxsInput(
 			EndBlock:   new(big.Int).SetUint64(currentBlock.Number + 1),
 			EpochRoot:  types.Hash{},
 		},
-		EpochSize: big.NewInt(int64(c.config.PolyBFTConfig.EpochSize)),
+		EpochSize: new(big.Int).SetUint64(c.config.PolyBFTConfig.EpochSize),
 		Uptime:    uptime,
 	}
 
