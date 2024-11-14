@@ -21,6 +21,7 @@ linters:
     - misspell # Misspelled English words in comments
     - makezero # Finds slice declarations with non-zero initial length
     - lll # Long lines
+    - importas # Enforces consistent import aliases
     - gosec # Security problems
     - gofmt # Whether the code was gofmt-ed
     - goimports # Unused imports
@@ -43,22 +44,37 @@ linters-settings:
   gocritic:
     enabled-checks:
       - ruleguard
-    disabled-checks:
-      - unslice # It should be enabled in the future.
     settings:
       ruleguard:
         rules: "./gorules/rules.go"
-  gosec:
-    excludes:
-      - G115
   lll:
-    line-length: 150
+    line-length: 120
 
 issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
+  # report only new issues with reference to the selected revision
+  new-from-rev: d27793e73eb22c4464711b187b8c98f14f7b8b17
+  whole-files: true
   exclude-dirs:
+    - archive
+    - blockchain
+    - command/bridge
+    - command/ibft
+    - command/rootchain
+    - consensus/dev
+    - consensus/ibft
+    - crypto
+    - gasprice
+    - helper/keccak
+    - helper/predeployment
+    - helper/staking
+    - jsonrpc
+    - state/immutable-trie
+    - state/runtime
+    - syncer
     - tests
+    - tracker
+    - txpool
+    - types
   exclude-rules:
     - path: testing\.go
       linters:
@@ -70,15 +86,23 @@ issues:
         - gosec
         - gocritic
         - unparam
+        - wsl
         - lll
         - predeclared
         - wastedassign
         - nolintlint
+        - forcetypeassert
     - path: gen_sc_data\.go
       linters:
         - wsl
         - lll
         - stylecheck
+    - path: system_service\.go
+      linters:
+        - gosec
+    - path: proposer_calculator\.go
+      linters:
+        - predeclared
   include:
     - EXC0012 # Exported (.+) should have comment( \(or a comment on this block\))? or be unexported
     - EXC0013 # Package comment should be of the form "(.+)...

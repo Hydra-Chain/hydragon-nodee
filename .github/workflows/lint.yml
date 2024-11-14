@@ -23,6 +23,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          submodules: recursive
+
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -33,3 +38,4 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           args: --timeout 10m --verbose
+          version: v1.61
