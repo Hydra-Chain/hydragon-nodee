@@ -436,7 +436,7 @@ func (c *consensusRuntime) FSM() error {
 	isEndOfEpoch := c.isFixedSizeOfEpochMet(pendingBlockNumber, epoch)
 	isStartOfEpoch := c.isStartOfEpochMet(pendingBlockNumber, epoch)
 
-	valSet := validator.NewValidatorSet(epoch.Validators.Copy(), c.logger)
+	valSet := validator.NewValidatorSet(epoch.Validators, c.logger)
 
 	exitRootHash, err := c.checkpointManager.BuildEventRoot(epoch.Number)
 	if err != nil {
@@ -489,7 +489,7 @@ func (c *consensusRuntime) FSM() error {
 
 		ff.newValidatorsDelta, err = c.stakeManager.UpdateValidatorSet(
 			epoch.Number,
-			epoch.Validators.Copy(),
+			epoch.Validators,
 		)
 		if err != nil {
 			return fmt.Errorf("cannot update validator set on epoch ending: %w", err)
