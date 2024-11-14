@@ -308,7 +308,7 @@ func TestPeerConnectionUpdateEventCh(t *testing.T) {
 	assert.NoError(t, topic.Subscribe(handler))
 
 	// need to wait for a few seconds to propagate subscribing
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	// enable peers to send own status via gossip
 	peerClient1.EnablePublishingPeerStatus()
