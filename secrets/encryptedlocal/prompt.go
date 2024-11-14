@@ -15,8 +15,8 @@ import (
 
 var (
 	ErrInvalidPassword = errors.New(
-		"password must contain at least one number, one uppercase letter, one special character," +
-			" and be at least 8 characters long",
+		"password must contain at least one number, one uppercase letter, one special character, " +
+			"and be at least 8 characters long",
 	)
 	ErrPasswordMismatch    = errors.New("passwords do not match")
 	ErrTerminatedOperation = errors.New("operation terminated")
@@ -131,13 +131,13 @@ func (p *Prompt) readPassword() ([]byte, error) {
 
 // DefaultPrompt prompts the user for any text and performs no validation. If nothing is entered it returns the default.
 func (p *Prompt) DefaultPrompt(promptText, defaultValue string) (string, error) {
+	var response string
+
 	if defaultValue != "" {
 		fmt.Printf("%s %s:\n", promptText, fmt.Sprintf("(default: %s)", defaultValue))
 	} else {
 		fmt.Printf("%s:\n", promptText)
 	}
-
-	var response string
 
 	scanner := bufio.NewScanner(os.Stdin)
 	if ok := scanner.Scan(); ok {

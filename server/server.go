@@ -293,10 +293,10 @@ func NewServer(config *Config) (*Server, error) {
 
 	// Use the london signer with eip-155 as a fallback one
 	var signer crypto.TxSigner = crypto.NewLondonSigner(
-		uint64(m.config.Chain.Params.ChainID),
+		uint64(m.config.Chain.Params.ChainID), //nolint:gosec
 		config.Chain.Params.Forks.IsActive(chain.Homestead, 0),
 		crypto.NewEIP155Signer(
-			uint64(m.config.Chain.Params.ChainID),
+			uint64(m.config.Chain.Params.ChainID), //nolint:gosec
 			config.Chain.Params.Forks.IsActive(chain.Homestead, 0),
 		),
 	)
@@ -890,7 +890,7 @@ func (s *Server) setupJSONRPC() error {
 	conf := &jsonrpc.Config{
 		Store:                    hub,
 		Addr:                     s.config.JSONRPC.JSONRPCAddr,
-		ChainID:                  uint64(s.config.Chain.Params.ChainID),
+		ChainID:                  uint64(s.config.Chain.Params.ChainID), //nolint:gosec
 		ChainName:                s.chain.Name,
 		AccessControlAllowOrigin: s.config.JSONRPC.AccessControlAllowOrigin,
 		PriceLimit:               s.config.PriceLimit,

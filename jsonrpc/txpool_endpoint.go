@@ -89,13 +89,13 @@ func (t *TxPool) Inspect() (interface{}, error) {
 	}
 
 	// get capacity of the TxPool
-	current, maximum := t.store.GetCapacity()
+	current, max := t.store.GetCapacity()
 	pendingTxs, queuedTxs := t.store.GetTxs(true)
 	resp := InspectResponse{
 		Pending:         convertTxMap(pendingTxs),
 		Queued:          convertTxMap(queuedTxs),
 		CurrentCapacity: current,
-		MaxCapacity:     maximum,
+		MaxCapacity:     max,
 	}
 
 	return resp, nil

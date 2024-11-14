@@ -342,7 +342,7 @@ func isVotingTime(timestamp uint64) bool {
 
 // isBlockOlderThan checks if the block is older than the given number of minutes
 func isBlockOlderThan(header *types.Header, minutes int64) bool {
-	return time.Now().UTC().Unix()-int64(header.Timestamp) > minutes*60
+	return time.Now().UTC().Unix()-int64(header.Timestamp) > minutes*60 //nolint:gosec
 }
 
 func calcDayNumber(timestamp uint64) uint64 {

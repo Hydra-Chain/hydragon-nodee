@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"math/big"
 
-	"golang.org/x/crypto/ripemd160" //nolint:gosec // It should be fixed in the future.
+	"golang.org/x/crypto/ripemd160" //nolint:staticcheck
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/crypto"
@@ -83,7 +83,7 @@ func (r *ripemd160h) gas(input []byte, config *chain.ForksInTime) uint64 {
 }
 
 func (r *ripemd160h) run(input []byte, _ types.Address, _ runtime.Host) ([]byte, error) {
-	ripemd := ripemd160.New() //nolint:gosec // It should be fixed in the future.
+	ripemd := ripemd160.New()
 	ripemd.Write(input)
 	res := ripemd.Sum(nil)
 

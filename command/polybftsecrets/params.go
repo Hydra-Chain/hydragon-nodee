@@ -231,8 +231,7 @@ func (ip *initParams) initKeys(secretsManager secrets.SecretsManager) ([]string,
 			err error
 		)
 
-		if !secretsManager.HasSecret(secrets.ValidatorKey) &&
-			!secretsManager.HasSecret(secrets.ValidatorBLSKey) {
+		if !secretsManager.HasSecret(secrets.ValidatorKey) && !secretsManager.HasSecret(secrets.ValidatorBLSKey) {
 			if ip.ecdsaKey != "" && ip.blsKey != "" {
 				blsKey, err := bls.UnmarshalPrivateKey([]byte(ip.blsKey))
 				if err != nil {

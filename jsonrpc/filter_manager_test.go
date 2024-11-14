@@ -729,7 +729,6 @@ func TestHeadStream_Concurrent(t *testing.T) {
 
 						return
 					}
-
 					expect++
 
 					if expect == uint64(nMessages) {

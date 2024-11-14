@@ -160,22 +160,20 @@ func (v *TestValidator) Key() *wallet.Key {
 
 func (v *TestValidator) ParamsValidator() *GenesisValidator {
 	blskey := v.Account.Bls.PublicKey().Marshal()
-
 	blsSignature, err := signer.MakeKOSKSignature(
 		v.Account.Bls,
 		types.Address(v.Account.Ecdsa.Address()),
 		1,
 		signer.DomainHydraChain,
 	)
+
 	if err != nil {
-		//nolint:gocritic // It should be fixed in the future.
-		panic(fmt.Sprintf("BUG: failed to sign validator params: %v", err))
+		panic(fmt.Sprintf("BUG: failed to sign validator params: %v", err)) //nolint:gocritic
 	}
 
 	signatureBytes, err := blsSignature.Marshal()
 	if err != nil {
-		//nolint:gocritic // It should be fixed in the future.
-		panic(fmt.Sprintf("BUG: failed to marshal validator params signature: %v", err))
+		panic(fmt.Sprintf("BUG: failed to marshal validator params signature: %v", err)) //nolint:gocritic
 	}
 
 	return &GenesisValidator{
@@ -249,7 +247,7 @@ func CreateValidatorSetDelta(oldValidatorSet, newValidatorSet AccountSet) (*Vali
 
 	removedValsBitmap := bitmap.Bitmap{}
 	for _, i := range removedValidators {
-		removedValsBitmap.Set(uint64(i))
+		removedValsBitmap.Set(uint64(i)) //nolint:gosec
 	}
 
 	delta := &ValidatorSetDelta{

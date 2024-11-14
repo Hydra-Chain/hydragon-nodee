@@ -1,8 +1,9 @@
 package precompiled
 
 import (
-	"math"
 	"math/big"
+
+	"math"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/state/runtime"
@@ -65,14 +66,13 @@ func subMul(x, a, b, c *big.Int) *big.Int {
 }
 
 func multComplexity(x *big.Int) *big.Int {
-	switch {
-	case x.Cmp(big64) <= 0:
+	if x.Cmp(big64) <= 0 {
 		// x ** x
 		x.Mul(x, x)
-	case x.Cmp(big1024) <= 0:
+	} else if x.Cmp(big1024) <= 0 {
 		// x ** 2 // 4 + 96 * x - 3072
 		x = subMul(x, big4, big96, big3072)
-	default:
+	} else {
 		// x ** 2 // 16 + 480 * x - 199680
 		x = subMul(x, big16, big480, big199680)
 	}

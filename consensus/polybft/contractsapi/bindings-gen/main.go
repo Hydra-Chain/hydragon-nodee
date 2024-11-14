@@ -284,8 +284,7 @@ func generateType(
 
 		var typ string
 
-		switch {
-		case elem.Kind() == abi.KindTuple:
+		if elem.Kind() == abi.KindTuple { //nolint:gocritic
 			// Struct
 			nestedType, err := generateNestedType(generatedData, tupleElem.Name, elem, res)
 			if err != nil {
@@ -293,7 +292,7 @@ func generateType(
 			}
 
 			typ = nestedType
-		case elem.Kind() == abi.KindSlice && elem.Elem().Kind() == abi.KindTuple:
+		} else if elem.Kind() == abi.KindSlice && elem.Elem().Kind() == abi.KindTuple {
 			// []Struct
 			nestedType, err := generateNestedType(generatedData, getInternalType(tupleElem.Name, elem), elem.Elem(), res)
 			if err != nil {
@@ -301,7 +300,7 @@ func generateType(
 			}
 
 			typ = "[]" + nestedType
-		case elem.Kind() == abi.KindArray && elem.Elem().Kind() == abi.KindTuple:
+		} else if elem.Kind() == abi.KindArray && elem.Elem().Kind() == abi.KindTuple {
 			// [n]Struct
 			nestedType, err := generateNestedType(generatedData, getInternalType(tupleElem.Name, elem), elem.Elem(), res)
 			if err != nil {
@@ -309,12 +308,12 @@ func generateType(
 			}
 
 			typ = "[" + strconv.Itoa(elem.Size()) + "]" + nestedType
-		case elem.Kind() == abi.KindAddress:
+		} else if elem.Kind() == abi.KindAddress {
 			// for address use the native `types.Address` type instead of `ethgo.Address`. Note that
 			// this only works for simple types and not for []address inputs. This is good enough since
 			// there are no kinds like that in our smart contracts.
 			typ = "types.Address"
-		default:
+		} else {
 			// for the rest of the types use the go type returned by abi
 			typ = elem.GoType().String()
 		}

@@ -200,20 +200,17 @@ func (d *Dispatcher) handleSubscribe(req Request, conn wsConn) (string, Error) {
 	}
 
 	var filterID string
-
-	switch subscribeMethod {
-	case "newHeads":
+	if subscribeMethod == "newHeads" {
 		filterID = d.filterManager.NewBlockFilter(conn)
-	case "logs":
+	} else if subscribeMethod == "logs" {
 		logQuery, err := decodeLogQueryFromInterface(params[1])
 		if err != nil {
 			return "", NewInternalError(err.Error())
 		}
-
 		filterID = d.filterManager.NewLogFilter(logQuery, conn)
-	case "newPendingTransactions":
+	} else if subscribeMethod == "newPendingTransactions" {
 		filterID = d.filterManager.NewPendingTxFilter(conn)
-	default:
+	} else {
 		return "", NewSubscriptionNotFoundError(subscribeMethod)
 	}
 

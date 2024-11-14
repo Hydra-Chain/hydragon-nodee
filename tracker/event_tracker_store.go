@@ -186,8 +186,8 @@ func (b *EventTrackerStore) GetEntry(hash string) (store.Entry, error) {
 }
 
 func (b *EventTrackerStore) getImplEntry(hash string) (*Entry, error) {
-	logsBucketName := append(dbLogs, []byte(hash)...)                   //nolint:gocritic // It should be fixed in the future.
-	nextToProcessBucketName := append(dbNextToProcess, []byte(hash)...) //nolint:gocritic // It should be fixed in the future.
+	logsBucketName := append(dbLogs, []byte(hash)...)
+	nextToProcessBucketName := append(dbNextToProcess, []byte(hash)...)
 
 	if err := b.conn.Update(func(tx *bolt.Tx) error {
 		if _, err := tx.CreateBucketIfNotExists(logsBucketName); err != nil {

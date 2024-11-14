@@ -31,6 +31,8 @@ func hashToPoint(msg, domain []byte) (*bn256.G1, error) {
 		return nil, err
 	}
 
+	//a = a.Mod(a, modulus)
+	//b = b.Mod(b, modulus)
 	a, b := res[0], res[1]
 
 	g1, err := mapToG1Point(a)
@@ -80,13 +82,11 @@ func hashToFpXMDSHA256(msg []byte, domain []byte, count int) ([]*big.Int, error)
 
 		// fast path
 		c := num.Cmp(modulus)
-
-		switch {
-		case c == 0:
+		if c == 0 {
 			// nothing
-		case c != 1 && num.Cmp(zero) != -1:
+		} else if c != 1 && num.Cmp(zero) != -1 {
 			// 0 < v < q
-		default:
+		} else {
 			num = num.Mod(num, modulus)
 		}
 
@@ -153,20 +153,20 @@ func expandMsgSHA256XMD(msg []byte, domain []byte, outLen int) ([]byte, error) {
 	return out[:outLen], nil
 }
 
-func mulmod(x, y, n *big.Int) *big.Int {
+func mulmod(x, y, N *big.Int) *big.Int {
 	xx := new(big.Int).Mul(x, y)
 
-	return xx.Mod(xx, n)
+	return xx.Mod(xx, N)
 }
 
-func addmod(x, y, n *big.Int) *big.Int {
+func addmod(x, y, N *big.Int) *big.Int {
 	xx := new(big.Int).Add(x, y)
 
-	return xx.Mod(xx, n)
+	return xx.Mod(xx, N)
 }
 
-func inversemod(x, n *big.Int) *big.Int {
-	return new(big.Int).ModInverse(x, n)
+func inversemod(x, N *big.Int) *big.Int {
+	return new(big.Int).ModInverse(x, N)
 }
 
 /**

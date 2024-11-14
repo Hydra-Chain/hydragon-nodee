@@ -113,7 +113,6 @@ func Test_decodeValidators(t *testing.T) {
 			} else {
 				assert.Error(t, err)
 			}
-
 			assert.Equal(t, tt.expected, res)
 		})
 	}
@@ -222,7 +221,6 @@ func TestQueryValidators(t *testing.T) {
 			} else {
 				assert.Error(t, err)
 			}
-
 			assert.Equal(t, tt.expected, res)
 		})
 	}

@@ -29,7 +29,6 @@ func TestPushOpcodes(t *testing.T) {
 		assert.Len(t, res, c)
 
 		assert.True(t, bytes.HasPrefix(code[1:], res))
-
 		c++
 	}
 }

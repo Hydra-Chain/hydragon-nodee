@@ -261,7 +261,6 @@ func (s *systemStateMock) GetEpoch() (uint64, error) {
 		return epochNumber, nil
 	} else if len(args) == 2 {
 		epochNumber, _ := args.Get(0).(uint64)
-
 		err, ok := args.Get(1).(error)
 		if ok {
 			return epochNumber, err
@@ -292,7 +291,6 @@ func (s *systemStateMock) GetVotingPowerExponent() (*big.Int, error) {
 func (s *systemStateMock) GetValidatorBalance(addr types.Address) (balance *big.Int, err error) {
 	args := s.Called(addr)
 	balance, _ = args.Get(0).(*big.Int)
-
 	if args.Get(1) != nil {
 		err, _ = args.Get(1).(error)
 	}
@@ -372,13 +370,13 @@ func (tp *txPoolMock) Prepare() {
 func (tp *txPoolMock) Length() uint64 {
 	args := tp.Called()
 
-	return args[0].(uint64) //nolint:forcetypeassert
+	return args[0].(uint64) //nolint
 }
 
 func (tp *txPoolMock) Peek() *types.Transaction {
 	args := tp.Called()
 
-	return args[0].(*types.Transaction) //nolint:forcetypeassert
+	return args[0].(*types.Transaction) //nolint
 }
 
 func (tp *txPoolMock) Pop(tx *types.Transaction) {
@@ -422,13 +420,13 @@ func (tp *syncerMock) Close() error {
 func (tp *syncerMock) GetSyncProgression() *progress.Progression {
 	args := tp.Called()
 
-	return args[0].(*progress.Progression) //nolint:forcetypeassert
+	return args[0].(*progress.Progression) //nolint
 }
 
 func (tp *syncerMock) HasSyncPeer() bool {
 	args := tp.Called()
 
-	return args[0].(bool) //nolint:forcetypeassert
+	return args[0].(bool) //nolint
 }
 
 func (tp *syncerMock) Sync(func(*types.FullBlock) bool) error {

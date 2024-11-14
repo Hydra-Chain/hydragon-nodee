@@ -40,7 +40,6 @@ func TestFSM_ValidateHeader(t *testing.T) {
 		validateHeaderFields(parent, header, blockTimeDrift),
 		"extra-data shorter than",
 	)
-
 	header.ExtraData = extra
 
 	// parent hash
@@ -49,7 +48,6 @@ func TestFSM_ValidateHeader(t *testing.T) {
 		validateHeaderFields(parent, header, blockTimeDrift),
 		"incorrect header parent hash",
 	)
-
 	header.ParentHash = parent.Hash
 
 	// sequence number
@@ -63,7 +61,6 @@ func TestFSM_ValidateHeader(t *testing.T) {
 		validateHeaderFields(parent, header, blockTimeDrift),
 		"timestamp older than parent",
 	)
-
 	header.Timestamp = 10
 
 	// failed nonce
@@ -80,7 +77,6 @@ func TestFSM_ValidateHeader(t *testing.T) {
 		validateHeaderFields(parent, header, blockTimeDrift),
 		"invalid gas limit",
 	)
-
 	header.GasLimit = 10
 	header.GasUsed = 10
 
@@ -90,7 +86,6 @@ func TestFSM_ValidateHeader(t *testing.T) {
 		validateHeaderFields(parent, header, blockTimeDrift),
 		"mix digest is not correct",
 	)
-
 	header.MixHash = HydragonMixDigest
 
 	// difficulty
@@ -108,9 +103,7 @@ func TestFSM_ValidateHeader(t *testing.T) {
 		validateHeaderFields(parent, header, blockTimeDrift),
 		"invalid header hash",
 	)
-
 	header.Timestamp = uint64(time.Now().UTC().Unix() + 150)
-
 	require.ErrorContains(
 		t,
 		validateHeaderFields(parent, header, blockTimeDrift),

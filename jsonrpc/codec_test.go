@@ -105,11 +105,9 @@ func TestBlockNumberOrHash_UnmarshalJSON(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-
 				if tt.expectedBnh.BlockNumber != nil {
 					assert.Equal(t, *bnh.BlockNumber, *tt.expectedBnh.BlockNumber)
 				}
-
 				if tt.expectedBnh.BlockHash != nil {
 					assert.Equal(t, bnh.BlockHash.String(), tt.expectedBnh.BlockHash.String())
 				}

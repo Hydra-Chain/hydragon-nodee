@@ -209,7 +209,7 @@ func GenerateGenesisAccountFromFile(
 			return nil, fmt.Errorf("unable to encode constructor arguments, %w", err)
 		}
 
-		finalBytecode = append(finalBytecode, constructor...)
+		finalBytecode = append(artifact.Bytecode, constructor...)
 	}
 
 	return getPredeployAccount(predeployAddress, finalBytecode, chainID)

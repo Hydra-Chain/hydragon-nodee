@@ -1285,7 +1285,6 @@ func createTestBitmaps(
 
 			if !bitmap.IsSet(index) {
 				bitmap.Set(index)
-
 				j++
 			}
 		}

@@ -191,7 +191,6 @@ func dirSize(t *testing.T, path string) int64 {
 		if err != nil {
 			t.Fail()
 		}
-
 		if !info.IsDir() {
 			size += info.Size()
 		}

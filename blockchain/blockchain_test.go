@@ -450,7 +450,6 @@ func TestInsertHeaders(t *testing.T) {
 				if len(a) != len(b) {
 					t.Fatal("bad size")
 				}
-
 				for indx := range a {
 					if chain.headers[a[indx].hash].Hash != b[indx].Hash {
 						t.Fatal("bad")
@@ -507,8 +506,10 @@ func TestInsertHeaders(t *testing.T) {
 			if len(forks) != 0 {
 				if len(forks) != len(expectedForks) {
 					t.Fatalf("forks length dont match, expected %d but found %d", len(expectedForks), len(forks))
-				} else if !reflect.DeepEqual(forks, expectedForks) {
-					t.Fatal("forks dont match")
+				} else {
+					if !reflect.DeepEqual(forks, expectedForks) {
+						t.Fatal("forks dont match")
+					}
 				}
 			}
 

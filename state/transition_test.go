@@ -78,7 +78,6 @@ func TestSubGasLimitPrice(t *testing.T) {
 			err := transition.subGasLimitPrice(msg)
 
 			assert.Equal(t, tt.expectedErr, err)
-
 			if err == nil {
 				// should reduce cost for gas from balance
 				reducedAmount := new(big.Int).Mul(msg.GasPrice, big.NewInt(int64(msg.Gas)))
@@ -146,7 +145,6 @@ func TestTransfer(t *testing.T) {
 			err := transition.Transfer(tt.from, tt.to, amount)
 
 			assert.Equal(t, tt.expectedErr, err)
-
 			if err == nil {
 				// should move balance
 				oldBalanceOfFrom := big.NewInt(int64(tt.preState[tt.from].Balance))

@@ -115,7 +115,8 @@ func (p *Precompiled) CanRun(c *runtime.Contract, _ runtime.Host, config *chain.
 	}
 
 	// istanbul precompiles
-	if c.CodeAddress == nine {
+	switch c.CodeAddress {
+	case nine:
 		return config.Istanbul
 	}
 
@@ -140,7 +141,7 @@ func (p *Precompiled) Run(c *runtime.Contract, host runtime.Host, config *chain.
 		}
 	}
 
-	c.Gas -= gasCost
+	c.Gas = c.Gas - gasCost
 	returnValue, err := contract.run(c.Input, c.Caller, host)
 
 	result := &runtime.ExecutionResult{

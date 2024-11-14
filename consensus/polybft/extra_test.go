@@ -377,7 +377,6 @@ func TestSignature_Verify(t *testing.T) {
 		validatorSet := vals.ToValidatorSet()
 
 		var signatures bls.Signatures
-
 		bitmap := bitmap.Bitmap{}
 		signers := make(map[types.Address]struct{}, len(validatorsMetadata))
 
@@ -504,7 +503,6 @@ func TestExtra_InitGenesisValidatorsDelta(t *testing.T) {
 		}
 
 		var i int
-
 		for _, val := range vals.Validators {
 			delta.Added[i] = &validator.ValidatorMetadata{
 				Address:     types.Address(val.Account.Ecdsa.Address()),
@@ -578,6 +576,7 @@ func Test_GetIbftExtraClean(t *testing.T) {
 
 	extraTwo := &Extra{}
 	require.NoError(t, extraTwo.UnmarshalRLP(extraClean))
+	require.True(t, extra.Validators.Equals(extra.Validators))
 	require.Equal(t, extra.Checkpoint.BlockRound, extraTwo.Checkpoint.BlockRound)
 	require.Equal(t, extra.Checkpoint.EpochNumber, extraTwo.Checkpoint.EpochNumber)
 	require.Equal(t, extra.Checkpoint.CurrentValidatorsHash, extraTwo.Checkpoint.CurrentValidatorsHash)
@@ -733,7 +732,6 @@ func TestCheckpointData_Validate(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-
 			checkpoint := &CheckpointData{
 				EpochNumber:           c.epochNumber,
 				CurrentValidatorsHash: c.currentValidatorsHash,

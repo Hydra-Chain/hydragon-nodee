@@ -327,7 +327,8 @@ func (s *stakeManager) updateWithReceipts(
 // UpdateValidatorSet returns an updated list of validators
 // based on balance change (transfer) events from HydraChain contract
 func (s *stakeManager) UpdateValidatorSet(
-	epoch uint64, oldValidators validator.AccountSet) (*validator.ValidatorSetDelta, error) {
+	epoch uint64, oldValidators validator.AccountSet,
+) (*validator.ValidatorSetDelta, error) {
 	s.logger.Info("Calculating validators set update...", "epoch", epoch)
 
 	fullValidatorSet, err := s.state.StakeStore.getFullValidatorSet(nil)
@@ -360,7 +361,7 @@ func (s *stakeManager) UpdateValidatorSet(
 		oldActiveMap[validator.Address] = validator
 		// remove existing validators from the validators list if they did not make it to the list
 		if _, exists := addressesSet[validator.Address]; !exists {
-			removedBitmap.Set(uint64(i))
+			removedBitmap.Set(uint64(i)) //nolint:gosec
 		}
 	}
 

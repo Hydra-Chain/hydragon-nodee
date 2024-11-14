@@ -488,6 +488,7 @@ func contains(l []string, name string) bool {
 	return false
 }
 
+//go:embed tests
 var testsFS embed.FS
 
 func listFolders(tests ...string) ([]string, error) {

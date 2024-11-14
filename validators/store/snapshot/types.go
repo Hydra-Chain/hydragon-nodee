@@ -334,12 +334,11 @@ func (s *snapshotStore) findClosestSnapshotIndex(blockNum uint64) int {
 	for low <= high {
 		mid := (high + low) / 2
 
-		switch {
-		case blockNum < s.list[mid].Number:
+		if blockNum < s.list[mid].Number {
 			high = mid - 1
-		case blockNum > s.list[mid].Number:
+		} else if blockNum > s.list[mid].Number {
 			low = mid + 1
-		default:
+		} else {
 			return mid
 		}
 	}

@@ -104,7 +104,8 @@ func baseOnSetHandler(
 	)
 
 	confirmValue, err := esm.prompt.DefaultPrompt(
-		`Please re-type the secret key value (present above, after the "=") to confirm that you have backed it up in a safe location.`,
+		`Please re-type the secret key value (present above, after the "=") `+
+			`to confirm that you have backed it up in a safe location.`,
 		"",
 	)
 	if err != nil {

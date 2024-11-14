@@ -101,15 +101,13 @@ func (a *AddressList) runInputCall(caller types.Address, input []byte,
 
 	// write operation
 	var updateRole Role
-
-	switch {
-	case bytes.Equal(sig, SetAdminFunc.ID()):
+	if bytes.Equal(sig, SetAdminFunc.ID()) {
 		updateRole = AdminRole
-	case bytes.Equal(sig, SetEnabledFunc.ID()):
+	} else if bytes.Equal(sig, SetEnabledFunc.ID()) {
 		updateRole = EnabledRole
-	case bytes.Equal(sig, SetNoneFunc.ID()):
+	} else if bytes.Equal(sig, SetNoneFunc.ID()) {
 		updateRole = NoRole
-	default:
+	} else {
 		return nil, 0, errFunctionNotFound
 	}
 

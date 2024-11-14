@@ -1108,7 +1108,6 @@ func TestPeerAdditionDeletion(t *testing.T) {
 		prunedPeers := 0
 		for i := 0; i < len(randomPeers); i += 2 {
 			prunedPeers++
-
 			server.removePeer(randomPeers[i].peerID)
 
 			assert.False(t, server.hasPeer(randomPeers[i].peerID))

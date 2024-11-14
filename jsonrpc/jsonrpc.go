@@ -158,7 +158,6 @@ func middlewareFactory(config *Config) func(http.Handler) http.Handler {
 					break
 				}
 			}
-
 			next.ServeHTTP(w, r)
 		})
 	}

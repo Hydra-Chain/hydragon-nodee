@@ -473,19 +473,19 @@ func rescalePriorities(snapshot *ProposerSnapshot, totalVotingPower *big.Int) er
 
 // computeMaxMinPriorityDiff computes the difference between the max and min ProposerPriority of that set.
 func computeMaxMinPriorityDiff(validators []*PrioritizedValidator) *big.Int {
-	minimum, maximum := validators[0].ProposerPriority, validators[0].ProposerPriority
+	min, max := validators[0].ProposerPriority, validators[0].ProposerPriority
 
 	for _, v := range validators[1:] {
-		if v.ProposerPriority.Cmp(minimum) < 0 {
-			minimum = v.ProposerPriority
+		if v.ProposerPriority.Cmp(min) < 0 {
+			min = v.ProposerPriority
 		}
 
-		if v.ProposerPriority.Cmp(maximum) > 0 {
-			maximum = v.ProposerPriority
+		if v.ProposerPriority.Cmp(max) > 0 {
+			max = v.ProposerPriority
 		}
 	}
 
-	diff := new(big.Int).Sub(maximum, minimum)
+	diff := new(big.Int).Sub(max, min)
 
 	if diff.Cmp(big.NewInt(0)) < 0 {
 		return diff.Neg(diff)

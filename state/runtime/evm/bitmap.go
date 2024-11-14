@@ -39,7 +39,6 @@ func (b *bitmap) setCode(code []byte) {
 				// jumpdest
 				b.set(uint64(i))
 			}
-
 			i++
 		}
 	}

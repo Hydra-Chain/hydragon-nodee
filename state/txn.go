@@ -522,7 +522,7 @@ func (txn *Txn) Empty(addr types.Address) bool {
 	return obj.Empty()
 }
 
-func newStateObject(txn *Txn) *StateObject {
+func newStateObject(_ *Txn) *StateObject {
 	return &StateObject{
 		Account: &Account{
 			Balance:  big.NewInt(0),
@@ -613,7 +613,6 @@ func (txn *Txn) Commit(deleteEmptyObjects bool) ([]*Object, error) {
 			DirtyCode: a.DirtyCode,
 			Code:      a.Code,
 		}
-
 		if a.Deleted {
 			obj.Deleted = true
 		} else if a.Txn != nil {

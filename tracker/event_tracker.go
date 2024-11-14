@@ -92,13 +92,11 @@ func (e *EventTracker) Start(ctx context.Context) error {
 	go common.RetryForever(ctx, time.Second, func(context.Context) error {
 		// Init
 		start := time.Now().UTC()
-
 		if err := blockTracker.Init(); err != nil {
 			e.logger.Error("failed to init blocktracker", "error", err)
 
 			return err
 		}
-
 		elapsed := time.Now().UTC().Sub(start)
 
 		// Start

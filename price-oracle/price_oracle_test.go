@@ -498,7 +498,6 @@ func TestVote(t *testing.T) {
 				big.NewInt(1),
 				event["day"].(*big.Int), //nolint:forcetypeassert
 			)
-
 			foundVoteLog = true
 		}
 	}
@@ -662,7 +661,6 @@ func TestExecuteVote(t *testing.T) {
 				big.NewInt(1),
 				event["day"].(*big.Int), //nolint:forcetypeassert
 			)
-
 			foundVoteLog = true
 		}
 	}

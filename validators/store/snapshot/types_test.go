@@ -637,7 +637,6 @@ func TestSnapshotCopy(t *testing.T) {
 
 			// check addresses of Votes are different
 			assert.Equal(t, len(test.snapshot.Votes), len(copied.Votes))
-
 			for idx := range test.snapshot.Votes {
 				assert.NotSame(t, test.snapshot.Votes[idx], copied.Votes[idx])
 			}

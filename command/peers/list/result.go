@@ -37,7 +37,6 @@ func (r *PeersListResult) GetOutput() string {
 		for i, p := range r.Peers {
 			rows[i] = fmt.Sprintf("[%d]|%s", i, p)
 		}
-
 		buffer.WriteString(helper.FormatKV(rows))
 	}
 

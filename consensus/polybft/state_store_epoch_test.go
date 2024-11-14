@@ -91,7 +91,6 @@ func TestState_cleanValidatorSnapshotsFromDb(t *testing.T) {
 		snapshotFromDB, err = state.EpochStore.getValidatorSnapshot(epoch)
 		assert.NoError(t, err)
 		assert.NotNil(t, snapshotFromDB)
-
 		epoch--
 	}
 }
