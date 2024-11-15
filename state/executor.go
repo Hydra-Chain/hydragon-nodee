@@ -198,7 +198,7 @@ func (e *Executor) BeginTxn(
 		Timestamp:    int64(header.Timestamp), //nolint:gosec
 		Number:       int64(header.Number),    //nolint:gosec
 		Difficulty:   types.BytesToHash(new(big.Int).SetUint64(header.Difficulty).Bytes()),
-		BaseFee:      int64(header.baseFee),  //nolint:gosec
+		BaseFee:      new(big.Int).SetUint64(header.baseFee),
 		GasLimit:     int64(header.GasLimit), //nolint:gosec
 		ChainID:      e.config.ChainID,
 		BurnContract: burnContract,
