@@ -392,7 +392,7 @@ func (as AccountSet) ExtractUpdatedValidatorsVotingPower(
 	if validatorsDelta.Removed.Len() > 0 {
 		for i, validator := range lastEpochValidators {
 			// Set voting power to be 0 of the removed validators and append.
-			if validatorsDelta.Removed.IsSet(uint64(i)) {
+			if validatorsDelta.Removed.IsSet(uint64(i)) { //nolint:gosec
 				updatedValidatorsPower = append(updatedValidatorsPower,
 					formatValidatorPower(validator.Address, big.NewInt(0)))
 			}
