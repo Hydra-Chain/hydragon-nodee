@@ -195,11 +195,11 @@ func (e *Executor) BeginTxn(
 
 	txCtx := runtime.TxContext{
 		Coinbase:     coinbaseReceiver,
-		Timestamp:    uint64(header.Timestamp), //nolint:gosec
-		Number:       uint64(header.Number),    //nolint:gosec
+		Timestamp:    int64(header.Timestamp), //nolint:gosec
+		Number:       int64(header.Number),    //nolint:gosec
 		Difficulty:   types.BytesToHash(new(big.Int).SetUint64(header.Difficulty).Bytes()),
-		BaseFee:      uint64(header.baseFee),  //nolint:gosec
-		GasLimit:     uint64(header.GasLimit), //nolint:gosec
+		BaseFee:      int64(header.baseFee),  //nolint:gosec
+		GasLimit:     int64(header.GasLimit), //nolint:gosec
 		ChainID:      e.config.ChainID,
 		BurnContract: burnContract,
 	}
