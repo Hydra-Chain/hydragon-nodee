@@ -10,6 +10,7 @@ import (
 
 	"github.com/0xPolygon/polygon-edge/consensus"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/bitmap"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
@@ -782,6 +783,100 @@ func TestConsensusRuntime_calculateStateTxsInput_SecondEpoch(t *testing.T) {
 	polybftBackendMock.AssertExpectations(t)
 }
 
+func TestConsensusRuntime_generateSyncValidatorsDataTxInput(t *testing.T) {
+	t.Parallel()
+
+	const (
+		epoch           = 2
+		epochStartBlock = 11
+		epochLastBlock  = uint64(20)
+	)
+
+	lastEpochValidators := validator.NewTestValidatorsWithAliases(t, []string{"A", "B", "C", "D", "E", "F", "G"})
+	lastEpochAccSet := lastEpochValidators.GetPublicIdentities()
+	addedValidators := validator.NewTestValidatorsWithAliases(t, []string{"H", "I"})
+	addedAccSet := addedValidators.GetPublicIdentities()
+	updatedValidators := map[string]uint64{"A": 30000, "B": 16000}
+	updatedAccSet := lastEpochValidators.UpdateVotingPowers(updatedValidators)
+	removedValidators := bitmap.Bitmap{}
+	removedValidators.Set(2) // Validator "C" is removed
+
+	extraData := createTestExtraForSyncValidatorsData(
+		t,
+		epoch,
+		addedAccSet,
+		updatedAccSet,
+		removedValidators,
+		bitmap.Bitmap{2},
+	)
+
+	parentIbftExtraData, err := GetIbftExtra(extraData)
+	assert.NoError(t, err)
+
+	newAccSet, err := lastEpochAccSet.ApplyDelta(parentIbftExtraData.Validators)
+	assert.NoError(t, err)
+
+	lastBuiltHeader := &types.Header{
+		Number:    epochLastBlock,
+		ExtraData: extraData,
+		GasLimit:  types.StateTransactionGasLimit,
+	}
+
+	blockchainMock := new(blockchainMock)
+
+	polybftBackendMock := new(polybftBackendMock)
+
+	// We need to mock the GetValidators call to return the last epoch validators
+	polybftBackendMock.On("GetValidators", epochLastBlock-1, []*types.Header(nil)).
+		Return(lastEpochAccSet, nil)
+
+	config := &runtimeConfig{
+		blockchain:     blockchainMock,
+		polybftBackend: polybftBackendMock,
+		Key:            lastEpochValidators.GetValidator("A").Key(),
+	}
+
+	consensusRuntime := &consensusRuntime{
+		config: config,
+		epoch: &epochMetadata{
+			Number:            epoch,
+			Validators:        newAccSet,
+			FirstBlockInEpoch: epochStartBlock,
+		},
+		lastBuiltBlock: lastBuiltHeader,
+		logger:         hclog.NewNullLogger(),
+	}
+
+	addedValAddresses := addedAccSet.GetAddresses()
+
+	updatedValAddresses := updatedAccSet.GetAddresses()
+
+	oldValAddresses := lastEpochAccSet.GetAddresses()
+
+	expectedUpdatedValidatorsPower := [5]*contractsapi.ValidatorPower{
+		{Validator: addedValAddresses[0], VotingPower: newAccSet.GetValidatorMetadata(addedValAddresses[0]).VotingPower},
+		{Validator: addedValAddresses[1], VotingPower: newAccSet.GetValidatorMetadata(addedValAddresses[1]).VotingPower},
+		{Validator: updatedValAddresses[0], VotingPower: newAccSet.GetValidatorMetadata(updatedValAddresses[0]).VotingPower},
+		{Validator: updatedValAddresses[1], VotingPower: newAccSet.GetValidatorMetadata(updatedValAddresses[1]).VotingPower},
+		{Validator: oldValAddresses[2], VotingPower: big.NewInt(0)},
+	}
+
+	syncValidatorsDataInput, err := consensusRuntime.generateSyncValidatorsDataTxInput(
+		lastBuiltHeader,
+		newAccSet,
+	)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, syncValidatorsDataInput)
+
+	for i, expectedVotingPower := range expectedUpdatedValidatorsPower {
+		assert.Equal(t, expectedVotingPower.Validator, syncValidatorsDataInput.ValidatorsPower[i].Validator)
+		assert.Equal(t, expectedVotingPower.VotingPower, syncValidatorsDataInput.ValidatorsPower[i].VotingPower)
+	}
+
+	blockchainMock.AssertExpectations(t)
+	polybftBackendMock.AssertExpectations(t)
+}
+
 func TestConsensusRuntime_IsValidValidator_BasicCases(t *testing.T) {
 	t.Parallel()
 
@@ -1216,8 +1311,12 @@ func TestConsensusRuntime_BuildPrepareMessage(t *testing.T) {
 	assert.Equal(t, signedMsg, runtime.BuildPrepareMessage(proposalHash, view))
 }
 
-func createTestBlocks(t *testing.T, numberOfBlocks, defaultEpochSize uint64,
-	validatorSet validator.AccountSet) (*types.Header, *testHeadersMap) {
+func createTestBlocks(
+	t *testing.T,
+	numberOfBlocks,
+	defaultEpochSize uint64,
+	validatorSet validator.AccountSet,
+) (*types.Header, *testHeadersMap) {
 	t.Helper()
 
 	headerMap := &testHeadersMap{}
@@ -1308,6 +1407,31 @@ func createTestExtraForAccounts(
 		Validators: &validator.ValidatorSetDelta{
 			Added:   validators,
 			Removed: bitmap.Bitmap{},
+		},
+		Parent:     &Signature{Bitmap: b, AggregatedSignature: dummySignature[:]},
+		Committed:  &Signature{Bitmap: b, AggregatedSignature: dummySignature[:]},
+		Checkpoint: &CheckpointData{EpochNumber: epoch},
+	}
+
+	return extraData.MarshalRLPTo(nil)
+}
+
+func createTestExtraForSyncValidatorsData(
+	t *testing.T,
+	epoch uint64,
+	addedValidators validator.AccountSet,
+	updatedValidators validator.AccountSet,
+	removedValidators bitmap.Bitmap,
+	b bitmap.Bitmap,
+) []byte {
+	t.Helper()
+
+	dummySignature := [64]byte{}
+	extraData := Extra{
+		Validators: &validator.ValidatorSetDelta{
+			Added:   addedValidators,
+			Updated: updatedValidators,
+			Removed: removedValidators,
 		},
 		Parent:     &Signature{Bitmap: b, AggregatedSignature: dummySignature[:]},
 		Committed:  &Signature{Bitmap: b, AggregatedSignature: dummySignature[:]},

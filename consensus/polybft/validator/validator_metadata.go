@@ -367,27 +367,39 @@ func (as AccountSet) ApplyDelta(validatorsDelta *ValidatorSetDelta) (AccountSet,
 	return validators, nil
 }
 
-// ExtractUpdatedValidatorsVotingPower receives ValidatorSetDelta and extracts the changed
-// validators (added, updated and removed)
+// ExtractUpdatedValidatorsVotingPower receives ValidatorSetDelta and the validator set from the last epoch,
+// then it extracts the changed validators (added, updated and removed)
 func (as AccountSet) ExtractUpdatedValidatorsVotingPower(
 	validatorsDelta *ValidatorSetDelta,
-) ([]*contractsapi.ValidatorPower, error) {
+	lastEpochValidators AccountSet,
+) []*contractsapi.ValidatorPower {
 	// Figure out which validators from the existing set are updated.
 	updatedValidatorsPower := make([]*contractsapi.ValidatorPower, 0)
 
-	for i, validator := range as {
-		// If a validator is removed, then append it.
-		// Otherwise, check if the validator is in the added or updated list
-		// because we are looking only for the updated ones.
-		if validatorsDelta.Removed.IsSet(uint64(i)) { //nolint:gosec
-			updatedValidatorsPower = append(updatedValidatorsPower, formatValidatorPower(validator))
-		} else if validatorsDelta.Added.ContainsAddress(validator.Address) ||
-			validatorsDelta.Updated.ContainsAddress(validator.Address) {
-			updatedValidatorsPower = append(updatedValidatorsPower, formatValidatorPower(validator))
+	// Include all the added validators in the updated validators power
+	for _, addedValidator := range validatorsDelta.Added {
+		updatedValidatorsPower = append(updatedValidatorsPower,
+			formatValidatorPower(addedValidator.Address, addedValidator.VotingPower))
+	}
+
+	// Include all the updated validators in the updated validators power
+	for _, updatedValidator := range validatorsDelta.Updated {
+		updatedValidatorsPower = append(updatedValidatorsPower,
+			formatValidatorPower(updatedValidator.Address, updatedValidator.VotingPower))
+	}
+
+	// If we have removed validators, then we need to loop through the last epoch validators
+	if validatorsDelta.Removed.Len() > 0 {
+		for i, validator := range lastEpochValidators {
+			// Set voting power to be 0 of the removed validators and append.
+			if validatorsDelta.Removed.IsSet(uint64(i)) { //nolint:gosec
+				updatedValidatorsPower = append(updatedValidatorsPower,
+					formatValidatorPower(validator.Address, big.NewInt(0)))
+			}
 		}
 	}
 
-	return updatedValidatorsPower, nil
+	return updatedValidatorsPower
 }
 
 // Marshal marshals AccountSet to JSON
@@ -410,10 +422,10 @@ func (as *AccountSet) GetTotalVotingPower() *big.Int {
 	return totalVotingPower
 }
 
-// Function to help shorten the validator's metadata
-func formatValidatorPower(validatorMetaData *ValidatorMetadata) *contractsapi.ValidatorPower {
+// Function to help to format the validator power structure
+func formatValidatorPower(address types.Address, votingPower *big.Int) *contractsapi.ValidatorPower {
 	return &contractsapi.ValidatorPower{
-		Validator:   validatorMetaData.Address,
-		VotingPower: validatorMetaData.VotingPower,
+		Validator:   address,
+		VotingPower: votingPower,
 	}
 }

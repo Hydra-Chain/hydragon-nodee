@@ -489,14 +489,12 @@ func (c *consensusRuntime) FSM() error {
 
 		ff.newValidatorsDelta, err = c.stakeManager.UpdateValidatorSet(
 			epoch.Number,
-			epoch.Validators.Copy(),
+			epoch.Validators,
 		)
 		if err != nil {
 			return fmt.Errorf("cannot update validator set on epoch ending: %w", err)
 		}
-	}
-
-	if isStartOfEpoch {
+	} else if isStartOfEpoch {
 		ff.syncValidatorsDataInput, err = c.generateSyncValidatorsDataTxInput(parent, ff.validators.Accounts())
 		if err != nil {
 			return fmt.Errorf("cannot generate sync validators data tx input: %w", err)
@@ -710,7 +708,7 @@ func (c *consensusRuntime) calculateStateTxsInput(
 // contains the updated validators data from the parent header (previous epoch-ending block)
 func (c *consensusRuntime) generateSyncValidatorsDataTxInput(
 	parent *types.Header,
-	accSet validator.AccountSet,
+	currAccSet validator.AccountSet,
 ) (*contractsapi.SyncValidatorsDataHydraChainFn, error) {
 	parentIbftExtraData, err := GetIbftExtra(parent.ExtraData)
 	if err != nil {
@@ -721,12 +719,20 @@ func (c *consensusRuntime) generateSyncValidatorsDataTxInput(
 		return nil, nil
 	}
 
-	updatedValidatorsVotingPower, err := accSet.ExtractUpdatedValidatorsVotingPower(
-		parentIbftExtraData.Validators,
-	)
-	if err != nil {
-		return nil, err
+	validatorsBlockNumber := parent.Number - 1
+	if parent.Number == 0 {
+		validatorsBlockNumber = parent.Number
 	}
+
+	lastEpochValidators, err := c.config.polybftBackend.GetValidators(validatorsBlockNumber, nil)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get validators for the previous epoch: %w", err)
+	}
+
+	updatedValidatorsVotingPower := currAccSet.ExtractUpdatedValidatorsVotingPower(
+		parentIbftExtraData.Validators,
+		lastEpochValidators,
+	)
 
 	syncValidatorsData := &contractsapi.SyncValidatorsDataHydraChainFn{
 		ValidatorsPower: updatedValidatorsVotingPower,
