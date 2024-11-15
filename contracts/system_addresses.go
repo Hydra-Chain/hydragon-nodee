@@ -31,7 +31,8 @@ var (
 	HydraDelegationContractV1 = types.StringToAddress("0x1071")
 	// VestingManagerFactoryContract is an address of the VestingManagerFactory's proxy contract on the chain
 	VestingManagerFactoryContract = types.StringToAddress("0x108")
-	// VestingManagerFactoryContractV1 is an address of the VestingManagerFactoryContract's implementation contract deployed on the chain
+	// VestingManagerFactoryContractV1 is an address of the VestingManagerFactoryContract's implementation contract
+	// deployed on the chain
 	VestingManagerFactoryContractV1 = types.StringToAddress("0x1081")
 	// APRCalculatorContract is an address of the APRCalculator's proxy contract on the chain
 	APRCalculatorContract = types.StringToAddress("0x109")

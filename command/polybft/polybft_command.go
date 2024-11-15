@@ -17,8 +17,9 @@ import (
 
 func GetCommand() *cobra.Command {
 	polybftCmd := &cobra.Command{
-		Use:   "hydragon",
-		Short: "Executes HydraChain's Hydragon consensus commands, including staking, unstaking, rewards management, and validator operations.",
+		Use: "hydragon",
+		Short: "Executes HydraChain's Hydragon consensus commands, including staking, unstaking, rewards management, " +
+			"and validator operations.",
 	}
 
 	// Hydra modification: modify sidechain commands and remove rootchain commands

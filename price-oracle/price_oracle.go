@@ -200,6 +200,7 @@ func (p *PriceOracle) shouldExecuteVote(header *types.Header) (bool, error) {
 
 	// then check if the contract is in a proper state to vote
 	dayNumber := calcDayNumber(header.Timestamp)
+
 	shouldVote, falseReason, err := state.shouldVote(dayNumber)
 	if err != nil {
 		return false, err
@@ -341,7 +342,7 @@ func isVotingTime(timestamp uint64) bool {
 
 // isBlockOlderThan checks if the block is older than the given number of minutes
 func isBlockOlderThan(header *types.Header, minutes int64) bool {
-	return time.Now().UTC().Unix()-int64(header.Timestamp) > minutes*60
+	return time.Now().UTC().Unix()-int64(header.Timestamp) > minutes*60 //nolint:gosec
 }
 
 func calcDayNumber(timestamp uint64) uint64 {

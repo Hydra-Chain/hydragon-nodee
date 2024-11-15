@@ -156,12 +156,14 @@ func (ip *initParams) setFlags(cmd *cobra.Command) {
 	// num flag should be used with data-dir flag only so it should not be used with config flag.
 	cmd.MarkFlagsMutuallyExclusive(numFlag, AccountConfigFlag)
 
-	// Encryptedlocal secrets manager with preset keys can be setup for a single bunch of secrets only, so num flag is not allowed.
+	// Encryptedlocal secrets manager with preset keys can be setup for a single bunch of secrets only,
+	// so num flag is not allowed.
 	cmd.MarkFlagsMutuallyExclusive(numFlag, networkKeyFlag)
 	cmd.MarkFlagsMutuallyExclusive(numFlag, blsKeyFlag)
 	cmd.MarkFlagsMutuallyExclusive(numFlag, ecdsaKeyFlag)
 
-	// network-key, ecdsa-key and bls-key flags should be used with data-dir flag only because they are related to local FS.
+	// network-key, ecdsa-key and bls-key flags should be used with data-dir flag only because they are related
+	// to local FS.
 	cmd.MarkFlagsMutuallyExclusive(AccountConfigFlag, networkKeyFlag)
 	cmd.MarkFlagsMutuallyExclusive(AccountConfigFlag, blsKeyFlag)
 	cmd.MarkFlagsMutuallyExclusive(AccountConfigFlag, ecdsaKeyFlag)
@@ -218,10 +220,8 @@ func (ip *initParams) initKeys(secretsManager secrets.SecretsManager) ([]string,
 			}
 
 			generated = append(generated, secrets.NetworkKey)
-		} else {
-			if ip.networkKey != "" {
-				return generated, fmt.Errorf("network-key already exists")
-			}
+		} else if ip.networkKey != "" {
+			return generated, fmt.Errorf("network-key already exists")
 		}
 	}
 

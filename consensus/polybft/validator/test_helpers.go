@@ -166,13 +166,14 @@ func (v *TestValidator) ParamsValidator() *GenesisValidator {
 		1,
 		signer.DomainHydraChain,
 	)
+
 	if err != nil {
-		panic(fmt.Sprintf("BUG: failed to sign validator params: %v", err))
+		panic(fmt.Sprintf("BUG: failed to sign validator params: %v", err)) //nolint:gocritic
 	}
 
 	signatureBytes, err := blsSignature.Marshal()
 	if err != nil {
-		panic(fmt.Sprintf("BUG: failed to marshal validator params signature: %v", err))
+		panic(fmt.Sprintf("BUG: failed to marshal validator params signature: %v", err)) //nolint:gocritic
 	}
 
 	return &GenesisValidator{
@@ -246,7 +247,7 @@ func CreateValidatorSetDelta(oldValidatorSet, newValidatorSet AccountSet) (*Vali
 
 	removedValsBitmap := bitmap.Bitmap{}
 	for _, i := range removedValidators {
-		removedValsBitmap.Set(uint64(i))
+		removedValsBitmap.Set(uint64(i)) //nolint:gosec
 	}
 
 	delta := &ValidatorSetDelta{

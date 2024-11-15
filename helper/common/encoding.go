@@ -53,7 +53,7 @@ func ParseUint256(val *uint64) *big.Int {
 		return nil
 	}
 
-	return new(big.Int).SetUint64(*val)	
+	return new(big.Int).SetUint64(*val)
 }
 
 func ParseBytes(val *string) ([]byte, error) {

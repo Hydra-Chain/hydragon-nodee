@@ -18,6 +18,10 @@ import (
 	"github.com/umbracle/ethgo"
 )
 
+func setup() {
+	hasExecutedForDay = make(map[uint64]bool)
+}
+
 func TestIsValidator(t *testing.T) {
 	mockPolybftBackend := new(MockPolybftBackend)
 	validators := validator.NewTestValidatorsWithAliases(
@@ -86,6 +90,7 @@ func TestIsValidator(t *testing.T) {
 			isValidator, err := priceOracle.isValidator(tt.block)
 
 			require.Equal(t, tt.expectedIsValidator, isValidator)
+
 			if tt.expectedError != nil {
 				require.EqualError(t, err, tt.expectedError.Error())
 			} else {
@@ -412,6 +417,7 @@ func TestShouldExecuteVote(t *testing.T) {
 
 			// Assert the results
 			require.Equal(t, tt.expectedResult, result)
+
 			if tt.expectedError != nil {
 				require.EqualError(t, err, tt.expectedError.Error())
 			} else {
@@ -480,18 +486,18 @@ func TestVote(t *testing.T) {
 			require.Equal(
 				t,
 				expectedPrice.String(),
-				event["price"].(*big.Int).String(),
-			) //nolint:forcetypeassert
+				event["price"].(*big.Int).String(), //nolint:forcetypeassert
+			)
 			require.Equal(
 				t,
 				account.Ecdsa.Address().String(),
-				event["validator"].(ethgo.Address).String(),
-			) //nolint:forcetypeassert
+				event["validator"].(ethgo.Address).String(), //nolint:forcetypeassert
+			)
 			require.Equal(
 				t,
 				big.NewInt(1),
-				event["day"].(*big.Int),
-			) //nolint:forcetypeassert
+				event["day"].(*big.Int), //nolint:forcetypeassert
+			)
 			foundVoteLog = true
 		}
 	}
@@ -643,18 +649,18 @@ func TestExecuteVote(t *testing.T) {
 			require.Equal(
 				t,
 				expectedPrice.String(),
-				event["price"].(*big.Int).String(),
-			) //nolint:forcetypeassert
+				event["price"].(*big.Int).String(), //nolint:forcetypeassert
+			)
 			require.Equal(
 				t,
 				account.Ecdsa.Address().String(),
-				event["validator"].(ethgo.Address).String(),
-			) //nolint:forcetypeassert
+				event["validator"].(ethgo.Address).String(), //nolint:forcetypeassert
+			)
 			require.Equal(
 				t,
 				big.NewInt(1),
-				event["day"].(*big.Int),
-			) //nolint:forcetypeassert
+				event["day"].(*big.Int), //nolint:forcetypeassert
+			)
 			foundVoteLog = true
 		}
 	}
@@ -672,6 +678,8 @@ func TestExecuteVote(t *testing.T) {
 }
 
 func TestExecuteVote_PriceFeedError(t *testing.T) {
+	setup()
+
 	header := &types.Header{Timestamp: 100000}
 
 	mockPriceFeed := new(MockPriceFeed)
@@ -700,6 +708,8 @@ func TestExecuteVote_PriceFeedError(t *testing.T) {
 }
 
 func TestExecuteVote_VoteError(t *testing.T) {
+	setup()
+
 	mockPriceFeed := new(MockPriceFeed)
 	mockTxRelayer := new(MockTxRelayer)
 	account := validator.NewTestValidator(t, "X", 1000).Account

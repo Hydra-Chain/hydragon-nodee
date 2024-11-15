@@ -231,7 +231,6 @@ func TestStatusPubSub(t *testing.T) {
 }
 
 func TestPeerConnectionUpdateEventCh(t *testing.T) {
-	t.Skip()
 	t.Parallel()
 
 	var (
@@ -309,7 +308,7 @@ func TestPeerConnectionUpdateEventCh(t *testing.T) {
 	assert.NoError(t, topic.Subscribe(handler))
 
 	// need to wait for a few seconds to propagate subscribing
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	// enable peers to send own status via gossip
 	peerClient1.EnablePublishingPeerStatus()
@@ -323,6 +322,7 @@ func TestPeerConnectionUpdateEventCh(t *testing.T) {
 	var (
 		wgForConnectingStatus sync.WaitGroup
 		newStatuses           []*NoForkPeer
+		statusCh              = client.GetPeerStatusUpdateCh()
 	)
 
 	wgForConnectingStatus.Add(1)
@@ -330,7 +330,7 @@ func TestPeerConnectionUpdateEventCh(t *testing.T) {
 	go func() {
 		defer wgForConnectingStatus.Done()
 
-		for status := range client.GetPeerStatusUpdateCh() {
+		for status := range statusCh {
 			newStatuses = append(newStatuses, status)
 		}
 	}()

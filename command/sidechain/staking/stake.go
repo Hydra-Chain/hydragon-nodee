@@ -9,7 +9,6 @@ import (
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/command/sidechain"
-	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/helper/common"
@@ -56,14 +55,14 @@ func setFlags(cmd *cobra.Command) {
 
 	cmd.Flags().BoolVar(
 		&params.self,
-		sidechainHelper.SelfFlag,
+		sidechain.SelfFlag,
 		false,
 		"indicates if its a self stake action",
 	)
 
 	cmd.Flags().StringVar(
 		&params.amount,
-		sidechainHelper.AmountFlag,
+		sidechain.AmountFlag,
 		"0",
 		"amount to stake or delegate to another account",
 	)
@@ -82,7 +81,7 @@ func setFlags(cmd *cobra.Command) {
 		"a flag to indicate if the secrets used are encrypted. If set to true, the secrets are stored in plain text.",
 	)
 
-	cmd.MarkFlagsMutuallyExclusive(sidechainHelper.SelfFlag, delegateAddressFlag)
+	cmd.MarkFlagsMutuallyExclusive(sidechain.SelfFlag, delegateAddressFlag)
 	cmd.MarkFlagsMutuallyExclusive(polybftsecrets.AccountDirFlag, polybftsecrets.AccountConfigFlag)
 }
 
@@ -96,7 +95,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter := command.InitializeOutputter(cmd)
 	defer outputter.WriteOutput()
 
-	validatorAccount, err := sidechainHelper.GetAccount(
+	validatorAccount, err := sidechain.GetAccount(
 		params.accountDir,
 		params.accountConfig,
 		params.insecureLocalStore,
@@ -112,7 +111,9 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	var encoded []byte
+
 	var contractAddr *ethgo.Address
+
 	if params.self {
 		encoded, err = contractsapi.HydraStaking.Abi.Methods["stake"].Encode([]interface{}{})
 		if err != nil {
@@ -122,6 +123,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		contractAddr = (*ethgo.Address)(&contracts.HydraStakingContract)
 	} else {
 		delegateToAddress := types.StringToAddress(params.delegateAddress)
+
 		encoded, err = contractsapi.HydraDelegation.Abi.Methods["delegate"].Encode(
 			[]interface{}{ethgo.Address(delegateToAddress), false})
 		if err != nil {

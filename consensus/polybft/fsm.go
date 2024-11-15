@@ -69,8 +69,10 @@ var (
 	errSyncValidatorsDataTxDoesNotExist = errors.New(
 		"sync validators data transaction is not found in the epoch starting block",
 	)
-	errSyncValidatorsDataTxSingleExpected = errors.New("only one sync validators data transaction is allowed " +
-		"in an epoch starting block")
+	errSyncValidatorsDataTxSingleExpected = errors.New(
+		"only one sync validators data transaction is allowed " +
+			"in an epoch starting block",
+	)
 	errSyncValidatorsDataTxNotExpected = errors.New(
 		"didn't expect sync validators data transaction " +
 			"in a non epoch starting block",
@@ -790,7 +792,7 @@ func (f *fsm) Insert(
 
 		signatures = append(signatures, s)
 
-		bitmap.Set(uint64(index))
+		bitmap.Set(uint64(index)) //nolint:gosec
 	}
 
 	aggregatedSignature, err := signatures.Aggregate().Marshal()
@@ -903,7 +905,8 @@ func (f *fsm) verifyDistributeDAOIncentiveTx(distributeDAOIncentiveTx *types.Tra
 
 		if distributeDAOIncentiveTx.Hash != localDistributeDAOIncentiveTx.Hash {
 			return fmt.Errorf(
-				"invalid distribute DAO incentive rewards transaction. Expected '%s', but got '%s' distribute DAO incentive rewards hash",
+				"invalid distribute DAO incentive rewards transaction. Expected '%s', "+
+					"but got '%s' distribute DAO incentive rewards hash",
 				localDistributeDAOIncentiveTx.Hash,
 				distributeDAOIncentiveTx.Hash,
 			)
@@ -917,7 +920,10 @@ func (f *fsm) verifyDistributeDAOIncentiveTx(distributeDAOIncentiveTx *types.Tra
 
 // verifySyncValidatorsDataTx creates sync validators data transaction
 // and compares its hash with the one extracted from the block.
-func (f *fsm) verifySyncValidatorsDataTx(syncValidatorsDataTx *types.Transaction, txIndex int) error {
+func (f *fsm) verifySyncValidatorsDataTx(
+	syncValidatorsDataTx *types.Transaction,
+	txIndex int,
+) error {
 	if f.isStartOfEpoch {
 		expectedTxIndex := 0
 		if txIndex != expectedTxIndex {
@@ -987,6 +993,7 @@ func validateHeaderFields(parent *types.Header, header *types.Header, blockTimeD
 			len(header.ExtraData),
 		)
 	}
+
 	// verify parent hash
 	if parent.Hash != header.ParentHash {
 		return fmt.Errorf(
@@ -995,38 +1002,46 @@ func validateHeaderFields(parent *types.Header, header *types.Header, blockTimeD
 			header.ParentHash,
 		)
 	}
+
 	// verify parent number
 	if header.Number != parent.Number+1 {
 		return fmt.Errorf("invalid number")
 	}
+
 	// verify time is from the future
-	if header.Timestamp > (uint64(time.Now().UTC().Unix()) + blockTimeDrift) {
+	if header.Timestamp > (uint64(time.Now().UTC().Unix()) + blockTimeDrift) { //nolint:gosec
 		return fmt.Errorf(
 			"block from the future. block timestamp: %s, configured block time drift %d seconds",
-			time.Unix(int64(header.Timestamp), 0).Format(time.RFC3339),
+			time.Unix(int64(header.Timestamp), 0).Format(time.RFC3339), //nolint:gosec
 			blockTimeDrift,
 		)
 	}
+
 	// verify header nonce is zero
 	if header.Nonce != types.ZeroNonce {
 		return fmt.Errorf("invalid nonce")
 	}
+
 	// verify that the gasUsed is <= gasLimit
 	if header.GasUsed > header.GasLimit {
 		return fmt.Errorf("invalid gas limit: have %v, max %v", header.GasUsed, header.GasLimit)
 	}
+
 	// verify time has passed
 	if header.Timestamp < parent.Timestamp {
 		return fmt.Errorf("timestamp older than parent")
 	}
+
 	// verify mix digest
 	if header.MixHash != HydragonMixDigest {
 		return fmt.Errorf("mix digest is not correct")
 	}
+
 	// difficulty must be > 0
 	if header.Difficulty <= 0 {
 		return fmt.Errorf("difficulty should be greater than zero")
 	}
+
 	// calculated header hash must be correct
 	if header.Hash != types.HeaderHash(header) {
 		return fmt.Errorf("invalid header hash")
