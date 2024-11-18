@@ -17,11 +17,11 @@ import (
 )
 
 var (
+	params whitelistParams
+
 	whitelistFn       = contractsapi.HydraChain.Abi.Methods["addToWhitelist"]
 	whitelistEventABI = contractsapi.HydraChain.Abi.Events["AddedToWhitelist"]
 )
-
-var params whitelistParams
 
 func GetCommand() *cobra.Command {
 	registerCmd := &cobra.Command{
@@ -101,11 +101,12 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("enlist validator failed: %w", err)
 	}
 
-	txn := &ethgo.Transaction{
-		From:  governanceAccount.Ecdsa.Address(),
-		Input: encoded,
-		To:    (*ethgo.Address)(&contracts.HydraChainContract),
-	}
+	txn := sidechain.CreateTransaction(
+		governanceAccount.Ecdsa.Address(),
+		(*ethgo.Address)(&contracts.HydraChainContract),
+		encoded,
+		nil,
+	)
 
 	receipt, err := txRelayer.SendTransaction(txn, governanceAccount.Ecdsa)
 	if err != nil {

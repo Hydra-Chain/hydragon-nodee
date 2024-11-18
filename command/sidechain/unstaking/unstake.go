@@ -16,7 +16,11 @@ import (
 	"github.com/umbracle/ethgo"
 )
 
-var params unstakeParams
+var (
+	params unstakeParams
+
+	unstakeFn = contractsapi.HydraStaking.Abi.Methods["unstake"]
+)
 
 func GetCommand() *cobra.Command {
 	unstakeCmd := &cobra.Command{
@@ -85,20 +89,19 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	unstakeFn := &contractsapi.UnstakeHydraStakingFn{
-		Amount: params.amountValue,
-	}
-
-	encoded, err := unstakeFn.EncodeAbi()
+	encoded, err := unstakeFn.Encode([]interface{}{
+		params.amountValue,
+	})
 	if err != nil {
 		return err
 	}
 
-	txn := &ethgo.Transaction{
-		From:  validatorAccount.Ecdsa.Address(),
-		Input: encoded,
-		To:    (*ethgo.Address)(&contracts.HydraStakingContract),
-	}
+	txn := sidechain.CreateTransaction(
+		validatorAccount.Ecdsa.Address(),
+		(*ethgo.Address)(&contracts.HydraStakingContract),
+		encoded,
+		nil,
+	)
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
 	if err != nil {

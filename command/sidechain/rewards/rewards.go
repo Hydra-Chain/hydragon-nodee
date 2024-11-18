@@ -17,7 +17,11 @@ import (
 	"github.com/0xPolygon/polygon-edge/types"
 )
 
-var params withdrawRewardsParams
+var (
+	params withdrawRewardsParams
+
+	claimRewardsFn = contractsapi.HydraStaking.Abi.Methods["claimStakingRewards"]
+)
 
 func GetCommand() *cobra.Command {
 	unstakeCmd := &cobra.Command{
@@ -81,18 +85,17 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	claimRewardsFn := contractsapi.ClaimStakingRewardsHydraStakingFn{}
-
-	encoded, err := claimRewardsFn.EncodeAbi()
+	encoded, err := claimRewardsFn.Encode([]interface{}{})
 	if err != nil {
 		return err
 	}
 
-	txn := &ethgo.Transaction{
-		From:  validatorAddr,
-		Input: encoded,
-		To:    (*ethgo.Address)(&contracts.HydraStakingContract),
-	}
+	txn := sidechain.CreateTransaction(
+		validatorAddr,
+		(*ethgo.Address)(&contracts.HydraStakingContract),
+		encoded,
+		nil,
+	)
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
 	if err != nil {

@@ -8,10 +8,15 @@ import (
 	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
 )
 
+var (
+	bannedFundsFlag = "banned"
+)
+
 type withdrawParams struct {
 	accountDir         string
 	accountConfig      string
 	jsonRPC            string
+	bannedFunds        bool
 	insecureLocalStore bool
 }
 

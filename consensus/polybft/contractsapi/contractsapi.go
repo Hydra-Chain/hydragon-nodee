@@ -430,6 +430,21 @@ func (w *WithdrawHydraStakingFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraStaking.Abi.Methods["withdraw"], buf, w)
 }
 
+type WithdrawBannedFundsHydraStakingFn struct {
+}
+
+func (w *WithdrawBannedFundsHydraStakingFn) Sig() []byte {
+	return HydraStaking.Abi.Methods["withdrawBannedFunds"].ID()
+}
+
+func (w *WithdrawBannedFundsHydraStakingFn) EncodeAbi() ([]byte, error) {
+	return HydraStaking.Abi.Methods["withdrawBannedFunds"].Encode(w)
+}
+
+func (w *WithdrawBannedFundsHydraStakingFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraStaking.Abi.Methods["withdrawBannedFunds"], buf, w)
+}
+
 type StakedEvent struct {
 	Account types.Address `abi:"account"`
 	Amount  *big.Int      `abi:"amount"`

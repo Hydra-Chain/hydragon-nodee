@@ -3,10 +3,12 @@ package sidechain
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
+	"github.com/umbracle/ethgo"
 )
 
 const (
@@ -59,4 +61,16 @@ func GetAccount(
 // GetAccountFromDir returns an account object from local secrets manager
 func GetAccountFromDir(accountDir string, insecureLocalStore bool) (*wallet.Account, error) {
 	return GetAccount(accountDir, "", insecureLocalStore)
+}
+
+// CreateTransaction is a helper function that creates a standard transaction based on the input parameters
+func CreateTransaction(sender ethgo.Address, to *ethgo.Address, input []byte, value *big.Int) *ethgo.Transaction {
+	txn := &ethgo.Transaction{
+		From:  sender,
+		To:    to,
+		Input: input,
+		Value: value,
+	}
+
+	return txn
 }
