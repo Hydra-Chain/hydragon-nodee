@@ -20,11 +20,12 @@ import (
 )
 
 var (
+	params setCommissionParams
+
 	delegationManager         = contracts.HydraDelegationContract
+	setCommissionFn           = contractsapi.HydraDelegation.Abi.Methods["setCommission"]
 	commissionUpdatedEventABI = contractsapi.HydraDelegation.Abi.Events["CommissionUpdated"]
 )
-
-var params setCommissionParams
 
 func GetCommand() *cobra.Command {
 	setCommissionCmd := &cobra.Command{
@@ -141,19 +142,19 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 }
 
 func setCommission(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.Receipt, error) {
-	setCommissionFn := &contractsapi.SetCommissionHydraDelegationFn{
-		NewCommission: new(big.Int).SetUint64(params.commission),
-	}
-
-	input, err := setCommissionFn.EncodeAbi()
+	encoded, err := setCommissionFn.Encode([]interface{}{
+		new(big.Int).SetUint64(params.commission),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("encoding set commission function failed: %w", err)
 	}
 
-	txn := &ethgo.Transaction{
-		Input: input,
-		To:    (*ethgo.Address)(&delegationManager),
-	}
+	txn := sidechain.CreateTransaction(
+		account.Ecdsa.Address(),
+		(*ethgo.Address)(&delegationManager),
+		encoded,
+		nil,
+	)
 
 	receipt, err := sender.SendTransaction(txn, account.Ecdsa)
 	if err != nil {

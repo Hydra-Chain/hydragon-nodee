@@ -25,14 +25,15 @@ import (
 )
 
 var (
+	params registerParams
+
 	hydraChain           = contracts.HydraChainContract
 	stakeManager         = contracts.HydraStakingContract
+	registerFn           = contractsapi.HydraChain.Abi.Methods["register"]
 	stakeFn              = contractsapi.HydraStaking.Abi.Methods["stake"]
 	newValidatorEventABI = contractsapi.HydraChain.Abi.Events["NewValidator"]
 	stakeEventABI        = contractsapi.HydraStaking.Abi.Events["Staked"]
 )
-
-var params registerParams
 
 func GetCommand() *cobra.Command {
 	registerCmd := &cobra.Command{
@@ -240,20 +241,20 @@ func registerValidator(
 		return nil, fmt.Errorf("register validator failed: %w", err)
 	}
 
-	registerFn := &contractsapi.RegisterHydraChainFn{
-		Signature: sigMarshal,
-		Pubkey:    account.Bls.PublicKey().ToBigInt(),
-	}
-
-	input, err := registerFn.EncodeAbi()
+	encoded, err := registerFn.Encode([]interface{}{
+		sigMarshal,
+		account.Bls.PublicKey().ToBigInt(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("register validator failed: %w", err)
 	}
 
-	txn := &ethgo.Transaction{
-		Input: input,
-		To:    (*ethgo.Address)(&hydraChain),
-	}
+	txn := sidechain.CreateTransaction(
+		account.Ecdsa.Address(),
+		(*ethgo.Address)(&hydraChain),
+		encoded,
+		nil,
+	)
 
 	return sender.SendTransaction(txn, account.Ecdsa)
 }

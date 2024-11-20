@@ -19,7 +19,10 @@ import (
 )
 
 var (
-	params           stakeParams
+	params stakeParams
+
+	stakeFn          = contractsapi.HydraStaking.Abi.Methods["stake"]
+	delegateFn       = contractsapi.HydraDelegation.Abi.Methods["delegate"]
 	stakeEventABI    = contractsapi.HydraStaking.Abi.Events["Staked"]
 	delegateEventABI = contractsapi.HydraDelegation.Abi.Events["Delegated"]
 )
@@ -115,22 +118,19 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	var contractAddr *ethgo.Address
 
 	if params.self {
-		encoded, err = contractsapi.HydraStaking.Abi.Methods["stake"].Encode([]interface{}{})
-		if err != nil {
-			return err
-		}
-
+		encoded, err = stakeFn.Encode([]interface{}{})
 		contractAddr = (*ethgo.Address)(&contracts.HydraStakingContract)
 	} else {
 		delegateToAddress := types.StringToAddress(params.delegateAddress)
 
-		encoded, err = contractsapi.HydraDelegation.Abi.Methods["delegate"].Encode(
-			[]interface{}{ethgo.Address(delegateToAddress), false})
-		if err != nil {
-			return err
-		}
-
+		encoded, err = delegateFn.Encode([]interface{}{
+			ethgo.Address(delegateToAddress),
+		})
 		contractAddr = (*ethgo.Address)(&contracts.HydraDelegationContract)
+	}
+
+	if err != nil {
+		return err
 	}
 
 	parsedValue, err := common.ParseUint256orHex(&params.amount)
@@ -138,12 +138,12 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("cannot parse \"amount\" value %s", params.amount)
 	}
 
-	txn := &ethgo.Transaction{
-		From:  validatorAccount.Ecdsa.Address(),
-		Input: encoded,
-		To:    contractAddr,
-		Value: parsedValue,
-	}
+	txn := sidechain.CreateTransaction(
+		validatorAccount.Ecdsa.Address(),
+		contractAddr,
+		encoded,
+		parsedValue,
+	)
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
 	if err != nil {

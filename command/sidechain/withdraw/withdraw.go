@@ -10,7 +10,6 @@ import (
 	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
-	rootHelper "github.com/0xPolygon/polygon-edge/command/rootchain/helper"
 	"github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/contracts"
@@ -18,7 +17,12 @@ import (
 	"github.com/0xPolygon/polygon-edge/types"
 )
 
-var params withdrawParams
+var (
+	params withdrawParams
+
+	withdrawBannedFundsFn = contractsapi.HydraStaking.Abi.Methods["withdrawBannedFunds"]
+	withdrawFn            = contractsapi.HydraStaking.Abi.Methods["withdraw"]
+)
 
 func GetCommand() *cobra.Command {
 	unstakeCmd := &cobra.Command{
@@ -47,6 +51,13 @@ func setFlags(cmd *cobra.Command) {
 		polybftsecrets.AccountConfigFlag,
 		"",
 		polybftsecrets.AccountConfigFlagDesc,
+	)
+
+	cmd.Flags().BoolVar(
+		&params.bannedFunds,
+		bannedFundsFlag,
+		false,
+		"a flag to indicate if you want to withdraw banned funds.",
 	)
 
 	cmd.Flags().BoolVar(
@@ -80,15 +91,26 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	withdrawFn := &contractsapi.WithdrawHydraStakingFn{To: (types.Address)(validatorAccount.Ecdsa.Address())}
+	var encoded []byte
 
-	encoded, err := withdrawFn.EncodeAbi()
+	if params.bannedFunds {
+		encoded, err = withdrawBannedFundsFn.Encode([]interface{}{})
+	} else {
+		encoded, err = withdrawFn.Encode([]interface{}{
+			(types.Address)(validatorAccount.Ecdsa.Address()),
+		})
+	}
+
 	if err != nil {
 		return err
 	}
 
-	receiver := (*ethgo.Address)(&contracts.HydraStakingContract)
-	txn := rootHelper.CreateTransaction(validatorAccount.Ecdsa.Address(), receiver, encoded, nil, false)
+	txn := sidechain.CreateTransaction(
+		validatorAccount.Ecdsa.Address(),
+		(*ethgo.Address)(&contracts.HydraStakingContract),
+		encoded,
+		nil,
+	)
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
 	if err != nil {

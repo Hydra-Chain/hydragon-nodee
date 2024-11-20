@@ -97,9 +97,22 @@ Stake tx is made in this step as well
 ./hydra hydragon commission --data-dir ./test-add-chain-1 --commission 10 --jsonrpc http://127.0.0.1:10001 --insecure
 ```
 
-6. Re-activating the validator, if a ban took place:
+6. The new valdiator will join the consensus in the next epoch. Then, after each epoch, rewards will be generated and can be claimed with the following command:
+
+```
+./hydra hydragon claim-rewards --data-dir ./test-add-chain-1 --jsonrpc http://127.0.0.1:10006 --insecure
+```
+
+7. Re-activating the validator, if a ban initiation took place:
+
 ```
 ./hydra hydragon terminate-ban --data-dir ./test-add-chain-1 --jsonrpc http://127.0.0.1:10001 --insecure
+```
+
+8. If the validator was banned, then withdraw the funds left by executing:
+
+```
+./hydra hydragon withdraw --banned --data-dir ./test-add-chain-1 --jsonrpc http://127.0.0.1:10001 --insecure
 ```
 
 ### LEGACY local setup
@@ -208,7 +221,7 @@ After Hydra's team confirms you are whitelisted you have to register your accoun
 In the container's shell execute:
 
 ```
-./hydra hydragon register-validator --data-dir ./node --stake 1000000000000000000000000 --jsonrpc http://localhost:8545
+./hydra hydragon register-validator --data-dir ./node --stake 15000000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.
@@ -216,7 +229,7 @@ The above command both register the validator and stakes the specified amount.
 Use the following command in case you want to execute the stake operation only:
 
 ```
-./hydra hydragon stake --data-dir ./node --self true --amount 999900000000000000000000 --jsonrpc http://localhost:8545
+./hydra hydragon stake --data-dir ./node --self true --amount 15000000000000000000000 --jsonrpc http://localhost:8545
 ```
 
 Congratulations! You are now a Hydra Chain validator!

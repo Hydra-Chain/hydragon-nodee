@@ -18,6 +18,8 @@ import (
 
 var (
 	params terminateBanParams
+
+	terminateBanFn = contractsapi.HydraChain.Abi.Methods["terminateBanProcedure"]
 )
 
 func GetCommand() *cobra.Command {
@@ -84,18 +86,17 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	encoded, err := contractsapi.HydraChain.Abi.Methods["terminateBanProcedure"].Encode(
-		[]interface{}{},
-	)
+	encoded, err := terminateBanFn.Encode([]interface{}{})
 	if err != nil {
 		return err
 	}
 
-	txn := &ethgo.Transaction{
-		From:  validatorAccount.Ecdsa.Address(),
-		Input: encoded,
-		To:    (*ethgo.Address)(&contracts.HydraChainContract),
-	}
+	txn := sidechain.CreateTransaction(
+		validatorAccount.Ecdsa.Address(),
+		(*ethgo.Address)(&contracts.HydraChainContract),
+		encoded,
+		nil,
+	)
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
 	if err != nil {

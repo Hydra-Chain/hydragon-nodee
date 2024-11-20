@@ -190,6 +190,14 @@ Additionally, you can update the commission if you need to.
 hydra hydragon commission --data-dir ./node-secrets --commission 10 --jsonrpc http://localhost:8545
 ```
 
+### Claiming the generated rewards from validating
+
+Once a validator starts validating blocks, rewards are generated at the end of each epoch based on the validator’s activity level. Validators can claim rewards at any time, provided rewards have been generated. If no rewards are available, the transaction will fail. Use the following command:
+
+```
+hydra hydragon claim-rewards --data-dir ./node-secrets --jsonrpc http://localhost:8545
+```
+
 ### Ban Validator
 To reduce the risk of stalling caused by validators experiencing temporary issues or acting maliciously, we’ve implemented an ejection and ban mechanism. Anyone who recongizes a suspicious activity, and the rules are met, can execute the ban process. Below is an outline of how the system works (specific conditions are detailed in our [genesis contracts](https://github.com/Hydra-Chain/hydragon-core-contracts)):
   1. **Initial Ejection**: If your validator stops proposing or participating in consensus whether due to hardware failure, software issues, or malicious intent—the ban procedure will be initiated. The validator will be ejected, allowing time for recovery. If no action is taken, a ban may follow. The threshold to trigger this process is initially set at 18,000 blocks (~2 hours), depending on block creation speed.
@@ -207,6 +215,15 @@ To reduce the risk of stalling caused by validators experiencing temporary issue
   
   ***Note:** Please keep in mind that if malicious behavior is detected, a manual ban can be initiated by the Hydragon DAO. Furthermore, if the conditions for initiating a ban and enforcing the ban are met, a user can execute the relevant functions by interacting with the contract via the explorer or programmatically.*
 
+  #### Withdrawing funds after ban
+
+  If your validator has been banned, you can still withdraw the remaining funds after the penalty and burned rewards have been deducted. Use the following command:
+
+  ```
+  hydra hydragon withdraw --banned --data-dir ./node-secrets --jsonrpc http://localhost:8545
+  ```
+
+  ***Note:*** If your machine is no longer running, you can use [our RPC](#adding-hydragon-network-to-metamask) as the value for the jsonrpc flag.
 
 ### Command Line Interface
 

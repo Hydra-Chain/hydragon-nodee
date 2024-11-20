@@ -73,6 +73,7 @@ func main() {
 				"distributeRewardsFor",
 				"claimStakingRewards()",
 				"withdraw",
+				"withdrawBannedFunds",
 			},
 			[]string{
 				"Staked",
