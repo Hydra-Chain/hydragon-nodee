@@ -506,6 +506,7 @@ func (c *consensusRuntime) FSM() error {
 		"epoch", epoch.Number,
 		"endOfEpoch", isEndOfEpoch,
 		"endOfSprint", isEndOfSprint,
+		"pendingBlockNumber", pendingBlockNumber,
 	)
 
 	c.lock.Lock()
