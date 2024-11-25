@@ -4,30 +4,36 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
 )
 
 const (
-	commissionFlag = "commission"
+	applyFlag = "apply"
+	claimFlag = "claim"
 )
 
 type setCommissionParams struct {
 	accountDir         string
 	accountConfig      string
 	commission         uint64
+	apply              bool
+	claim              bool
 	jsonRPC            string
 	insecureLocalStore bool
 }
 
 type setCommissionResult struct {
-	staker        string
-	newCommission uint64
+	staker     string
+	commission uint64
+	isPending  bool
+	isClaimed  bool
 }
 
 func (scp *setCommissionParams) getRequiredFlags() []string {
 	return []string{
-		commissionFlag,
+		command.CommissionFlag,
 	}
 }
 
@@ -54,13 +60,31 @@ func (scp *setCommissionParams) validateFlags() error {
 func (scr setCommissionResult) GetOutput() string {
 	var buffer bytes.Buffer
 
-	var vals []string
+	// var vals []string
+	var addressString string
 
-	buffer.WriteString("\n[COMMISSION SET]\n")
+	var valueString string
 
-	vals = make([]string, 0, 3)
-	vals = append(vals, fmt.Sprintf("Staker Address|%s", scr.staker))
-	vals = append(vals, fmt.Sprintf("New Commission |%v", scr.newCommission))
+	if scr.isPending { //nolint:gocritic
+		buffer.WriteString("\n[NEW COMMISSION SET AND WILL REMAIN PENDING FOR 15 DAYS]\n")
+
+		addressString = "Staker Address"
+		valueString = "New Commission"
+	} else if scr.isClaimed {
+		buffer.WriteString("\n[COMMISSION CLAIMED]\n")
+
+		addressString = "Received Address"
+		valueString = "Claimed Commission (wei)"
+	} else {
+		buffer.WriteString("\n[COMMISSION APPLIED]\n")
+
+		addressString = "Staker Address"
+		valueString = "Applied Commission"
+	}
+
+	vals := make([]string, 0, 2)
+	vals = append(vals, fmt.Sprintf("%s|%s", addressString, scr.staker))
+	vals = append(vals, fmt.Sprintf("%s|%v", valueString, scr.commission))
 
 	buffer.WriteString(helper.FormatKV(vals))
 	buffer.WriteString("\n")

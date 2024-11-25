@@ -192,7 +192,7 @@ func GenesisPostHookFactory(
 		}
 
 		// initialize VestingManagerFactory SC
-		if err = initVestingManagerFactory(polyBFTConfig, transition); err != nil {
+		if err = initVestingManagerFactory(transition); err != nil {
 			return err
 		}
 
@@ -207,7 +207,7 @@ func GenesisPostHookFactory(
 		}
 
 		// initialize RewardWallet SC
-		if err = initRewardWallet(polyBFTConfig, transition); err != nil {
+		if err = initRewardWallet(transition); err != nil {
 			return err
 		}
 
@@ -217,7 +217,7 @@ func GenesisPostHookFactory(
 		}
 
 		// initialize PriceOracle SC
-		if err = initPriceOracle(polyBFTConfig, transition); err != nil {
+		if err = initPriceOracle(transition); err != nil {
 			return err
 		}
 

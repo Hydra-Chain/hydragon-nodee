@@ -39,7 +39,6 @@ func initHydraChain(polyBFTConfig PolyBFTConfig, transition *state.Transition) e
 		Governance:            polyBFTConfig.Governance,
 		HydraStakingAddr:      contracts.HydraStakingContract,
 		HydraDelegationAddr:   contracts.HydraDelegationContract,
-		AprCalculatorAddr:     contracts.APRCalculatorContract,
 		RewardWalletAddr:      contracts.RewardWalletContract,
 		DaoIncentiveVaultAddr: contracts.DAOIncentiveVaultContract,
 		NewBls:                contracts.BLSContract,
@@ -63,13 +62,13 @@ func initHydraStaking(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 
 	initFn := &contractsapi.InitializeHydraStakingFn{
 		InitialStakers:      initialStakers,
-		Governance:          polyBFTConfig.Governance,
 		NewMinStake:         initialMinStake,
-		NewLiquidToken:      contracts.LiquidityTokenContract,
-		HydraChainAddr:      contracts.HydraChainContract,
+		Governance:          polyBFTConfig.Governance,
 		AprCalculatorAddr:   contracts.APRCalculatorContract,
+		HydraChainAddr:      contracts.HydraChainContract,
 		HydraDelegationAddr: contracts.HydraDelegationContract,
 		RewardWalletAddr:    contracts.RewardWalletContract,
+		LiquidToken:         contracts.LiquidityTokenContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -90,14 +89,14 @@ func initHydraDelegation(polyBFTConfig PolyBFTConfig, transition *state.Transiti
 
 	initFn := &contractsapi.InitializeHydraDelegationFn{
 		InitialStakers:            initialStakers,
-		Governance:                polyBFTConfig.Governance,
 		InitialCommission:         big.NewInt(10),
-		LiquidToken:               contracts.LiquidityTokenContract,
+		Governance:                polyBFTConfig.Governance,
 		AprCalculatorAddr:         contracts.APRCalculatorContract,
-		HydraStakingAddr:          contracts.HydraStakingContract,
 		HydraChainAddr:            contracts.HydraChainContract,
+		HydraStakingAddr:          contracts.HydraStakingContract,
 		VestingManagerFactoryAddr: contracts.VestingManagerFactoryContract,
 		RewardWalletAddr:          contracts.RewardWalletContract,
+		LiquidToken:               contracts.LiquidityTokenContract,
 	}
 
 	input, err := initFn.EncodeAbi()
@@ -110,7 +109,7 @@ func initHydraDelegation(polyBFTConfig PolyBFTConfig, transition *state.Transiti
 }
 
 // initRewardWallet initializes RewardWallet SC
-func initRewardWallet(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
+func initRewardWallet(transition *state.Transition) error {
 	managers := []ethgo.Address{
 		ethgo.Address(contracts.HydraChainContract),
 		ethgo.Address(contracts.HydraStakingContract),
@@ -131,7 +130,7 @@ func initRewardWallet(polyBFTConfig PolyBFTConfig, transition *state.Transition)
 }
 
 // initVestingManagerFactory initializes VestingManagerFactory SC
-func initVestingManagerFactory(polyBFTConfig PolyBFTConfig, transition *state.Transition) error {
+func initVestingManagerFactory(transition *state.Transition) error {
 	initFn := &contractsapi.InitializeVestingManagerFactoryFn{
 		HydraDelegationAddr: contracts.HydraDelegationContract,
 	}
@@ -233,7 +232,7 @@ func initLiquidityToken(polyBFTConfig PolyBFTConfig, transition *state.Transitio
 }
 
 // initPriceOracle initializes PriceOracle SC
-func initPriceOracle(polybftConfig PolyBFTConfig, transition *state.Transition) error {
+func initPriceOracle(transition *state.Transition) error {
 	initFn := &contractsapi.InitializePriceOracleFn{
 		HydraChainAddr:    contracts.HydraChainContract,
 		AprCalculatorAddr: contracts.APRCalculatorContract,

@@ -82,7 +82,7 @@ for the secret keys, and the following for the public keys, including the Node I
 Stake tx is made in this step as well
 
 ```
-./hydra hydragon register-validator --data-dir ./test-add-chain-1 --stake 15000000000000000000000 --jsonrpc http://127.0.0.1:10001 --insecure
+./hydra hydragon register-validator --data-dir ./test-add-chain-1 --stake 15000000000000000000000  --commission 10 --jsonrpc http://127.0.0.1:10001 --insecure
 ```
 
 4. Run new validator
@@ -91,16 +91,30 @@ Stake tx is made in this step as well
 ./hydra server --data-dir ./test-add-chain-1 --chain genesis.json --grpc-address :5006 --libp2p :30306 --jsonrpc :10006 --log-level DEBUG --log-to ./log-6
 ```
 
-5. Set or update commission of the validator that will taken from the delegators' rewards.
+5. Update commission of the validator that will taken from the delegators' rewards.
+
+Here is the command to use for initializing the new commission:
 
 ```
-./hydra hydragon commission --data-dir ./test-add-chain-1 --commission 10 --jsonrpc http://127.0.0.1:10001 --insecure
+./hydra hydragon commission --data-dir ./test-add-chain-1 --commission 20 --jsonrpc http://127.0.0.1:10006 --insecure
 ```
 
-6. The new valdiator will join the consensus in the next epoch. Then, after each epoch, rewards will be generated and can be claimed with the following command:
+Then, we have a 15-day waiting period before being able to apply the commission. The apply can be done by using the `--apply` flag:
+
+```
+./hydra hydragon commission --data-dir ./test-add-chain-1 --apply true --jsonrpc http://127.0.0.1:10006 --insecure
+```
+
+6. The new validator will join the consensus in the next epoch. Then, after each epoch, rewards will be generated and can be claimed with the following command:
 
 ```
 ./hydra hydragon claim-rewards --data-dir ./test-add-chain-1 --jsonrpc http://127.0.0.1:10006 --insecure
+```
+
+Additionally, during rewards distribution, if a validator has delegators, an additional reward based on the set commission (if greater than 0) will be generated when delegators claim their rewards. The validator can claim these commission rewards by executing the following command:
+
+```
+./hydra hydragon commission --data-dir ./test-add-chain-1 --claim true --jsonrpc http://127.0.0.1:10006 --insecure
 ```
 
 7. Re-activating the validator, if a ban initiation took place:
