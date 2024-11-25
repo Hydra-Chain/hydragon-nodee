@@ -31,6 +31,8 @@ const (
 	IBFTValidatorTypeFlag = "ibft-validator-type"
 
 	SecretsConfigFlag = "secrets-config"
+
+	CommissionFlag = "commission"
 )
 
 const (

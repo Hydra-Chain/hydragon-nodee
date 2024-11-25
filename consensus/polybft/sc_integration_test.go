@@ -470,7 +470,7 @@ func initGenesisContracts(
 	require.NoError(t, err)
 
 	// init VestingManagerFactory
-	err = initVestingManagerFactory(polyBFTConfig, transition)
+	err = initVestingManagerFactory(transition)
 	require.NoError(t, err)
 
 	// init APRCalculator
@@ -478,7 +478,7 @@ func initGenesisContracts(
 	require.NoError(t, err)
 
 	// initialize RewardWallet SC
-	err = initRewardWallet(polyBFTConfig, transition)
+	err = initRewardWallet(transition)
 	require.NoError(t, err)
 
 	// initialize DAOIncentiveVault SC
@@ -486,7 +486,7 @@ func initGenesisContracts(
 	require.NoError(t, err)
 
 	// initialize PriceOracle SC
-	err = initPriceOracle(polyBFTConfig, transition)
+	err = initPriceOracle(transition)
 	require.NoError(t, err)
 }
 

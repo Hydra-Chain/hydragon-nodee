@@ -22,9 +22,10 @@ import (
 var (
 	params setCommissionParams
 
-	delegationManager         = contracts.HydraDelegationContract
-	setCommissionFn           = contractsapi.HydraDelegation.Abi.Methods["setCommission"]
-	commissionUpdatedEventABI = contractsapi.HydraDelegation.Abi.Events["CommissionUpdated"]
+	delegationManager              = contracts.HydraDelegationContract
+	pendingCommissionAddedEventABI = contractsapi.HydraDelegation.Abi.Events["PendingCommissionAdded"]
+	commissionUpdatedEventABI      = contractsapi.HydraDelegation.Abi.Events["CommissionUpdated"]
+	commissionClaimedEventABI      = contractsapi.HydraDelegation.Abi.Events["CommissionClaimed"]
 )
 
 func GetCommand() *cobra.Command {
@@ -36,7 +37,6 @@ func GetCommand() *cobra.Command {
 	}
 
 	setFlags(setCommissionCmd)
-	helper.SetRequiredFlags(setCommissionCmd, params.getRequiredFlags())
 
 	return setCommissionCmd
 }
@@ -58,9 +58,24 @@ func setFlags(cmd *cobra.Command) {
 
 	cmd.Flags().Uint64Var(
 		&params.commission,
-		commissionFlag,
+		command.CommissionFlag,
 		0,
-		"mandatory flag that represents the commission percentage of the validator (staker)",
+		"flag that represents the commission percentage of the validator (staker)",
+	)
+
+	cmd.Flags().BoolVar(
+		&params.apply,
+		applyFlag,
+		false,
+		"a flag to indicate whether to set or apply the commission. "+
+			"If the flag is set, it will apply the pending commission, otherwise will set new pending commission.",
+	)
+
+	cmd.Flags().BoolVar(
+		&params.claim,
+		claimFlag,
+		false,
+		"a flag to indicate whether to claim the commission generated from the delegators.",
 	)
 
 	cmd.Flags().BoolVar(
@@ -73,6 +88,7 @@ func setFlags(cmd *cobra.Command) {
 	helper.RegisterJSONRPCFlag(cmd)
 
 	cmd.MarkFlagsMutuallyExclusive(polybftsecrets.AccountConfigFlag, polybftsecrets.AccountDirFlag)
+	cmd.MarkFlagsMutuallyExclusive(command.CommissionFlag, applyFlag, claimFlag)
 }
 
 func runPreRun(cmd *cobra.Command, _ []string) error {
@@ -107,33 +123,76 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	receipt, err := setCommission(txRelayer, validatorAccount)
+	var input []byte
+	if params.apply { //nolint:gocritic
+		input, err = generateApplyPendingCommissionFn()
+	} else if params.claim {
+		input, err = generateClaimCommissionFn(validatorAccount)
+	} else {
+		input, err = generateSetPendingCommissionFn()
+	}
+
+	if err != nil {
+		return err
+	}
+
+	receipt, err := sendCommissionTx(txRelayer, validatorAccount, input)
 	if err != nil {
 		return err
 	}
 
 	if receipt.Status != uint64(types.ReceiptSuccess) {
-		return errors.New("register validator transaction failed")
+		return errors.New("commission transaction failed")
 	}
 
 	result := &setCommissionResult{}
+	foundPendingCommissionLog := false
 	foundCommissionUpdatedLog := false
+	foundClaimCommissionLog := false
 
 	for _, log := range receipt.Logs {
+		if pendingCommissionAddedEventABI.Match(log) {
+			event, err := pendingCommissionAddedEventABI.ParseLog(log)
+			if err != nil {
+				return err
+			}
+
+			result.staker = event["staker"].(ethgo.Address).String()       //nolint:forcetypeassert
+			result.commission = event["newCommission"].(*big.Int).Uint64() //nolint:forcetypeassert
+			result.isPending = true
+			foundPendingCommissionLog = true
+		}
+
 		if commissionUpdatedEventABI.Match(log) {
 			event, err := commissionUpdatedEventABI.ParseLog(log)
 			if err != nil {
 				return err
 			}
 
-			result.staker = event["staker"].(ethgo.Address).String()          //nolint:forcetypeassert
-			result.newCommission = event["newCommission"].(*big.Int).Uint64() //nolint:forcetypeassert
+			result.staker = event["staker"].(ethgo.Address).String()       //nolint:forcetypeassert
+			result.commission = event["newCommission"].(*big.Int).Uint64() //nolint:forcetypeassert
 			foundCommissionUpdatedLog = true
+		}
+
+		if commissionClaimedEventABI.Match(log) {
+			event, err := commissionClaimedEventABI.ParseLog(log)
+			if err != nil {
+				return err
+			}
+
+			result.staker = event["to"].(ethgo.Address).String()    //nolint:forcetypeassert
+			result.commission = event["amount"].(*big.Int).Uint64() //nolint:forcetypeassert
+			result.isClaimed = true
+			foundClaimCommissionLog = true
 		}
 	}
 
-	if !foundCommissionUpdatedLog {
+	if params.apply && !foundCommissionUpdatedLog { //nolint:gocritic
 		return fmt.Errorf("could not find an appropriate log in the receipt that validates the new commission update")
+	} else if params.claim && !foundClaimCommissionLog {
+		return fmt.Errorf("could not find an appropriate log in the receipt that validates the commission claim")
+	} else if !foundPendingCommissionLog {
+		return fmt.Errorf("could not find an appropriate log in the receipt that validates the new pending commission")
 	}
 
 	outputter.WriteCommandResult(result)
@@ -141,18 +200,11 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func setCommission(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.Receipt, error) {
-	encoded, err := setCommissionFn.Encode([]interface{}{
-		new(big.Int).SetUint64(params.commission),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("encoding set commission function failed: %w", err)
-	}
-
+func sendCommissionTx(sender txrelayer.TxRelayer, account *wallet.Account, input []byte) (*ethgo.Receipt, error) {
 	txn := sidechain.CreateTransaction(
 		account.Ecdsa.Address(),
 		(*ethgo.Address)(&delegationManager),
-		encoded,
+		input,
 		nil,
 	)
 
@@ -163,4 +215,41 @@ func setCommission(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.
 	}
 
 	return receipt, err
+}
+
+func generateSetPendingCommissionFn() ([]byte, error) {
+	setPendingCommisionFn := &contractsapi.SetPendingCommissionHydraDelegationFn{
+		NewCommission: new(big.Int).SetUint64(params.commission),
+	}
+
+	encoded, err := setPendingCommisionFn.EncodeAbi()
+	if err != nil {
+		return nil, fmt.Errorf("encoding set pending commission function failed: %w", err)
+	}
+
+	return encoded, err
+}
+
+func generateApplyPendingCommissionFn() ([]byte, error) {
+	applyPendingCommisionFn := &contractsapi.ApplyPendingCommissionHydraDelegationFn{}
+
+	encoded, err := applyPendingCommisionFn.EncodeAbi()
+	if err != nil {
+		return nil, fmt.Errorf("encoding apply pending commission function failed: %w", err)
+	}
+
+	return encoded, err
+}
+
+func generateClaimCommissionFn(account *wallet.Account) ([]byte, error) {
+	claimCommisionFn := &contractsapi.ClaimCommissionHydraDelegationFn{
+		To: (types.Address)(account.Ecdsa.Address()),
+	}
+
+	encoded, err := claimCommisionFn.EncodeAbi()
+	if err != nil {
+		return nil, fmt.Errorf("encoding claim commission function failed: %w", err)
+	}
+
+	return encoded, err
 }

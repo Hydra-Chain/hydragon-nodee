@@ -161,7 +161,7 @@ After your node is operational and fully synced, you're ready to become a valida
 
 ### Register account as validator and stake
 
-Hydra's validator set is unique as it offers a permissionless opportunity on a first come/first serve. It supports up to 150 validators and uses exponentiating formula to ensure consolidation is countered for a maximum Nakamoto Coefficient. The requirements to become a validator: a) to have a minimum of 15,000 HYDRA and b) there to be vacant slots in the validator sets. Inactive validators are going to be ejected after 72 hours in order to ensure fair environment and highest level of network security.
+Hydra's validator set is unique as it offers a permissionless opportunity on a first come/first serve. It supports up to 150 validators and uses exponentiating formula to ensure consolidation is countered for a maximum Nakamoto Coefficient. The requirements to become a validator: a) to have a minimum of 15,000 HYDRA and b) there to be vacant slots in the validator sets. Inactive validators are going to be ejected after approximately 72 hours in order to ensure fair environment and highest level of network security.
 
 After ensuring you have a minimum of 15,000 HYDRA in your validator wallet, you can execute the following command.
 
@@ -169,9 +169,13 @@ After ensuring you have a minimum of 15,000 HYDRA in your validator wallet, you 
 hydra hydragon register-validator --data-dir ./node-secrets --stake 15000000000000000000000 --jsonrpc http://localhost:8545
 ```
 
-The above command both register the validator and stakes the specified amount.
+The command above both registers the validator and stakes the specified amount. To specify an initial commission rate that will be deducted from future delegators’ rewards, use the `--commission` flag with the desired value. The commission rate must be between 0 and 100. The command will look as follows:
 
-Use the following command in case you want to execute the stake operation only:
+```
+hydra hydragon register-validator --data-dir ./node-secrets --stake 15000000000000000000000 --commission 10 --jsonrpc http://localhost:8545
+```
+
+Use the following command if you want to perform a stake operation only or increase your existing stake:
 
 ```
 hydra hydragon stake --data-dir ./node-secrets --self true --amount 15000000000000000000000 --jsonrpc http://localhost:8545
@@ -181,21 +185,32 @@ hydra hydragon stake --data-dir ./node-secrets --self true --amount 150000000000
 
 Congratulations! You have successfully become a validator on the Hydra Chain. For further information and support, join our Telegram group and engage with the community.
 
-### Set or update the commission for the delegators
+### Update the commission for the delegators
 
-After becoming a validator, you can set the desired commission that will be deducted from the delegators' rewards.
-Additionally, you can update the commission if you need to.
+After becoming a validator, you can still update the commission rate if needed. The process begins with executing a command to set the new commission as pending. This is followed by a 15-day waiting period, after which you can apply the updated commission. This waiting period is designed to prevent validators from acting dishonestly by executing commission changes shortly before delegators claim their rewards. You can initialize the new commission using the following command:
 
 ```
-hydra hydragon commission --data-dir ./node-secrets --commission 10 --jsonrpc http://localhost:8545
+hydra hydragon commission --data-dir ./node-secrets --commission 15 --jsonrpc http://localhost:8545
 ```
 
-### Claiming the generated rewards from validating
+After the waiting period ends, execute the following command to apply the commission rate set in the previous step:
+
+```
+hydra hydragon commission --data-dir ./node-secrets --apply true --jsonrpc http://localhost:8545
+```
+
+### Claiming the generated rewards from validating and commission rewards from delegators
 
 Once a validator starts validating blocks, rewards are generated at the end of each epoch based on the validator’s activity level. Validators can claim rewards at any time, provided rewards have been generated. If no rewards are available, the transaction will fail. Use the following command:
 
 ```
 hydra hydragon claim-rewards --data-dir ./node-secrets --jsonrpc http://localhost:8545
+```
+
+Additionally, the rewards that are generated from the claimings of the delegators, you can claim it by executing the command below:
+
+```
+hydra hydragon commission --data-dir ./node-secrets --claim true --jsonrpc http://localhost:8545
 ```
 
 ### Ban Validator
@@ -220,7 +235,7 @@ To reduce the risk of stalling caused by validators experiencing temporary issue
   If your validator has been banned, you can still withdraw the remaining funds after the penalty and burned rewards have been deducted. Use the following command:
 
   ```
-  hydra hydragon withdraw --banned --data-dir ./node-secrets --jsonrpc http://localhost:8545
+  hydra hydragon withdraw --data-dir ./node-secrets --banned --jsonrpc http://localhost:8545
   ```
 
   ***Note:*** If your machine is no longer running, you can use [our RPC](#adding-hydragon-network-to-metamask) as the value for the jsonrpc flag.

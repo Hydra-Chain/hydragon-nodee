@@ -27,12 +27,11 @@ import (
 var (
 	params registerParams
 
-	hydraChain           = contracts.HydraChainContract
-	stakeManager         = contracts.HydraStakingContract
-	registerFn           = contractsapi.HydraChain.Abi.Methods["register"]
-	stakeFn              = contractsapi.HydraStaking.Abi.Methods["stake"]
-	newValidatorEventABI = contractsapi.HydraChain.Abi.Events["NewValidator"]
-	stakeEventABI        = contractsapi.HydraStaking.Abi.Events["Staked"]
+	hydraChain                = contracts.HydraChainContract
+	stakeManager              = contracts.HydraStakingContract
+	newValidatorEventABI      = contractsapi.HydraChain.Abi.Events["NewValidator"]
+	commissionUpdatedEventABI = contractsapi.HydraDelegation.Abi.Events["CommissionUpdated"]
+	stakeEventABI             = contractsapi.HydraStaking.Abi.Events["Staked"]
 )
 
 func GetCommand() *cobra.Command {
@@ -44,6 +43,7 @@ func GetCommand() *cobra.Command {
 	}
 
 	setFlags(registerCmd)
+	helper.SetRequiredFlags(registerCmd, params.getRequiredFlags())
 
 	return registerCmd
 }
@@ -68,6 +68,13 @@ func setFlags(cmd *cobra.Command) {
 		stakeFlag,
 		"",
 		"stake represents amount which is going to be staked by the new validator account",
+	)
+
+	cmd.Flags().Uint64Var(
+		&params.commission,
+		command.CommissionFlag,
+		0,
+		"a mandatory flag that represents the commission percentage of the new validator",
 	)
 
 	cmd.Flags().BoolVar(
@@ -151,6 +158,15 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 			result.validatorAddress = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
 			foundNewValidatorLog = true
 		}
+
+		if commissionUpdatedEventABI.Match(log) {
+			event, err := commissionUpdatedEventABI.ParseLog(log)
+			if err != nil {
+				return err
+			}
+
+			result.commission = event["newCommission"].(*big.Int).Uint64() //nolint:forcetypeassert
+		}
 	}
 
 	if !foundNewValidatorLog {
@@ -173,12 +189,41 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func stake(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.Receipt, error) {
-	if stakeFn == nil {
-		return nil, errors.New("failed to create stake ABI function")
+func registerValidator(
+	sender txrelayer.TxRelayer,
+	account *wallet.Account,
+	signature *bls.Signature,
+) (*ethgo.Receipt, error) {
+	sigMarshal, err := signature.ToBigInt()
+	if err != nil {
+		return nil, fmt.Errorf("register validator failed: %w", err)
 	}
 
-	input, err := stakeFn.Encode([]interface{}{})
+	registerFn := &contractsapi.RegisterHydraChainFn{
+		Signature:         sigMarshal,
+		Pubkey:            account.Bls.PublicKey().ToBigInt(),
+		InitialCommission: new(big.Int).SetUint64(params.commission),
+	}
+
+	encoded, err := registerFn.EncodeAbi()
+	if err != nil {
+		return nil, fmt.Errorf("register validator failed: %w", err)
+	}
+
+	txn := sidechain.CreateTransaction(
+		account.Ecdsa.Address(),
+		(*ethgo.Address)(&hydraChain),
+		encoded,
+		nil,
+	)
+
+	return sender.SendTransaction(txn, account.Ecdsa)
+}
+
+func stake(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.Receipt, error) {
+	stakeFn := &contractsapi.StakeHydraStakingFn{}
+
+	encoded, err := stakeFn.EncodeAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +234,7 @@ func stake(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.Receipt,
 	}
 
 	txn := &ethgo.Transaction{
-		Input: input,
+		Input: encoded,
 		To:    (*ethgo.Address)(&stakeManager),
 		Value: stake,
 	}
@@ -229,32 +274,4 @@ func populateStakeResults(receipt *ethgo.Receipt, result *registerResult) {
 	}
 
 	result.stakeResult = "Could not find an appropriate log in receipt that stake happened"
-}
-
-func registerValidator(
-	sender txrelayer.TxRelayer,
-	account *wallet.Account,
-	signature *bls.Signature,
-) (*ethgo.Receipt, error) {
-	sigMarshal, err := signature.ToBigInt()
-	if err != nil {
-		return nil, fmt.Errorf("register validator failed: %w", err)
-	}
-
-	encoded, err := registerFn.Encode([]interface{}{
-		sigMarshal,
-		account.Bls.PublicKey().ToBigInt(),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("register validator failed: %w", err)
-	}
-
-	txn := sidechain.CreateTransaction(
-		account.Ecdsa.Address(),
-		(*ethgo.Address)(&hydraChain),
-		encoded,
-		nil,
-	)
-
-	return sender.SendTransaction(txn, account.Ecdsa)
 }

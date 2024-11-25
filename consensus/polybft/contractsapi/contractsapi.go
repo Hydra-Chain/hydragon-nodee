@@ -30,7 +30,6 @@ type InitializeHydraChainFn struct {
 	Governance            types.Address    `abi:"governance"`
 	HydraStakingAddr      types.Address    `abi:"hydraStakingAddr"`
 	HydraDelegationAddr   types.Address    `abi:"hydraDelegationAddr"`
-	AprCalculatorAddr     types.Address    `abi:"aprCalculatorAddr"`
 	RewardWalletAddr      types.Address    `abi:"rewardWalletAddr"`
 	DaoIncentiveVaultAddr types.Address    `abi:"daoIncentiveVaultAddr"`
 	NewBls                types.Address    `abi:"newBls"`
@@ -99,7 +98,7 @@ func (c *CommitEpochHydraChainFn) DecodeAbi(buf []byte) error {
 }
 
 type AddToWhitelistHydraChainFn struct {
-	WhitelistAddreses []ethgo.Address `abi:"whitelistAddreses"`
+	WhitelistAddresses []ethgo.Address `abi:"whitelistAddresses"`
 }
 
 func (a *AddToWhitelistHydraChainFn) Sig() []byte {
@@ -115,8 +114,9 @@ func (a *AddToWhitelistHydraChainFn) DecodeAbi(buf []byte) error {
 }
 
 type RegisterHydraChainFn struct {
-	Signature [2]*big.Int `abi:"signature"`
-	Pubkey    [4]*big.Int `abi:"pubkey"`
+	Signature         [2]*big.Int `abi:"signature"`
+	Pubkey            [4]*big.Int `abi:"pubkey"`
+	InitialCommission *big.Int    `abi:"initialCommission"`
 }
 
 func (r *RegisterHydraChainFn) Sig() []byte {
@@ -330,13 +330,13 @@ func (s *StakerInit) DecodeAbi(buf []byte) error {
 
 type InitializeHydraStakingFn struct {
 	InitialStakers      []*StakerInit `abi:"initialStakers"`
-	Governance          types.Address `abi:"governance"`
 	NewMinStake         *big.Int      `abi:"newMinStake"`
-	NewLiquidToken      types.Address `abi:"newLiquidToken"`
-	HydraChainAddr      types.Address `abi:"hydraChainAddr"`
+	Governance          types.Address `abi:"governance"`
 	AprCalculatorAddr   types.Address `abi:"aprCalculatorAddr"`
+	HydraChainAddr      types.Address `abi:"hydraChainAddr"`
 	HydraDelegationAddr types.Address `abi:"hydraDelegationAddr"`
 	RewardWalletAddr    types.Address `abi:"rewardWalletAddr"`
+	LiquidToken         types.Address `abi:"liquidToken"`
 }
 
 func (i *InitializeHydraStakingFn) Sig() []byte {
@@ -598,14 +598,14 @@ func (w *WithdrawalFinishedEvent) Decode(input []byte) error {
 
 type InitializeHydraDelegationFn struct {
 	InitialStakers            []*StakerInit `abi:"initialStakers"`
-	Governance                types.Address `abi:"governance"`
 	InitialCommission         *big.Int      `abi:"initialCommission"`
-	LiquidToken               types.Address `abi:"liquidToken"`
+	Governance                types.Address `abi:"governance"`
 	AprCalculatorAddr         types.Address `abi:"aprCalculatorAddr"`
-	HydraStakingAddr          types.Address `abi:"hydraStakingAddr"`
 	HydraChainAddr            types.Address `abi:"hydraChainAddr"`
+	HydraStakingAddr          types.Address `abi:"hydraStakingAddr"`
 	VestingManagerFactoryAddr types.Address `abi:"vestingManagerFactoryAddr"`
 	RewardWalletAddr          types.Address `abi:"rewardWalletAddr"`
+	LiquidToken               types.Address `abi:"liquidToken"`
 }
 
 func (i *InitializeHydraDelegationFn) Sig() []byte {
@@ -669,45 +669,51 @@ func (c *ClaimDelegatorRewardHydraDelegationFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraDelegation.Abi.Methods["claimDelegatorReward"], buf, c)
 }
 
-type SetCommissionHydraDelegationFn struct {
+type ClaimCommissionHydraDelegationFn struct {
+	To types.Address `abi:"to"`
+}
+
+func (c *ClaimCommissionHydraDelegationFn) Sig() []byte {
+	return HydraDelegation.Abi.Methods["claimCommission"].ID()
+}
+
+func (c *ClaimCommissionHydraDelegationFn) EncodeAbi() ([]byte, error) {
+	return HydraDelegation.Abi.Methods["claimCommission"].Encode(c)
+}
+
+func (c *ClaimCommissionHydraDelegationFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraDelegation.Abi.Methods["claimCommission"], buf, c)
+}
+
+type SetPendingCommissionHydraDelegationFn struct {
 	NewCommission *big.Int `abi:"newCommission"`
 }
 
-func (s *SetCommissionHydraDelegationFn) Sig() []byte {
-	return HydraDelegation.Abi.Methods["setCommission"].ID()
+func (s *SetPendingCommissionHydraDelegationFn) Sig() []byte {
+	return HydraDelegation.Abi.Methods["setPendingCommission"].ID()
 }
 
-func (s *SetCommissionHydraDelegationFn) EncodeAbi() ([]byte, error) {
-	return HydraDelegation.Abi.Methods["setCommission"].Encode(s)
+func (s *SetPendingCommissionHydraDelegationFn) EncodeAbi() ([]byte, error) {
+	return HydraDelegation.Abi.Methods["setPendingCommission"].Encode(s)
 }
 
-func (s *SetCommissionHydraDelegationFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(HydraDelegation.Abi.Methods["setCommission"], buf, s)
+func (s *SetPendingCommissionHydraDelegationFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraDelegation.Abi.Methods["setPendingCommission"], buf, s)
 }
 
-type CommissionUpdatedEvent struct {
-	Staker        types.Address `abi:"staker"`
-	NewCommission *big.Int      `abi:"newCommission"`
+type ApplyPendingCommissionHydraDelegationFn struct {
 }
 
-func (*CommissionUpdatedEvent) Sig() ethgo.Hash {
-	return HydraDelegation.Abi.Events["CommissionUpdated"].ID()
+func (a *ApplyPendingCommissionHydraDelegationFn) Sig() []byte {
+	return HydraDelegation.Abi.Methods["applyPendingCommission"].ID()
 }
 
-func (c *CommissionUpdatedEvent) Encode() ([]byte, error) {
-	return HydraDelegation.Abi.Events["CommissionUpdated"].Inputs.Encode(c)
+func (a *ApplyPendingCommissionHydraDelegationFn) EncodeAbi() ([]byte, error) {
+	return HydraDelegation.Abi.Methods["applyPendingCommission"].Encode(a)
 }
 
-func (c *CommissionUpdatedEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !HydraDelegation.Abi.Events["CommissionUpdated"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(HydraDelegation.Abi.Events["CommissionUpdated"], log, c)
-}
-
-func (c *CommissionUpdatedEvent) Decode(input []byte) error {
-	return HydraDelegation.Abi.Events["CommissionUpdated"].Inputs.DecodeStruct(input, &c)
+func (a *ApplyPendingCommissionHydraDelegationFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraDelegation.Abi.Methods["applyPendingCommission"], buf, a)
 }
 
 type DelegatedEvent struct {
@@ -813,8 +819,85 @@ func (d *DelegatorRewardsClaimedEvent) Decode(input []byte) error {
 	return HydraDelegation.Abi.Events["DelegatorRewardsClaimed"].Inputs.DecodeStruct(input, &d)
 }
 
+type CommissionClaimedEvent struct {
+	Staker types.Address `abi:"staker"`
+	To     types.Address `abi:"to"`
+	Amount *big.Int      `abi:"amount"`
+}
+
+func (*CommissionClaimedEvent) Sig() ethgo.Hash {
+	return HydraDelegation.Abi.Events["CommissionClaimed"].ID()
+}
+
+func (c *CommissionClaimedEvent) Encode() ([]byte, error) {
+	return HydraDelegation.Abi.Events["CommissionClaimed"].Inputs.Encode(c)
+}
+
+func (c *CommissionClaimedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraDelegation.Abi.Events["CommissionClaimed"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraDelegation.Abi.Events["CommissionClaimed"], log, c)
+}
+
+func (c *CommissionClaimedEvent) Decode(input []byte) error {
+	return HydraDelegation.Abi.Events["CommissionClaimed"].Inputs.DecodeStruct(input, &c)
+}
+
+type PendingCommissionAddedEvent struct {
+	Staker        types.Address `abi:"staker"`
+	NewCommission *big.Int      `abi:"newCommission"`
+}
+
+func (*PendingCommissionAddedEvent) Sig() ethgo.Hash {
+	return HydraDelegation.Abi.Events["PendingCommissionAdded"].ID()
+}
+
+func (p *PendingCommissionAddedEvent) Encode() ([]byte, error) {
+	return HydraDelegation.Abi.Events["PendingCommissionAdded"].Inputs.Encode(p)
+}
+
+func (p *PendingCommissionAddedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraDelegation.Abi.Events["PendingCommissionAdded"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraDelegation.Abi.Events["PendingCommissionAdded"], log, p)
+}
+
+func (p *PendingCommissionAddedEvent) Decode(input []byte) error {
+	return HydraDelegation.Abi.Events["PendingCommissionAdded"].Inputs.DecodeStruct(input, &p)
+}
+
+type CommissionUpdatedEvent struct {
+	Staker        types.Address `abi:"staker"`
+	NewCommission *big.Int      `abi:"newCommission"`
+}
+
+func (*CommissionUpdatedEvent) Sig() ethgo.Hash {
+	return HydraDelegation.Abi.Events["CommissionUpdated"].ID()
+}
+
+func (c *CommissionUpdatedEvent) Encode() ([]byte, error) {
+	return HydraDelegation.Abi.Events["CommissionUpdated"].Inputs.Encode(c)
+}
+
+func (c *CommissionUpdatedEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraDelegation.Abi.Events["CommissionUpdated"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraDelegation.Abi.Events["CommissionUpdated"], log, c)
+}
+
+func (c *CommissionUpdatedEvent) Decode(input []byte) error {
+	return HydraDelegation.Abi.Events["CommissionUpdated"].Inputs.DecodeStruct(input, &c)
+}
+
 type InitializeVestingManagerFactoryFn struct {
 	HydraDelegationAddr types.Address `abi:"hydraDelegationAddr"`
+	LiquidityTokenAddr  types.Address `abi:"liquidityTokenAddr"`
 }
 
 func (i *InitializeVestingManagerFactoryFn) Sig() []byte {

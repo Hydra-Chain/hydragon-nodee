@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/helper/common"
@@ -11,6 +12,8 @@ import (
 
 const (
 	stakeFlag = "stake"
+
+	maxCommission = 100
 )
 
 type registerParams struct {
@@ -18,7 +21,14 @@ type registerParams struct {
 	accountConfig      string
 	jsonRPC            string
 	stake              string
+	commission         uint64
 	insecureLocalStore bool
+}
+
+func (rp *registerParams) getRequiredFlags() []string {
+	return []string{
+		command.CommissionFlag,
+	}
 }
 
 func (rp *registerParams) validateFlags() error {
@@ -37,6 +47,10 @@ func (rp *registerParams) validateFlags() error {
 		}
 	}
 
+	if rp.commission > maxCommission {
+		return fmt.Errorf("provided commission '%d' is higher than the maximum of '%d'", rp.commission, maxCommission)
+	}
+
 	return nil
 }
 
@@ -44,6 +58,7 @@ type registerResult struct {
 	validatorAddress string
 	stakeResult      string
 	amount           string
+	commission       uint64
 }
 
 func (rr registerResult) GetOutput() string {
@@ -53,8 +68,9 @@ func (rr registerResult) GetOutput() string {
 
 	buffer.WriteString("\n[SUCCESSFUL REGISTRATION]\n")
 
-	vals = make([]string, 0, 1)
+	vals = make([]string, 0, 2)
 	vals = append(vals, fmt.Sprintf("EVM Address|%s", rr.validatorAddress))
+	vals = append(vals, fmt.Sprintf("Commission |%v", rr.commission))
 
 	buffer.WriteString(helper.FormatKV(vals))
 	buffer.WriteString("\n")
@@ -64,7 +80,7 @@ func (rr registerResult) GetOutput() string {
 
 		vals = make([]string, 0, 2)
 		vals = append(vals, fmt.Sprintf("Staking Result|%s", rr.stakeResult))
-		vals = append(vals, fmt.Sprintf("Amount Staked|%v", rr.amount))
+		vals = append(vals, fmt.Sprintf("Amount Staked |%v", rr.amount))
 
 		buffer.WriteString(helper.FormatKV(vals))
 		buffer.WriteString("\n")
