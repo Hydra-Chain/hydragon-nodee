@@ -187,12 +187,12 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	if params.commission > 0 && !foundPendingCommissionLog { //nolint:gocritic
-		return fmt.Errorf("could not find an appropriate log in the receipt that validates the new pending commission")
-	} else if params.apply && !foundCommissionUpdatedLog {
+	if params.apply && !foundCommissionUpdatedLog { //nolint:gocritic
 		return fmt.Errorf("could not find an appropriate log in the receipt that validates the new commission update")
 	} else if params.claim && !foundClaimCommissionLog {
 		return fmt.Errorf("could not find an appropriate log in the receipt that validates the commission claim")
+	} else if !foundPendingCommissionLog {
+		return fmt.Errorf("could not find an appropriate log in the receipt that validates the new pending commission")
 	}
 
 	outputter.WriteCommandResult(result)
