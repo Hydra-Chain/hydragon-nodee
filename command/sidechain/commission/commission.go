@@ -124,12 +124,12 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	var input []byte
-	if params.commission > 0 { //nolint:gocritic
-		input, err = generateSetPendingCommissionFn()
-	} else if params.apply {
+	if params.apply { //nolint:gocritic
 		input, err = generateApplyPendingCommissionFn()
 	} else if params.claim {
 		input, err = generateClaimCommissionFn(validatorAccount)
+	} else {
+		input, err = generateSetPendingCommissionFn()
 	}
 
 	if err != nil {

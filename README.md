@@ -169,7 +169,7 @@ After ensuring you have a minimum of 15,000 HYDRA in your validator wallet, you 
 hydra hydragon register-validator --data-dir ./node-secrets --stake 15000000000000000000000 --jsonrpc http://localhost:8545
 ```
 
-The command above both registers the validator and stakes the specified amount. To set an initial commission rate that will be deducted from the future delegators' rewards, use the `--commission` flag with the desired value, as shown below:
+The command above both registers the validator and stakes the specified amount. To specify an initial commission rate that will be deducted from future delegators’ rewards, use the `--commission` flag with the desired value. The commission rate must be between 0 and 100. The command will look as follows:
 
 ```
 hydra hydragon register-validator --data-dir ./node-secrets --stake 15000000000000000000000 --commission 10 --jsonrpc http://localhost:8545

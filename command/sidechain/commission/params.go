@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
 )
@@ -29,12 +28,6 @@ type setCommissionResult struct {
 	commission uint64
 	isPending  bool
 	isClaimed  bool
-}
-
-func (scp *setCommissionParams) getRequiredFlags() []string {
-	return []string{
-		command.CommissionFlag,
-	}
 }
 
 func (scp *setCommissionParams) validateFlags() error {
@@ -65,7 +58,7 @@ func (scr setCommissionResult) GetOutput() string {
 	var valueString string
 
 	if scr.isPending { //nolint:gocritic
-		buffer.WriteString("\n[NEW COMMISSION SET AND WILL REMAIN PENDING FOR 15 DAYS]\n")
+		buffer.WriteString("\n[NEW COMMISSION IS PENDING AND YOU MUST EXECUTE APPLY TX AFTER 15 DAYS]\n")
 
 		addressString = "Staker Address"
 		valueString = "New Commission"

@@ -43,6 +43,7 @@ func GetCommand() *cobra.Command {
 	}
 
 	setFlags(registerCmd)
+	helper.SetRequiredFlags(registerCmd, params.getRequiredFlags())
 
 	return registerCmd
 }
@@ -73,7 +74,7 @@ func setFlags(cmd *cobra.Command) {
 		&params.commission,
 		command.CommissionFlag,
 		0,
-		"flag that represents the commission percentage of the new validator",
+		"a mandatory flag that represents the commission percentage of the new validator",
 	)
 
 	cmd.Flags().BoolVar(

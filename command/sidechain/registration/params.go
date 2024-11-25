@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/0xPolygon/polygon-edge/command"
 	"github.com/0xPolygon/polygon-edge/command/helper"
 	sidechainHelper "github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/helper/common"
 )
 
 const (
-	stakeFlag      = "stake"
-	commissionFlag = "commission"
+	stakeFlag = "stake"
 
 	maxCommission = 100
 )
@@ -23,6 +23,12 @@ type registerParams struct {
 	stake              string
 	commission         uint64
 	insecureLocalStore bool
+}
+
+func (rp *registerParams) getRequiredFlags() []string {
+	return []string{
+		command.CommissionFlag,
+	}
 }
 
 func (rp *registerParams) validateFlags() error {
