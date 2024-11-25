@@ -60,7 +60,6 @@ func (scp *setCommissionParams) validateFlags() error {
 func (scr setCommissionResult) GetOutput() string {
 	var buffer bytes.Buffer
 
-	// var vals []string
 	var addressString string
 
 	var valueString string
