@@ -133,6 +133,7 @@ func initRewardWallet(transition *state.Transition) error {
 func initVestingManagerFactory(transition *state.Transition) error {
 	initFn := &contractsapi.InitializeVestingManagerFactoryFn{
 		HydraDelegationAddr: contracts.HydraDelegationContract,
+		LiquidityTokenAddr:  contracts.LiquidityTokenContract,
 	}
 
 	input, err := initFn.EncodeAbi()

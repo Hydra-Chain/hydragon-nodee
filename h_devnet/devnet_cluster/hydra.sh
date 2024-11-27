@@ -11,7 +11,7 @@ fi
 HYDRA_NODE_BIN=hydra
 CHAIN_CUSTOM_OPTIONS=$(
   tr "\n" " " <<EOL
---block-gas-limit 10000000
+--block-gas-limit 100000000
 --epoch-size 500
 --chain-id 88441
 --name hydra-docker
@@ -52,7 +52,8 @@ case "$1" in
     --consensus polybft \
     --validators-path /data \
     --validators-prefix data- \
-    --native-token-config "Hydra Token:HYDRA:18:true:$(echo "$secrets" | jq -r '.[0] | .address')" \
+    --secrets-config /data/secretsManagerConfig.json \
+    --native-token-config "Hydra Token:dHYDRA:18:true:$(echo "$secrets" | jq -r '.[0] | .address')" \
     --bootnode "/dns4/node-1/tcp/1478/p2p/$(echo "$secrets" | jq -r '.[0] | .node_id')" \
     --bootnode "/dns4/node-2/tcp/1478/p2p/$(echo "$secrets" | jq -r '.[1] | .node_id')" \
     --bootnode "/dns4/node-3/tcp/1478/p2p/$(echo "$secrets" | jq -r '.[2] | .node_id')" \
