@@ -10,6 +10,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/command/sidechain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/txrelayer"
@@ -35,8 +36,9 @@ func GetCommand() *cobra.Command {
 		RunE:    runCommand,
 	}
 
-	helper.RegisterJSONRPCFlag(stakeCmd)
 	setFlags(stakeCmd)
+
+	helper.SetRequiredFlags(stakeCmd, params.getRequiredFlags())
 
 	return stakeCmd
 }
@@ -56,6 +58,13 @@ func setFlags(cmd *cobra.Command) {
 		polybftsecrets.AccountConfigFlagDesc,
 	)
 
+	cmd.Flags().StringVar(
+		&params.amount,
+		sidechain.AmountFlag,
+		"",
+		"a mandatory flag which indicates the amount to self stake or delegate to another account",
+	)
+
 	cmd.Flags().BoolVar(
 		&params.self,
 		sidechain.SelfFlag,
@@ -63,11 +72,19 @@ func setFlags(cmd *cobra.Command) {
 		"indicates if its a self stake action",
 	)
 
-	cmd.Flags().StringVar(
-		&params.amount,
-		sidechain.AmountFlag,
-		"0",
-		"amount to stake or delegate to another account",
+	cmd.Flags().BoolVar(
+		&params.vesting,
+		vestingFlag,
+		false,
+		"indicates if you want to open vested stake position",
+	)
+
+	cmd.Flags().Uint64Var(
+		&params.vestingPeriod,
+		vestingPeriodFlag,
+		0,
+		"if vesting flag is set, this is a mandatory flag which indicates the vesting period in weeks. "+
+			"It must be at least 1 week and the max period is 52 weeks (1 year).",
 	)
 
 	cmd.Flags().StringVar(
@@ -84,7 +101,11 @@ func setFlags(cmd *cobra.Command) {
 		"a flag to indicate if the secrets used are encrypted. If set to true, the secrets are stored in plain text.",
 	)
 
+	helper.RegisterJSONRPCFlag(cmd)
+
 	cmd.MarkFlagsMutuallyExclusive(sidechain.SelfFlag, delegateAddressFlag)
+	cmd.MarkFlagsMutuallyExclusive(vestingFlag, delegateAddressFlag)
+	cmd.MarkFlagsMutuallyExclusive(vestingPeriodFlag, delegateAddressFlag)
 	cmd.MarkFlagsMutuallyExclusive(polybftsecrets.AccountDirFlag, polybftsecrets.AccountConfigFlag)
 }
 
@@ -107,43 +128,18 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	txRelayer, err := txrelayer.NewTxRelayer(txrelayer.WithIPAddress(params.jsonRPC),
-		txrelayer.WithReceiptTimeout(150*time.Millisecond))
-	if err != nil {
-		return err
-	}
-
-	var encoded []byte
-
-	var contractAddr *ethgo.Address
-
-	if params.self {
-		encoded, err = stakeFn.Encode([]interface{}{})
-		contractAddr = (*ethgo.Address)(&contracts.HydraStakingContract)
-	} else {
-		delegateToAddress := types.StringToAddress(params.delegateAddress)
-
-		encoded, err = delegateFn.Encode([]interface{}{
-			ethgo.Address(delegateToAddress),
-		})
-		contractAddr = (*ethgo.Address)(&contracts.HydraDelegationContract)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	parsedValue, err := common.ParseUint256orHex(&params.amount)
-	if err != nil {
-		return fmt.Errorf("cannot parse \"amount\" value %s", params.amount)
-	}
-
-	txn := sidechain.CreateTransaction(
-		validatorAccount.Ecdsa.Address(),
-		contractAddr,
-		encoded,
-		parsedValue,
+	txRelayer, err := txrelayer.NewTxRelayer(
+		txrelayer.WithIPAddress(params.jsonRPC),
+		txrelayer.WithReceiptTimeout(150*time.Millisecond),
 	)
+	if err != nil {
+		return err
+	}
+
+	txn, err := createStakeTransaction(validatorAccount)
+	if err != nil {
+		return err
+	}
 
 	receipt, err := txRelayer.SendTransaction(txn, validatorAccount.Ecdsa)
 	if err != nil {
@@ -156,33 +152,37 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 	result := &stakeResult{
 		validatorAddress: validatorAccount.Ecdsa.Address().String(),
+		isVesting:        params.vesting,
+		vestingPeriod:    params.vestingPeriod,
 	}
 
 	foundLog := false
 
 	// check the logs to check for the result
 	for _, log := range receipt.Logs {
-		if stakeEventABI.Match(log) {
-			event, err := stakeEventABI.ParseLog(log)
+		var event map[string]interface{}
+
+		var match bool
+
+		if match = stakeEventABI.Match(log); match {
+			event, err = stakeEventABI.ParseLog(log)
 			if err != nil {
 				return err
 			}
 
 			result.isSelfStake = true
 			result.amount = event["amount"].(*big.Int).String() //nolint:forcetypeassert
-
-			foundLog = true
-
-			break
-		} else if delegateEventABI.Match(log) {
-			event, err := delegateEventABI.ParseLog(log)
+		} else if match = delegateEventABI.Match(log); match {
+			event, err = delegateEventABI.ParseLog(log)
 			if err != nil {
 				return err
 			}
 
 			result.amount = event["amount"].(*big.Int).String()              //nolint:forcetypeassert
 			result.delegatedTo = event["validator"].(ethgo.Address).String() //nolint:forcetypeassert
+		}
 
+		if match {
 			foundLog = true
 
 			break
@@ -198,4 +198,42 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 	outputter.WriteCommandResult(result)
 
 	return nil
+}
+
+func createStakeTransaction(validatorAccount *wallet.Account) (*ethgo.Transaction, error) {
+	var (
+		encoded      []byte
+		contractAddr *ethgo.Address
+		err          error
+	)
+
+	if params.self {
+		encoded, err = stakeFn.Encode([]interface{}{})
+		contractAddr = (*ethgo.Address)(&contracts.HydraStakingContract)
+	} else {
+		delegateToAddress := types.StringToAddress(params.delegateAddress)
+
+		encoded, err = delegateFn.Encode([]interface{}{
+			ethgo.Address(delegateToAddress),
+		})
+		contractAddr = (*ethgo.Address)(&contracts.HydraDelegationContract)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	parsedValue, err := common.ParseUint256orHex(&params.amount)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse \"amount\" value %s", params.amount)
+	}
+
+	txn := sidechain.CreateTransaction(
+		validatorAccount.Ecdsa.Address(),
+		contractAddr,
+		encoded,
+		parsedValue,
+	)
+
+	return txn, nil
 }

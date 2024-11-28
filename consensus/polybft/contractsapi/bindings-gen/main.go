@@ -69,6 +69,7 @@ func main() {
 			[]string{
 				"initialize",
 				"stake",
+				"stakeWithVesting",
 				"unstake",
 				"distributeRewardsFor",
 				"claimStakingRewards()",

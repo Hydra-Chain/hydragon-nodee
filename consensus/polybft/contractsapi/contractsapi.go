@@ -366,6 +366,22 @@ func (s *StakeHydraStakingFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraStaking.Abi.Methods["stake"], buf, s)
 }
 
+type StakeWithVestingHydraStakingFn struct {
+	DurationWeeks *big.Int `abi:"durationWeeks"`
+}
+
+func (s *StakeWithVestingHydraStakingFn) Sig() []byte {
+	return HydraStaking.Abi.Methods["stakeWithVesting"].ID()
+}
+
+func (s *StakeWithVestingHydraStakingFn) EncodeAbi() ([]byte, error) {
+	return HydraStaking.Abi.Methods["stakeWithVesting"].Encode(s)
+}
+
+func (s *StakeWithVestingHydraStakingFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraStaking.Abi.Methods["stakeWithVesting"], buf, s)
+}
+
 type UnstakeHydraStakingFn struct {
 	Amount *big.Int `abi:"amount"`
 }
