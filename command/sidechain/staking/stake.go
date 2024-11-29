@@ -137,9 +137,6 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// vito
-	fmt.Println("===params.vesting is ", params.vesting)
-
 	txn, err := createStakeTransaction(validatorAccount)
 	if err != nil {
 		return err
@@ -176,20 +173,14 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 			result.isSelfStake = true
 			result.amount = event["amount"].(*big.Int).String() //nolint:forcetypeassert
-			fmt.Println("===amount is ", result.amount)
 
 			if params.vesting {
-				// vito
 				validatorInfo, err := sidechain.GetValidatorInfo(txRelayer, validatorAccount.Ecdsa.Address())
 				if err != nil {
 					fmt.Printf("was unable to get the validator info %s", result.validatorAddress)
 				} else {
 					result.amount = validatorInfo.Stake.String()
 				}
-
-				fmt.Println("===validatorInfo ", validatorInfo)
-
-				fmt.Println("===result.amount is ", result.amount)
 			}
 		} else if match = delegateEventABI.Match(log); match {
 			event, err = delegateEventABI.ParseLog(log)
