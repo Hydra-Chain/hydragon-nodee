@@ -37,7 +37,7 @@ func (sp *stakeParams) validateFlags() error {
 		return fmt.Errorf("failed to parse json rpc address. Error: %w", err)
 	}
 
-	if sp.vestingPeriod < 1 || sp.vestingPeriod > sidechainHelper.MaxVestingPeriod {
+	if sp.vesting && (sp.vestingPeriod < 1 || sp.vestingPeriod > sidechainHelper.MaxVestingPeriod) {
 		return fmt.Errorf(
 			"invalid vesting period '%d'. The period must between 1 and '%d' weeks",
 			sp.vestingPeriod,

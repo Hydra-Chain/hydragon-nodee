@@ -7,7 +7,13 @@ import (
 	"os"
 
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
+	"github.com/0xPolygon/polygon-edge/contracts"
+	"github.com/0xPolygon/polygon-edge/helper/hex"
+	"github.com/0xPolygon/polygon-edge/txrelayer"
+	"github.com/0xPolygon/polygon-edge/types"
 	"github.com/umbracle/ethgo"
 )
 
@@ -20,6 +26,30 @@ const (
 	MaxCommission    = 100
 	MaxVestingPeriod = 52
 )
+
+// Define the ValidatorStatus enum
+type ValidatorStatus int
+
+const (
+	None ValidatorStatus = iota
+	Registered
+	Active
+	Banned
+)
+
+// Function to get ValidatorStatus based on number value
+func GetStatus(value int) ValidatorStatus {
+	switch value {
+	case 1:
+		return Active
+	case 2:
+		return Active
+	case 3:
+		return Banned
+	default:
+		return None
+	}
+}
 
 func CheckIfDirectoryExist(dir string) error {
 	if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
@@ -74,4 +104,62 @@ func CreateTransaction(sender ethgo.Address, to *ethgo.Address, input []byte, va
 	}
 
 	return txn
+}
+
+// GetValidatorInfo queries HydraChain smart contract to retrieve the validator info for given address
+func GetValidatorInfo(txRelayer txrelayer.TxRelayer, validatorAddr ethgo.Address) (*polybft.ValidatorInfo, error) {
+	var getValidatorFn = &contractsapi.GetValidatorHydraChainFn{
+		ValidatorAddress: types.Address(validatorAddr),
+	}
+
+	encoded, err := getValidatorFn.EncodeAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := txRelayer.Call(validatorAddr, (ethgo.Address)(contracts.HydraChainContract), encoded)
+	if err != nil {
+		return nil, err
+	}
+
+	byteResponse, err := hex.DecodeHex(response)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode hex response, %w", err)
+	}
+
+	getValidatorMethod := contractsapi.HydraChain.Abi.GetMethod("getValidator")
+
+	decoded, err := getValidatorMethod.Outputs.Decode(byteResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	decodedOutputsMap, ok := decoded.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("could not convert decoded outputs to map")
+	}
+
+	stake, ok := decodedOutputsMap["stake"].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("could not convert stake to big.Int")
+	}
+
+	withdrawableRewards, ok := decodedOutputsMap["withdrawableRewards"].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("could not convert withdrawableRewards to big.Int")
+	}
+
+	status, ok := decodedOutputsMap["status"].(uint8)
+	if !ok {
+		return nil, fmt.Errorf("could not convert status to uint8")
+	}
+
+	validatorInfo := &polybft.ValidatorInfo{
+		Address:             validatorAddr,
+		Stake:               stake,
+		WithdrawableRewards: withdrawableRewards,
+		IsActive:            Active == GetStatus(int(status)),
+	}
+
+	return validatorInfo, nil
 }

@@ -235,7 +235,7 @@ After Hydra's team confirms you are whitelisted you have to register your accoun
 In the container's shell execute:
 
 ```
-./hydra hydragon register-validator --data-dir ./node --stake 15000000000000000000000 --jsonrpc http://localhost:8545
+./hydra hydragon register-validator --data-dir ./node --stake 15000000000000000000000 --commission 10 --jsonrpc http://localhost:8545
 ```
 
 The above command both register the validator and stakes the specified amount.

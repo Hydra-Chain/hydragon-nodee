@@ -22,8 +22,9 @@ import (
 var (
 	params stakeParams
 
-	stakeFn          = contractsapi.HydraStaking.Abi.Methods["stake"]
-	delegateFn       = contractsapi.HydraDelegation.Abi.Methods["delegate"]
+	// stakeFn            = contractsapi.HydraStaking.Abi.Methods["stake"]
+	// stakeWithVestingFn = contractsapi.HydraStaking.Abi.Methods["stakeWithVesting"]
+	// delegateFn         = contractsapi.HydraDelegation.Abi.Methods["delegate"]
 	stakeEventABI    = contractsapi.HydraStaking.Abi.Events["Staked"]
 	delegateEventABI = contractsapi.HydraDelegation.Abi.Events["Delegated"]
 )
@@ -136,6 +137,9 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	// vito
+	fmt.Println("===params.vesting is ", params.vesting)
+
 	txn, err := createStakeTransaction(validatorAccount)
 	if err != nil {
 		return err
@@ -172,6 +176,21 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 			result.isSelfStake = true
 			result.amount = event["amount"].(*big.Int).String() //nolint:forcetypeassert
+			fmt.Println("===amount is ", result.amount)
+
+			if params.vesting {
+				// vito
+				validatorInfo, err := sidechain.GetValidatorInfo(txRelayer, validatorAccount.Ecdsa.Address())
+				if err != nil {
+					fmt.Printf("was unable to get the validator info %s", result.validatorAddress)
+				} else {
+					result.amount = validatorInfo.Stake.String()
+				}
+
+				fmt.Println("===validatorInfo ", validatorInfo)
+
+				fmt.Println("===result.amount is ", result.amount)
+			}
 		} else if match = delegateEventABI.Match(log); match {
 			event, err = delegateEventABI.ParseLog(log)
 			if err != nil {
@@ -208,14 +227,24 @@ func createStakeTransaction(validatorAccount *wallet.Account) (*ethgo.Transactio
 	)
 
 	if params.self {
-		encoded, err = stakeFn.Encode([]interface{}{})
+		if params.vesting {
+			var stakeWithVestingFn = &contractsapi.StakeWithVestingHydraStakingFn{
+				DurationWeeks: new(big.Int).SetUint64(params.vestingPeriod),
+			}
+
+			encoded, err = stakeWithVestingFn.EncodeAbi()
+		} else {
+			var stakeFn = &contractsapi.StakeHydraStakingFn{}
+			encoded, err = stakeFn.EncodeAbi()
+		}
+
 		contractAddr = (*ethgo.Address)(&contracts.HydraStakingContract)
 	} else {
-		delegateToAddress := types.StringToAddress(params.delegateAddress)
+		var delegateFn = &contractsapi.DelegateHydraDelegationFn{
+			Staker: types.StringToAddress(params.delegateAddress),
+		}
 
-		encoded, err = delegateFn.Encode([]interface{}{
-			ethgo.Address(delegateToAddress),
-		})
+		encoded, err = delegateFn.EncodeAbi()
 		contractAddr = (*ethgo.Address)(&contracts.HydraDelegationContract)
 	}
 
