@@ -32,6 +32,30 @@ type ValidatorMetadata struct {
 	IsActive    bool
 }
 
+// Define the ValidatorStatus enum
+type ValidatorStatus int
+
+const (
+	None ValidatorStatus = iota
+	Registered
+	Active
+	Banned
+)
+
+// Function to get ValidatorStatus based on number value
+func GetStatus(value int) ValidatorStatus {
+	switch value {
+	case 1:
+		return Active
+	case 2:
+		return Active
+	case 3:
+		return Banned
+	default:
+		return None
+	}
+}
+
 // Equals checks ValidatorMetadata equality
 func (v *ValidatorMetadata) Equals(b *ValidatorMetadata) bool {
 	if b == nil {

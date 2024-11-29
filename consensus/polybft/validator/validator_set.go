@@ -127,27 +127,3 @@ func getQuorumSize(blockNumber uint64, totalVotingPower *big.Int) *big.Int {
 
 	return quorum
 }
-
-// Define the ValidatorStatus enum
-type ValidatorStatus int
-
-const (
-	None ValidatorStatus = iota
-	Registered
-	Active
-	Banned
-)
-
-// Function to get ValidatorStatus based on number value
-func GetStatus(value int) ValidatorStatus {
-	switch value {
-	case 1:
-		return Active
-	case 2:
-		return Active
-	case 3:
-		return Banned
-	default:
-		return None
-	}
-}
