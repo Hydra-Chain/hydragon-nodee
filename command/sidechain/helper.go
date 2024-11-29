@@ -9,6 +9,7 @@ import (
 	"github.com/0xPolygon/polygon-edge/command/polybftsecrets"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/contractsapi"
+	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/wallet"
 	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/helper/hex"
@@ -26,30 +27,6 @@ const (
 	MaxCommission    = 100
 	MaxVestingPeriod = 52
 )
-
-// Define the ValidatorStatus enum
-type ValidatorStatus int
-
-const (
-	None ValidatorStatus = iota
-	Registered
-	Active
-	Banned
-)
-
-// Function to get ValidatorStatus based on number value
-func GetStatus(value int) ValidatorStatus {
-	switch value {
-	case 1:
-		return Active
-	case 2:
-		return Active
-	case 3:
-		return Banned
-	default:
-		return None
-	}
-}
 
 func CheckIfDirectoryExist(dir string) error {
 	if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
@@ -158,7 +135,7 @@ func GetValidatorInfo(txRelayer txrelayer.TxRelayer, validatorAddr ethgo.Address
 		Address:             validatorAddr,
 		Stake:               stake,
 		WithdrawableRewards: withdrawableRewards,
-		IsActive:            Active == GetStatus(int(status)),
+		IsActive:            validator.Active == validator.GetStatus(int(status)),
 	}
 
 	return validatorInfo, nil
