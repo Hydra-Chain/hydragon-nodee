@@ -75,7 +75,7 @@ func (sr stakeResult) GetOutput() string {
 		if sr.isVesting {
 			title = "\n[VESTED STAKING ACTIVATED]\n"
 
-			vals = append(vals, fmt.Sprintf("Vesting Period|%d", sr.vestingPeriod))
+			vals = append(vals, fmt.Sprintf("Vesting Period (in weeks)|%d", sr.vestingPeriod))
 		}
 	} else {
 		title = "\n[DELEGATED AMOUNT]\n"
