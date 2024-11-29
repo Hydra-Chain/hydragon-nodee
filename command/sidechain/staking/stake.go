@@ -22,9 +22,6 @@ import (
 var (
 	params stakeParams
 
-	// stakeFn            = contractsapi.HydraStaking.Abi.Methods["stake"]
-	// stakeWithVestingFn = contractsapi.HydraStaking.Abi.Methods["stakeWithVesting"]
-	// delegateFn         = contractsapi.HydraDelegation.Abi.Methods["delegate"]
 	stakeEventABI    = contractsapi.HydraStaking.Abi.Events["Staked"]
 	delegateEventABI = contractsapi.HydraDelegation.Abi.Events["Delegated"]
 )

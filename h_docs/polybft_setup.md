@@ -107,7 +107,7 @@ To stake a vested position, use the same command but include the additional vest
 
 **Note:** The specified amount will be added to your existing staked amount, if applicable.
 
-1. Update commission of the validator that will taken from the delegators' rewards.
+6. Update the commission of the validator that will taken from the delegators' rewards.
 
 Here is the command to use for initializing the new commission:
 
