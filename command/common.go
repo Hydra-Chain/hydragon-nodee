@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/crypto"
 	"github.com/0xPolygon/polygon-edge/helper/common"
 	"github.com/0xPolygon/polygon-edge/secrets"
@@ -196,15 +195,6 @@ func ValidateAddress(name string, address string) error {
 
 	if strings.TrimSpace(address) == "" {
 		return fmt.Errorf("%s address must be set", name)
-	}
-
-	governanceAddr := types.StringToAddress(address)
-	if governanceAddr == types.ZeroAddress {
-		return fmt.Errorf("%s address must not be zero address", name)
-	}
-
-	if governanceAddr == contracts.SystemCaller {
-		return fmt.Errorf("%s address must not be system caller address", name)
 	}
 
 	return nil
