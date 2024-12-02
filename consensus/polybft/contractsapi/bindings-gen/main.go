@@ -53,6 +53,7 @@ func main() {
 				"distributeDAOIncentive",
 				"syncValidatorsData",
 				"terminateBanProcedure",
+				"getValidator",
 			},
 			[]string{
 				"NewValidator",
@@ -69,6 +70,7 @@ func main() {
 			[]string{
 				"initialize",
 				"stake",
+				"stakeWithVesting",
 				"unstake",
 				"distributeRewardsFor",
 				"claimStakingRewards()",

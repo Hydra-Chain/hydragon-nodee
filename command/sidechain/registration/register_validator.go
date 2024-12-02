@@ -28,7 +28,7 @@ var (
 	params registerParams
 
 	hydraChain                = contracts.HydraChainContract
-	stakeManager              = contracts.HydraStakingContract
+	hydraStaking              = contracts.HydraStakingContract
 	newValidatorEventABI      = contractsapi.HydraChain.Abi.Events["NewValidator"]
 	commissionUpdatedEventABI = contractsapi.HydraDelegation.Abi.Events["CommissionUpdated"]
 	stakeEventABI             = contractsapi.HydraStaking.Abi.Events["Staked"]
@@ -235,7 +235,7 @@ func stake(sender txrelayer.TxRelayer, account *wallet.Account) (*ethgo.Receipt,
 
 	txn := &ethgo.Transaction{
 		Input: encoded,
-		To:    (*ethgo.Address)(&stakeManager),
+		To:    (*ethgo.Address)(&hydraStaking),
 		Value: stake,
 	}
 

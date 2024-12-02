@@ -166,14 +166,12 @@ Hydra's validator set is unique as it offers a permissionless opportunity on a f
 After ensuring you have a minimum of 15,000 HYDRA in your validator wallet, you can execute the following command.
 
 ```
-hydra hydragon register-validator --data-dir ./node-secrets --stake 15000000000000000000000 --jsonrpc http://localhost:8545
-```
-
-The command above both registers the validator and stakes the specified amount. To specify an initial commission rate that will be deducted from future delegators’ rewards, use the `--commission` flag with the desired value. The commission rate must be between 0 and 100. The command will look as follows:
-
-```
 hydra hydragon register-validator --data-dir ./node-secrets --stake 15000000000000000000000 --commission 10 --jsonrpc http://localhost:8545
 ```
+
+The command above both registers the validator, stakes the specified amount and sets the commission (in percentage). This commission will be deducted from future delegators’ rewards. Change the value next to the `--commission` flag with the desired commission and ensure it is between 0 and 100.
+
+#### Stake
 
 Use the following command if you want to perform a stake operation only or increase your existing stake:
 
@@ -184,6 +182,20 @@ hydra hydragon stake --data-dir ./node-secrets --self true --amount 150000000000
 **Note:** Amounts are specified in wei.
 
 Congratulations! You have successfully become a validator on the Hydra Chain. For further information and support, join our Telegram group and engage with the community.
+
+#### Stake with Vesting
+
+Hydra Chain allows you to open a vested position, where your funds are locked for a chosen period between 1 and 52 weeks (1 year). In return, you receive a loyalty bonus on the APR. The longer the vesting duration, the higher the bonus.
+
+You can unstake your funds prematurely by paying a penalty fee, which is calculated at 0.5% per remaining week of the lockup period. Consequently, the closer the position is to maturity, the lower the penalty fee, while the further away, the higher the cost. Additionally, any rewards distributed to you in the vesting period will also be burned in the process. For more details on this mechanism, refer to the Whitepaper.
+
+```
+hydra hydragon stake --data-dir ./node-secrets --self true --amount 10000000000000000000000 --vesting-period 52 --jsonrpc http://localhost:8545
+```
+
+**Note:** The amounts are specified in wei, and the specified value will be added to your existing staked amount, if applicable.
+
+Congratulations! Enjoy the enhanced rewards and benefits provided by Vested Staking.
 
 ### Update the commission for the delegators
 
@@ -242,7 +254,7 @@ To reduce the risk of stalling caused by validators experiencing temporary issue
 
 ### Command Line Interface
 
-Here are the HydraChain node CLI commands that currently can be used:
+Here are the Hydra Chain node CLI commands that currently can be used:
 
 - Usage:
 
@@ -259,7 +271,7 @@ Here are the HydraChain node CLI commands that currently can be used:
 | completion | Generate the autocompletion script for the specified shell                                                                    |
 | genesis    | Generates the genesis configuration file with the passed in parameters                                                        |
 | help       | Help about any command                                                                                                        |
-| hydragon   | Executes HydraChain's Hydragon consensus commands, including staking, unstaking, rewards management, and validator operations |
+| hydragon   | Executes Hydra Chain's Hydragon consensus commands, including staking, unstaking, rewards management, and validator operations |
 | license    | Returns Hydra Chain license and dependency attributions                                                                       |
 | monitor    | Starts logging block add / remove events on the blockchain                                                                    |
 | peers      | Top level command for interacting with the network peers. Only accepts subcommands                                            |
