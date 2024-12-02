@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/chain"
@@ -14,7 +13,6 @@ import (
 	"github.com/0xPolygon/polygon-edge/consensus/ibft/fork"
 	"github.com/0xPolygon/polygon-edge/consensus/ibft/signer"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft"
-	"github.com/0xPolygon/polygon-edge/contracts"
 	"github.com/0xPolygon/polygon-edge/contracts/staking"
 	stakingHelper "github.com/0xPolygon/polygon-edge/helper/staking"
 	"github.com/0xPolygon/polygon-edge/secrets"
@@ -171,7 +169,7 @@ func (p *genesisParams) validateFlags() error {
 		// 	return err
 		// }
 
-		if err := p.validateProxyContractsAdmin(); err != nil {
+		if err := command.ValidateAddress("proxy contracts admin", p.proxyContractsAdmin); err != nil {
 			return err
 		}
 
@@ -566,23 +564,6 @@ func (p *genesisParams) validateGenesisBaseFeeConfig() error {
 	return nil
 }
 
-func (p *genesisParams) validateProxyContractsAdmin() error {
-	if strings.TrimSpace(p.proxyContractsAdmin) == "" {
-		return errors.New("proxy contracts admin address must be set")
-	}
-
-	proxyContractsAdminAddr := types.StringToAddress(p.proxyContractsAdmin)
-	if proxyContractsAdminAddr == types.ZeroAddress {
-		return errors.New("proxy contracts admin address must not be zero address")
-	}
-
-	if proxyContractsAdminAddr == contracts.SystemCaller {
-		return errors.New("proxy contracts admin address must not be system caller address")
-	}
-
-	return nil
-}
-
 // isBurnContractEnabled returns true in case burn contract info is provided
 func (p *genesisParams) isBurnContractEnabled() bool {
 	return p.burnContract != ""
@@ -607,17 +588,12 @@ func (p *genesisParams) getResult() command.CommandResult {
 }
 
 func (p *genesisParams) validateGovernanceAddress() error {
-	if strings.TrimSpace(p.governance) == "" {
-		return errors.New("governance address must be set")
+	if err := command.ValidateAddress("governance", p.governance); err != nil {
+		return err
 	}
 
-	proxyContractsAdminAddr := types.StringToAddress(p.proxyContractsAdmin)
-	if proxyContractsAdminAddr == types.ZeroAddress {
-		return errors.New("governance address must not be zero address")
-	}
-
-	if proxyContractsAdminAddr == contracts.SystemCaller {
-		return errors.New("governance address must not be system caller address")
+	if p.proxyContractsAdmin == p.governance {
+		return errors.New("governance address must be different than the proxy contracts admin")
 	}
 
 	return nil
