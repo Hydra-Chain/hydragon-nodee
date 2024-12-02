@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/chain"
@@ -37,6 +36,7 @@ const (
 	nativeTokenConfigFlag        = "native-token-config"
 	blockTrackerPollIntervalFlag = "block-tracker-poll-interval"
 	proxyContractsAdminFlag      = "proxy-contracts-admin"
+	governanceFlag               = "governance"
 )
 
 // Legacy flags that need to be preserved for running clients
@@ -129,6 +129,7 @@ type genesisParams struct {
 	blockTrackerPollInterval time.Duration
 
 	proxyContractsAdmin string
+	governance          string
 
 	secretsConfigPath string
 	secretsConfig     *secrets.SecretsManagerConfig
@@ -170,6 +171,10 @@ func (p *genesisParams) validateFlags() error {
 		// }
 
 		if err := p.validateProxyContractsAdmin(); err != nil {
+			return err
+		}
+
+		if err := p.validateGovernanceAddress(); err != nil {
 			return err
 		}
 	}
@@ -222,6 +227,7 @@ func (p *genesisParams) getRequiredFlags() []string {
 	if p.isIBFTConsensus() {
 		return []string{
 			command.BootnodeFlag,
+			governanceFlag,
 		}
 	}
 
@@ -560,8 +566,8 @@ func (p *genesisParams) validateGenesisBaseFeeConfig() error {
 }
 
 func (p *genesisParams) validateProxyContractsAdmin() error {
-	if strings.TrimSpace(p.proxyContractsAdmin) == "" {
-		return errors.New("proxy contracts admin address must be set")
+	if err := command.ValidateAddress("proxy contracts admin", p.proxyContractsAdmin); err != nil {
+		return err
 	}
 
 	proxyContractsAdminAddr := types.StringToAddress(p.proxyContractsAdmin)
@@ -597,4 +603,25 @@ func (p *genesisParams) getResult() command.CommandResult {
 	return &GenesisResult{
 		Message: fmt.Sprintf("\nGenesis written to %s\n", p.genesisPath),
 	}
+}
+
+func (p *genesisParams) validateGovernanceAddress() error {
+	if err := command.ValidateAddress("governance", p.governance); err != nil {
+		return err
+	}
+
+	governanceAddr := types.StringToAddress(p.governance)
+	if governanceAddr == types.ZeroAddress {
+		return errors.New("governance address must not be zero address")
+	}
+
+	if governanceAddr == contracts.SystemCaller {
+		return errors.New("governance address must not be system caller address")
+	}
+
+	if p.proxyContractsAdmin == p.governance {
+		return errors.New("governance address must be different than the proxy contracts admin")
+	}
+
+	return nil
 }

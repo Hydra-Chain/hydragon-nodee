@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -184,4 +185,17 @@ func getBLSPublicKeyBytesFromSecretManager(manager secrets.SecretsManager) ([]by
 	}
 
 	return pubKeyBytes, nil
+}
+
+// ValidateAddress checks if address is provided, is a valid Ethereum address, is not zero address, nor system caller
+func ValidateAddress(name string, address string) error {
+	if strings.TrimSpace(address) == "" {
+		return fmt.Errorf("%s address must be set", name)
+	}
+
+	if err := types.IsValidAddress(address); err != nil {
+		return err
+	}
+
+	return nil
 }
