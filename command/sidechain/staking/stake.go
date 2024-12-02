@@ -70,18 +70,11 @@ func setFlags(cmd *cobra.Command) {
 		"indicates if its a self stake action",
 	)
 
-	cmd.Flags().BoolVar(
-		&params.vesting,
-		vestingFlag,
-		false,
-		"indicates if you want to open vested stake position",
-	)
-
 	cmd.Flags().Uint64Var(
 		&params.vestingPeriod,
 		vestingPeriodFlag,
 		0,
-		"if vesting flag is set, this is a mandatory flag which indicates the vesting period in weeks. "+
+		"this flag is used to open a vested staking position. It indicates the vesting period in weeks. "+
 			"It must be at least 1 week and the max period is 52 weeks (1 year).",
 	)
 
@@ -102,7 +95,6 @@ func setFlags(cmd *cobra.Command) {
 	helper.RegisterJSONRPCFlag(cmd)
 
 	cmd.MarkFlagsMutuallyExclusive(sidechain.SelfFlag, delegateAddressFlag)
-	cmd.MarkFlagsMutuallyExclusive(vestingFlag, delegateAddressFlag)
 	cmd.MarkFlagsMutuallyExclusive(vestingPeriodFlag, delegateAddressFlag)
 	cmd.MarkFlagsMutuallyExclusive(polybftsecrets.AccountDirFlag, polybftsecrets.AccountConfigFlag)
 }
@@ -150,7 +142,6 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 
 	result := &stakeResult{
 		validatorAddress: validatorAccount.Ecdsa.Address().String(),
-		isVesting:        params.vesting,
 		vestingPeriod:    params.vestingPeriod,
 	}
 
@@ -171,7 +162,7 @@ func runCommand(cmd *cobra.Command, _ []string) error {
 			result.isSelfStake = true
 			result.amount = event["amount"].(*big.Int).String() //nolint:forcetypeassert
 
-			if params.vesting {
+			if params.vestingPeriod > 0 {
 				validatorInfo, err := sidechain.GetValidatorInfo(txRelayer, validatorAccount.Ecdsa.Address())
 				if err != nil {
 					fmt.Printf("was unable to get the validator info %s", result.validatorAddress)
@@ -215,7 +206,7 @@ func createStakeTransaction(validatorAccount *wallet.Account) (*ethgo.Transactio
 	)
 
 	if params.self {
-		if params.vesting {
+		if params.vestingPeriod > 0 {
 			var stakeWithVestingFn = &contractsapi.StakeWithVestingHydraStakingFn{
 				DurationWeeks: new(big.Int).SetUint64(params.vestingPeriod),
 			}

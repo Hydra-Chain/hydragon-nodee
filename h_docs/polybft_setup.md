@@ -99,10 +99,10 @@ After registering, you can increase your stake at any time. Additionally, if you
 ./hydra hydragon stake --data-dir ./test-add-chain-1 --self true --amount 10000000000000000000000 --jsonrpc http://127.0.0.1:10006 --insecure
 ```
 
-To stake a vested position, use the same command but include the additional vesting flags:
+To stake a vested position, use the same command but include the additional vesting flag:
 
 ```
-./hydra hydragon stake --data-dir ./test-add-chain-1 --self true --amount 10000000000000000000000 --vesting true --vesting-period 52 --jsonrpc http://127.0.0.1:10006 --insecure
+./hydra hydragon stake --data-dir ./test-add-chain-1 --self true --amount 10000000000000000000000 --vesting-period 52 --jsonrpc http://127.0.0.1:10006 --insecure
 ```
 
 **Note:** The specified amount will be added to your existing staked amount, if applicable.

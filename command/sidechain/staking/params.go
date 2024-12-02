@@ -10,7 +10,6 @@ import (
 
 var (
 	delegateAddressFlag = "delegate"
-	vestingFlag         = "vesting"
 	vestingPeriodFlag   = "vesting-period"
 )
 
@@ -20,7 +19,6 @@ type stakeParams struct {
 	jsonRPC            string
 	amount             string
 	self               bool
-	vesting            bool
 	vestingPeriod      uint64
 	delegateAddress    string
 	insecureLocalStore bool
@@ -37,7 +35,7 @@ func (sp *stakeParams) validateFlags() error {
 		return fmt.Errorf("failed to parse json rpc address. Error: %w", err)
 	}
 
-	if sp.vesting && (sp.vestingPeriod < 1 || sp.vestingPeriod > sidechainHelper.MaxVestingPeriod) {
+	if sp.vestingPeriod != 0 && (sp.vestingPeriod < 1 || sp.vestingPeriod > sidechainHelper.MaxVestingPeriod) {
 		return fmt.Errorf(
 			"invalid vesting period '%d'. The period must between 1 and '%d' weeks",
 			sp.vestingPeriod,
@@ -51,7 +49,6 @@ func (sp *stakeParams) validateFlags() error {
 type stakeResult struct {
 	validatorAddress string
 	isSelfStake      bool
-	isVesting        bool
 	amount           string
 	vestingPeriod    uint64
 	delegatedTo      string
@@ -72,7 +69,7 @@ func (sr stakeResult) GetOutput() string {
 			fmt.Sprintf("Amount Staked|%v", sr.amount),
 		}
 
-		if sr.isVesting {
+		if sr.vestingPeriod > 0 {
 			title = "\n[VESTED STAKING ACTIVATED]\n"
 
 			vals = append(vals, fmt.Sprintf("Vesting Period (in weeks)|%d", sr.vestingPeriod))

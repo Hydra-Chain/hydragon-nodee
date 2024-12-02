@@ -190,7 +190,7 @@ Hydra Chain allows you to open a vested position, where your funds are locked fo
 You can unstake your funds prematurely by paying a penalty fee, which is calculated at 0.5% per remaining week of the lockup period. Consequently, the closer the position is to maturity, the lower the penalty fee, while the further away, the higher the cost. Additionally, any rewards distributed to you in the vesting period will also be burned in the process. For more details on this mechanism, refer to the Whitepaper.
 
 ```
-hydra hydragon stake --data-dir ./node-secrets --self true --amount 10000000000000000000000 --vesting true --vesting-period 52 --jsonrpc http://localhost:8545
+hydra hydragon stake --data-dir ./node-secrets --self true --amount 10000000000000000000000 --vesting-period 52 --jsonrpc http://localhost:8545
 ```
 
 **Note:** The amounts are specified in wei, and the specified value will be added to your existing staked amount, if applicable.
