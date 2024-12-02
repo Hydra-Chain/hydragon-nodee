@@ -187,7 +187,7 @@ Congratulations! You have successfully become a validator on the Hydra Chain. Fo
 
 Hydra Chain allows you to open a vested position, where your funds are locked for a chosen period between 1 and 52 weeks (1 year). In return, you receive a loyalty bonus on the APR. The longer the vesting duration, the higher the bonus.
 
-You can unstake your funds prematurely by paying a penalty fee, which is calculated at 0.5% per remaining week of the lockup period. Consequently, the closer the position is to maturity, the lower the penalty fee, while the further away, the higher the cost. Additionally, any rewards that haven`t completed vesting will also be burned in the process. For more details on this mechanism, refer to the Whitepaper.
+You can unstake your funds prematurely by paying a penalty fee, which is calculated at 0.5% per remaining week of the lockup period. Consequently, the closer the position is to maturity, the lower the penalty fee, while the further away, the higher the cost. Additionally, any rewards distributed to you in the vesting period will also be burned in the process. For more details on this mechanism, refer to the Whitepaper.
 
 ```
 hydra hydragon stake --data-dir ./node-secrets --self true --amount 10000000000000000000000 --vesting true --vesting-period 52 --jsonrpc http://localhost:8545
