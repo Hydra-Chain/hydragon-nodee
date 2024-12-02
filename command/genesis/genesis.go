@@ -118,6 +118,14 @@ func setFlags(cmd *cobra.Command) {
 	)
 
 	cmd.Flags().StringVar(
+		&params.governance,
+		governanceFlag,
+		"",
+		"a mandatory flag that represents governance address that controls essential functions across the "+
+			"core contracts infrastructure",
+	)
+
+	cmd.Flags().StringVar(
 		&params.secretsConfigPath,
 		command.SecretsConfigFlag,
 		command.DefaultSecretsConfigPath,

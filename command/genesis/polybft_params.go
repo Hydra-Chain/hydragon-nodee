@@ -117,13 +117,12 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 	}
 
 	polyBftConfig := &polybft.PolyBFTConfig{
-		InitialValidatorSet: initialValidators,
-		BlockTime:           common.Duration{Duration: p.blockTime},
-		EpochSize:           p.epochSize,
-		SprintSize:          p.sprintSize,
-		EpochReward:         p.epochReward,
-		// use 1st account as governance address
-		Governance:               initialValidators[0].Address,
+		InitialValidatorSet:      initialValidators,
+		BlockTime:                common.Duration{Duration: p.blockTime},
+		EpochSize:                p.epochSize,
+		SprintSize:               p.sprintSize,
+		EpochReward:              p.epochReward,
+		Governance:               types.StringToAddress(p.governance),
 		InitialTrieRoot:          types.StringToHash(p.initialStateRoot),
 		NativeTokenConfig:        p.nativeTokenConfig,
 		MinValidatorSetSize:      p.minNumValidators,

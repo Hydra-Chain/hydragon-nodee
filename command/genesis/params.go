@@ -37,6 +37,7 @@ const (
 	nativeTokenConfigFlag        = "native-token-config"
 	blockTrackerPollIntervalFlag = "block-tracker-poll-interval"
 	proxyContractsAdminFlag      = "proxy-contracts-admin"
+	governanceFlag               = "governance"
 )
 
 // Legacy flags that need to be preserved for running clients
@@ -129,6 +130,7 @@ type genesisParams struct {
 	blockTrackerPollInterval time.Duration
 
 	proxyContractsAdmin string
+	governance          string
 
 	secretsConfigPath string
 	secretsConfig     *secrets.SecretsManagerConfig
@@ -170,6 +172,10 @@ func (p *genesisParams) validateFlags() error {
 		// }
 
 		if err := p.validateProxyContractsAdmin(); err != nil {
+			return err
+		}
+
+		if err := p.validateGovernanceAddress(); err != nil {
 			return err
 		}
 	}
@@ -222,6 +228,7 @@ func (p *genesisParams) getRequiredFlags() []string {
 	if p.isIBFTConsensus() {
 		return []string{
 			command.BootnodeFlag,
+			governanceFlag,
 		}
 	}
 
@@ -597,4 +604,21 @@ func (p *genesisParams) getResult() command.CommandResult {
 	return &GenesisResult{
 		Message: fmt.Sprintf("\nGenesis written to %s\n", p.genesisPath),
 	}
+}
+
+func (p *genesisParams) validateGovernanceAddress() error {
+	if strings.TrimSpace(p.governance) == "" {
+		return errors.New("governance address must be set")
+	}
+
+	proxyContractsAdminAddr := types.StringToAddress(p.proxyContractsAdmin)
+	if proxyContractsAdminAddr == types.ZeroAddress {
+		return errors.New("governance address must not be zero address")
+	}
+
+	if proxyContractsAdminAddr == contracts.SystemCaller {
+		return errors.New("governance address must not be system caller address")
+	}
+
+	return nil
 }
