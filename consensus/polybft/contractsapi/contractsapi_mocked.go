@@ -1553,31 +1553,6 @@ func (t *TransferEvent) Decode(input []byte) error {
 	return HydraStaking.Abi.Events["Transfer"].Inputs.DecodeStruct(input, &t)
 }
 
-type WithdrawalRegisteredEvent struct {
-	Account types.Address `abi:"account"`
-	Amount  *big.Int      `abi:"amount"`
-}
-
-func (*WithdrawalRegisteredEvent) Sig() ethgo.Hash {
-	return HydraStaking.Abi.Events["WithdrawalRegistered"].ID()
-}
-
-func (w *WithdrawalRegisteredEvent) Encode() ([]byte, error) {
-	return HydraStaking.Abi.Events["WithdrawalRegistered"].Inputs.Encode(w)
-}
-
-func (w *WithdrawalRegisteredEvent) ParseLog(log *ethgo.Log) (bool, error) {
-	if !HydraStaking.Abi.Events["WithdrawalRegistered"].Match(log) {
-		return false, nil
-	}
-
-	return true, decodeEvent(HydraStaking.Abi.Events["WithdrawalRegistered"], log, w)
-}
-
-func (w *WithdrawalRegisteredEvent) Decode(input []byte) error {
-	return HydraStaking.Abi.Events["WithdrawalRegistered"].Inputs.DecodeStruct(input, &w)
-}
-
 type InitializeEIP1559BurnFn struct {
 	NewChildERC20Predicate types.Address `abi:"newChildERC20Predicate"`
 	NewBurnDestination     types.Address `abi:"newBurnDestination"`

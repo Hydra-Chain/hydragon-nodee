@@ -195,7 +195,7 @@ You can unstake your funds prematurely by paying a penalty fee, which is calcula
 hydra hydragon stake --data-dir ./node-secrets --self true --amount 15000000000000000000000 --vesting-period 52 --jsonrpc http://localhost:8545
 ```
 
-**Note:** The amounts are specified in wei, and the specified value will be added to your existing staked amount, if applicable.
+**Note:** The amounts are specified in wei, and the specified value will be added to your existing staked amount. If you do not wish to increase your stake, set the amount value to 0.
 
 **Note:** You can vest your already staked balance by setting the 'amount' flag to 0.
 
@@ -250,7 +250,19 @@ Congratulations, you’re back in action!
 
 **Note:** Please keep in mind that if malicious behavior is detected, a manual ban can be initiated by the Hydra DAO. Furthermore, if the conditions for initiating a ban and enforcing the ban are met, a user can execute the relevant functions by interacting with the contract via the explorer or programmatically.
 
-#### Withdrawing funds after ban
+#### Withdrawing penalized funds after ban
+
+If your validator has been banned, you can still withdraw the remaining funds after the penalty and burned rewards have been deducted. To do so, you must first initiate the withdrawal process for the penalized funds and then wait for the withdrawal period to complete. Use the following command:
+
+```
+hydra hydragon withdraw --penalized-funds true --data-dir ./node-secrets --jsonrpc http://localhost:8545
+```
+
+After the withdrawal period has ended, you can claim the remaining funds using the command below:
+
+```
+hydra hydragon withdraw --data-dir ./node-secrets --jsonrpc http://localhost:8545
+```
 
 If your validator has been banned, you can still withdraw the remaining funds after the penalty and burned rewards have been deducted. Use the following command:
 

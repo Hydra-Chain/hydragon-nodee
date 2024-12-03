@@ -462,19 +462,19 @@ func (w *WithdrawHydraStakingFn) DecodeAbi(buf []byte) error {
 	return decodeMethod(HydraStaking.Abi.Methods["withdraw"], buf, w)
 }
 
-type WithdrawBannedFundsHydraStakingFn struct {
+type InitiatePenalizedFundsWithdrawalHydraStakingFn struct {
 }
 
-func (w *WithdrawBannedFundsHydraStakingFn) Sig() []byte {
-	return HydraStaking.Abi.Methods["withdrawBannedFunds"].ID()
+func (i *InitiatePenalizedFundsWithdrawalHydraStakingFn) Sig() []byte {
+	return HydraStaking.Abi.Methods["initiatePenalizedFundsWithdrawal"].ID()
 }
 
-func (w *WithdrawBannedFundsHydraStakingFn) EncodeAbi() ([]byte, error) {
-	return HydraStaking.Abi.Methods["withdrawBannedFunds"].Encode(w)
+func (i *InitiatePenalizedFundsWithdrawalHydraStakingFn) EncodeAbi() ([]byte, error) {
+	return HydraStaking.Abi.Methods["initiatePenalizedFundsWithdrawal"].Encode(i)
 }
 
-func (w *WithdrawBannedFundsHydraStakingFn) DecodeAbi(buf []byte) error {
-	return decodeMethod(HydraStaking.Abi.Methods["withdrawBannedFunds"], buf, w)
+func (i *InitiatePenalizedFundsWithdrawalHydraStakingFn) DecodeAbi(buf []byte) error {
+	return decodeMethod(HydraStaking.Abi.Methods["initiatePenalizedFundsWithdrawal"], buf, i)
 }
 
 type StakedEvent struct {
@@ -600,6 +600,31 @@ func (s *StakingRewardsClaimedEvent) ParseLog(log *ethgo.Log) (bool, error) {
 
 func (s *StakingRewardsClaimedEvent) Decode(input []byte) error {
 	return HydraStaking.Abi.Events["StakingRewardsClaimed"].Inputs.DecodeStruct(input, &s)
+}
+
+type WithdrawalRegisteredEvent struct {
+	Account types.Address `abi:"account"`
+	Amount  *big.Int      `abi:"amount"`
+}
+
+func (*WithdrawalRegisteredEvent) Sig() ethgo.Hash {
+	return HydraStaking.Abi.Events["WithdrawalRegistered"].ID()
+}
+
+func (w *WithdrawalRegisteredEvent) Encode() ([]byte, error) {
+	return HydraStaking.Abi.Events["WithdrawalRegistered"].Inputs.Encode(w)
+}
+
+func (w *WithdrawalRegisteredEvent) ParseLog(log *ethgo.Log) (bool, error) {
+	if !HydraStaking.Abi.Events["WithdrawalRegistered"].Match(log) {
+		return false, nil
+	}
+
+	return true, decodeEvent(HydraStaking.Abi.Events["WithdrawalRegistered"], log, w)
+}
+
+func (w *WithdrawalRegisteredEvent) Decode(input []byte) error {
+	return HydraStaking.Abi.Events["WithdrawalRegistered"].Inputs.DecodeStruct(input, &w)
 }
 
 type WithdrawalFinishedEvent struct {
