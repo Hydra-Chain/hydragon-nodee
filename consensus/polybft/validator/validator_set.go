@@ -83,7 +83,8 @@ func (vs validatorSet) HasQuorum(blockNumber uint64, signers map[types.Address]s
 		"signers", len(signers),
 		"signers voting power", aggregateVotingPower,
 		"quorum size", quorumSize,
-		"hasQuorum", hasQuorum)
+		"hasQuorum", hasQuorum,
+		"block number", blockNumber)
 
 	return hasQuorum
 }
