@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	bannedFundsFlag = "banned"
+	penalizedFundsFlag = "penalized-funds"
 )
 
 type withdrawParams struct {
 	accountDir         string
 	accountConfig      string
 	jsonRPC            string
-	bannedFunds        bool
+	penalizedFunds     bool
 	insecureLocalStore bool
 }
 
@@ -32,12 +32,17 @@ type withdrawResult struct {
 	ValidatorAddress string `json:"validatorAddress"`
 	Amount           string `json:"amount"`
 	BlockNumber      uint64 `json:"blockNumber"`
+	Registered       bool   `json:"registered"`
 }
 
 func (r *withdrawResult) GetOutput() string {
 	var buffer bytes.Buffer
 
-	buffer.WriteString("\n[WITHDRAWAL]\n")
+	if r.Registered {
+		buffer.WriteString("\n[WITHDRAWAL REGISTERED]\n")
+	} else {
+		buffer.WriteString("\n[WITHDRAWAL SUCCESSFUL]\n")
+	}
 
 	vals := make([]string, 0, 4)
 	vals = append(vals, fmt.Sprintf("Validator Address|%s", r.ValidatorAddress))

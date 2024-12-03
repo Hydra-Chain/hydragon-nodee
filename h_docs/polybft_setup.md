@@ -139,10 +139,18 @@ Additionally, during rewards distribution, if a validator has delegators, an add
 ./hydra hydragon terminate-ban --data-dir ./test-add-chain-1 --jsonrpc http://127.0.0.1:10001 --insecure
 ```
 
-9. If the validator was banned, then withdraw the funds left by executing:
+9. If the validator has been banned:
+
+You can still withdraw the remaining funds after the penalty and burned rewards have been deducted. To do so, you must first initiate the withdrawal process for the penalized funds and then wait for the withdrawal period to complete. Use the following command:
 
 ```
-./hydra hydragon withdraw --banned --data-dir ./test-add-chain-1 --jsonrpc http://127.0.0.1:10001 --insecure
+./hydra hydragon withdraw --penalized-funds true --data-dir ./test-add-chain-1 --jsonrpc http://127.0.0.1:10001 --insecure
+```
+
+After the withdrawal period has ended, you can claim the remaining funds using the command below:
+
+```
+./hydra hydragon withdraw --data-dir ./test-add-chain-1 --jsonrpc http://127.0.0.1:10001 --insecure
 ```
 
 ### LEGACY local setup

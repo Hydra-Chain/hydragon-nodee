@@ -75,7 +75,7 @@ func main() {
 				"distributeRewardsFor",
 				"claimStakingRewards()",
 				"withdraw",
-				"withdrawBannedFunds",
+				"initiatePenalizedFundsWithdrawal",
 			},
 			[]string{
 				"Staked",
@@ -83,6 +83,7 @@ func main() {
 				"BalanceChanged",
 				"StakingRewardDistributed",
 				"StakingRewardsClaimed",
+				"WithdrawalRegistered",
 				"WithdrawalFinished",
 			},
 		},
