@@ -152,8 +152,9 @@ func setFlags(cmd *cobra.Command) {
 		cmd.Flags().Uint64Var(
 			&params.maxNumValidators,
 			command.MaxValidatorCountFlag,
-			common.MaxSafeJSInt,
-			"the maximum number of validators in the validator set for PoS",
+			150,
+			"the maximum number of validators in the validator set for PoS"+
+				"(This is the total maximum - the actual number is set in the core contracts)",
 		)
 
 		cmd.Flags().StringVar(
