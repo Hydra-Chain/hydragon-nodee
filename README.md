@@ -130,7 +130,7 @@ For more details on available commands and their usage, you can append the `--he
 
 The genesis.json file is crucial, containing details about the genesis block and node configurations.
 **Important: Do not alter this file to avoid potential loss of funds.**
-Future releases will automate this configuration. You can find the Testnet genesis file in the extracted folder containing the [release assets](<[#executable](https://github.com/Hydra-Chain/hydragon-node/releases/latest)>) and place it in your node directory.
+Future releases will automate this configuration. You can find the Testnet genesis file in the extracted folder containing the [release assets](#executable) and place it in your node directory.
 
 #### Secrets Configuration File
 
@@ -163,7 +163,7 @@ After your node is operational and fully synced, you're ready to become a valida
 
 ### Register account as validator and stake
 
-Hydra's validator set is unique as it offers a permissionless opportunity on a first come/first serve. It supports up to 150 validators and uses exponentiating formula to ensure consolidation is countered for a maximum Nakamoto Coefficient. The requirements to become a validator: a) to have a minimum of 15,000 HYDRA and b) there to be vacant slots in the validator sets. Inactive validators are going to be ejected after approximately 1 hours of inactivity and permanently banned after additional 24 hours if the bann process is not terminated (See the [Ban Validator](#ban-validator) section for more details.) in order to ensure fair environment and highest level of network security.
+Hydra's validator set is unique as it offers a permissionless opportunity on a first come/first serve. It supports up to 150 validators and uses exponentiating formula to ensure consolidation is countered for a maximum Nakamoto Coefficient. The requirements to become a validator: a) to have a minimum of 15,000 HYDRA and b) there to be vacant slots in the validator sets. Inactive validators are going to be ejected after approximately 1 hours of inactivity and permanently banned after additional 24 hours if the ban process is not terminated (See the [Ban Validator](#ban-validator) section for more details.) in order to ensure fair environment and highest level of network security.
 
 After ensuring you have a minimum of 15,000 HYDRA in your validator wallet, you can execute the following command.
 
@@ -248,7 +248,7 @@ hydra hydragon terminate-ban --data-dir ./node-secrets --jsonrpc http://localhos
 
 Congratulations, you’re back in action!
 
-**\*Note:** Please keep in mind that if malicious behavior is detected, a manual ban can be initiated by the Hydra DAO. Furthermore, if the conditions for initiating a ban and enforcing the ban are met, a user can execute the relevant functions by interacting with the contract via the explorer or programmatically.\*
+**Note:** Please keep in mind that if malicious behavior is detected, a manual ban can be initiated by the Hydra DAO. Furthermore, if the conditions for initiating a ban and enforcing the ban are met, a user can execute the relevant functions by interacting with the contract via the explorer or programmatically.
 
 #### Withdrawing funds after ban
 
