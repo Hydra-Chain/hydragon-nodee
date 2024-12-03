@@ -34,7 +34,7 @@ After downloading, unzip the file. The extracted folder, named identically to th
 
 ##### Prerequisites
 
-1. Golang 1.20 installed
+1. Golang >=1.21 installed. (The current recommended version is 1.23.3)
 
 ##### Build steps
 
@@ -109,6 +109,7 @@ Node ID                  = 16Uiu2HAm66TZf6DnK2qjLCRLQZiHttGpsHCGtdNxLb1eMgWNM6cD
 #### Output the secret and public data for the validator
 
 There may be situations where you need to retrieve the secret data (such as private keys) after initializing the node. You can retrieve the private keys using the following command:
+
 ```
 hydra secrets output-private --data-dir node-secrets
 ```
@@ -116,6 +117,7 @@ hydra secrets output-private --data-dir node-secrets
 You’ll then be prompted to enter the password you set during the secrets initialization process.
 
 The same steps apply for retrieving public keys and the Node ID. Use the following command to output this information:
+
 ```
 hydra secrets output-public --data-dir node-secrets
 ```
@@ -128,7 +130,7 @@ For more details on available commands and their usage, you can append the `--he
 
 The genesis.json file is crucial, containing details about the genesis block and node configurations.
 **Important: Do not alter this file to avoid potential loss of funds.**
-Future releases will automate this configuration. You can find the Testnet genesis file in the extracted folder containing the [release assets]([#executable](https://github.com/Hydra-Chain/hydragon-node/releases/latest)) and place it in your node directory.
+Future releases will automate this configuration. You can find the Testnet genesis file in the extracted folder containing the [release assets](#executable) and place it in your node directory.
 
 #### Secrets Configuration File
 
@@ -161,7 +163,7 @@ After your node is operational and fully synced, you're ready to become a valida
 
 ### Register account as validator and stake
 
-Hydra's validator set is unique as it offers a permissionless opportunity on a first come/first serve. It supports up to 150 validators and uses exponentiating formula to ensure consolidation is countered for a maximum Nakamoto Coefficient. The requirements to become a validator: a) to have a minimum of 15,000 HYDRA and b) there to be vacant slots in the validator sets. Inactive validators are going to be ejected after approximately 72 hours in order to ensure fair environment and highest level of network security.
+Hydra's validator set is unique as it offers a permissionless opportunity on a first come/first serve. It supports up to 150 validators and uses exponentiating formula to ensure consolidation is countered for a maximum Nakamoto Coefficient. The requirements to become a validator: a) to have a minimum of 15,000 HYDRA and b) there to be vacant slots in the validator sets. Inactive validators are going to be ejected after approximately 1 hours of inactivity and permanently banned after additional 24 hours if the ban process is not terminated (See the [Ban Validator](#ban-validator) section for more details.) in order to ensure fair environment and highest level of network security.
 
 After ensuring you have a minimum of 15,000 HYDRA in your validator wallet, you can execute the following command.
 
@@ -190,10 +192,14 @@ Hydra Chain allows you to open a vested position, where your funds are locked fo
 You can unstake your funds prematurely by paying a penalty fee, which is calculated at 0.5% per remaining week of the lockup period. Consequently, the closer the position is to maturity, the lower the penalty fee, while the further away, the higher the cost. Additionally, any rewards distributed to you in the vesting period will also be burned in the process. For more details on this mechanism, refer to the Whitepaper.
 
 ```
-hydra hydragon stake --data-dir ./node-secrets --self true --amount 10000000000000000000000 --vesting-period 52 --jsonrpc http://localhost:8545
+hydra hydragon stake --data-dir ./node-secrets --self true --amount 15000000000000000000000 --vesting-period 52 --jsonrpc http://localhost:8545
 ```
 
 **Note:** The amounts are specified in wei, and the specified value will be added to your existing staked amount, if applicable.
+
+**Note:** You can vest your already staked balance by setting the 'amount' flag to 0.
+
+**Note:** If you have a prevoiusly staked balance and then you execute the command above with X amount, the vested balance will be old balance + X amount, meaning that the vesting is applied on the total balance.
 
 Congratulations! Enjoy the enhanced rewards and benefits provided by Vested Staking.
 
@@ -226,31 +232,33 @@ hydra hydragon commission --data-dir ./node-secrets --claim true --jsonrpc http:
 ```
 
 ### Ban Validator
+
 To reduce the risk of stalling caused by validators experiencing temporary issues or acting maliciously, we’ve implemented an ejection and ban mechanism. Anyone who recongizes a suspicious activity, and the rules are met, can execute the ban process. Below is an outline of how the system works (specific conditions are detailed in our [genesis contracts](https://github.com/Hydra-Chain/hydragon-core-contracts)):
-  1. **Initial Ejection**: If your validator stops proposing or participating in consensus whether due to hardware failure, software issues, or malicious intent—the ban procedure will be initiated. The validator will be ejected, allowing time for recovery. If no action is taken, a ban may follow. The threshold to trigger this process is initially set at 18,000 blocks (~2 hours), depending on block creation speed.
-  2. **Ban Procedure**: After ejection, you can rejoin by resolving the issue and running the appropriate command (explained [below](#re-activate)). However, if you fail to act within the final threshold (86,400 seconds or ~24 hours), your validator will be permanently banned. This will result in a penalty, a small reward for the reporter, and the remaining funds being prepared for withdrawal. Once banned, you will no longer be able to participate as a validator.
 
-  #### Re-activate
+1. **Initial Ejection**: If your validator stops proposing or participating in consensus whether due to hardware failure, software issues, or malicious intent—the ban procedure will be initiated. The validator will be ejected, allowing time for recovery. If no action is taken, a ban may follow. The threshold to trigger this process is initially set at 18,000 blocks (~2 hours), depending on block creation speed.
+2. **Ban Procedure**: After ejection, you can rejoin by resolving the issue and running the appropriate command (explained [below](#re-activate)). However, if you fail to act within the final threshold (86,400 seconds or ~24 hours), your validator will be permanently banned. This will result in a penalty (currently 700 HYDRA) , a small reward for the reporter (currently 300 HYDRA; applied only if ban is executed by reporter different than the Governance), and the remaining funds being prepared for withdrawal. Once banned, you will no longer be able to participate as a validator.
 
-  After resolving the encountered issues, you should restart the node to sync with the blockchain. Once synced, you can reactivate by running the following command:
+#### Re-activate
 
-  ```
-  hydra hydragon terminate-ban --data-dir ./node-secrets --jsonrpc http://localhost:8545
-  ```
+After resolving the encountered issues, you should restart the node to sync with the blockchain. Once synced, you can reactivate by running the following command:
 
-  Congratulations, you’re back in action!
-  
-  ***Note:** Please keep in mind that if malicious behavior is detected, a manual ban can be initiated by the Hydragon DAO. Furthermore, if the conditions for initiating a ban and enforcing the ban are met, a user can execute the relevant functions by interacting with the contract via the explorer or programmatically.*
+```
+hydra hydragon terminate-ban --data-dir ./node-secrets --jsonrpc http://localhost:8545
+```
 
-  #### Withdrawing funds after ban
+Congratulations, you’re back in action!
 
-  If your validator has been banned, you can still withdraw the remaining funds after the penalty and burned rewards have been deducted. Use the following command:
+**Note:** Please keep in mind that if malicious behavior is detected, a manual ban can be initiated by the Hydra DAO. Furthermore, if the conditions for initiating a ban and enforcing the ban are met, a user can execute the relevant functions by interacting with the contract via the explorer or programmatically.
 
-  ```
-  hydra hydragon withdraw --data-dir ./node-secrets --banned --jsonrpc http://localhost:8545
-  ```
+#### Withdrawing funds after ban
 
-  ***Note:*** If your machine is no longer running, you can use [our RPC](#adding-hydragon-network-to-metamask) as the value for the jsonrpc flag.
+If your validator has been banned, you can still withdraw the remaining funds after the penalty and burned rewards have been deducted. Use the following command:
+
+```
+hydra hydragon withdraw --data-dir ./node-secrets --banned --jsonrpc http://localhost:8545
+```
+
+**_Note:_** If your machine is no longer running, you can use [our RPC](#adding-hydragon-network-to-metamask) as the value for the jsonrpc flag.
 
 ### Command Line Interface
 
@@ -264,23 +272,23 @@ Here are the Hydra Chain node CLI commands that currently can be used:
 
 - Available Commands:
 
-| Command    | Description                                                                                                                   |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| backup     | Create blockchain backup file by fetching blockchain data from the running node                                               |
-| bridge     | Top level bridge command                                                                                                      |
-| completion | Generate the autocompletion script for the specified shell                                                                    |
-| genesis    | Generates the genesis configuration file with the passed in parameters                                                        |
-| help       | Help about any command                                                                                                        |
+| Command    | Description                                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| backup     | Create blockchain backup file by fetching blockchain data from the running node                                                |
+| bridge     | Top level bridge command                                                                                                       |
+| completion | Generate the autocompletion script for the specified shell                                                                     |
+| genesis    | Generates the genesis configuration file with the passed in parameters                                                         |
+| help       | Help about any command                                                                                                         |
 | hydragon   | Executes Hydra Chain's Hydragon consensus commands, including staking, unstaking, rewards management, and validator operations |
-| license    | Returns Hydra Chain license and dependency attributions                                                                       |
-| monitor    | Starts logging block add / remove events on the blockchain                                                                    |
-| peers      | Top level command for interacting with the network peers. Only accepts subcommands                                            |
-| regenesis  | Copies trie for specific block to a separate folder                                                                           |
-| secrets    | Top level SecretsManager command for interacting with secrets functionality. Only accepts subcommands                         |
-| server     | The default command that starts the Hydra Chain client by bootstrapping all modules together                                  |
-| status     | Returns the status of the Hydra Chain client                                                                                  |
-| txpool     | Top level command for interacting with the transaction pool. Only accepts subcommands                                         |
-| version    | Returns the current Hydra Chain client version                                                                                |
+| license    | Returns Hydra Chain license and dependency attributions                                                                        |
+| monitor    | Starts logging block add / remove events on the blockchain                                                                     |
+| peers      | Top level command for interacting with the network peers. Only accepts subcommands                                             |
+| regenesis  | Copies trie for specific block to a separate folder                                                                            |
+| secrets    | Top level SecretsManager command for interacting with secrets functionality. Only accepts subcommands                          |
+| server     | The default command that starts the Hydra Chain client by bootstrapping all modules together                                   |
+| status     | Returns the status of the Hydra Chain client                                                                                   |
+| txpool     | Top level command for interacting with the transaction pool. Only accepts subcommands                                          |
+| version    | Returns the current Hydra Chain client version                                                                                 |
 
 - Flags:
 
