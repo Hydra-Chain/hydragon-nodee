@@ -70,8 +70,9 @@ func (p *Precompiled) setupContracts() {
 	// Istanbul fork
 	p.register("9", &blake2f{p})
 
+	// Hydra modification: we don't use a separate native erc20 token, thus, we don't need this precompile
 	// Native transfer precompile
-	p.register(contracts.NativeTransferPrecompile.String(), &nativeTransfer{})
+	// p.register(contracts.NativeTransferPrecompile.String(), &nativeTransfer{})
 
 	// Console precompile
 	// p.register(contracts.ConsolePrecompile.String(), &console{})
