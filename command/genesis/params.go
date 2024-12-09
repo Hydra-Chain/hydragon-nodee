@@ -23,17 +23,19 @@ import (
 )
 
 const (
-	dirFlag                      = "dir"
-	nameFlag                     = "name"
-	premineFlag                  = "premine"
-	chainIDFlag                  = "chain-id"
-	epochSizeFlag                = "epoch-size"
-	epochRewardFlag              = "epoch-reward"
-	blockGasLimitFlag            = "block-gas-limit"
-	burnContractFlag             = "burn-contract"
-	genesisBaseFeeConfigFlag     = "base-fee-config"
-	posFlag                      = "pos"
-	nativeTokenConfigFlag        = "native-token-config"
+	dirFlag           = "dir"
+	nameFlag          = "name"
+	premineFlag       = "premine"
+	chainIDFlag       = "chain-id"
+	epochSizeFlag     = "epoch-size"
+	epochRewardFlag   = "epoch-reward"
+	blockGasLimitFlag = "block-gas-limit"
+	// Hydra modification: we use the 0x0 address for burning, thus, we don't need the this flag
+	// burnContractFlag             = "burn-contract"
+	genesisBaseFeeConfigFlag = "base-fee-config"
+	posFlag                  = "pos"
+	// Hydra modification: we don't use a separate native erc20 token, thus, we don't need this flag
+	// nativeTokenConfigFlag        = "native-token-config"
 	blockTrackerPollIntervalFlag = "block-tracker-poll-interval"
 	proxyContractsAdminFlag      = "proxy-contracts-admin"
 	governanceFlag               = "governance"
@@ -156,16 +158,17 @@ func (p *genesisParams) validateFlags() error {
 		return err
 	}
 
-	if p.isPolyBFTConsensus() {
-		if err := p.extractNativeTokenMetadata(); err != nil {
-			return err
-		}
+	if p.isPolyBFTConsensus() { //nolint:wsl
+		// Hydra modification: we don't use a separate native erc20 token neither a burn contract,
+		// thus, we don't need the following validations
+		// if err := p.extractNativeTokenMetadata(); err != nil {
+		// 	return err
+		// }
 
-		if err := p.validateBurnContract(); err != nil {
-			return err
-		}
+		// if err := p.validateBurnContract(); err != nil {
+		// 	return err
+		// }
 
-		// Hydra modification: We don't need a reserve account premining, we use the 0x0 address for burning
 		// if err := p.validatePremineInfo(); err != nil {
 		// 	return err
 		// }
@@ -508,31 +511,32 @@ func (p *genesisParams) validateBlockTrackerPollInterval() error {
 	return nil
 }
 
+// Hydra modification: we use the 0x0 address for burning, thus, we don't need this validation function
 // validateBurnContract validates burn contract. If native token is mintable,
 // burn contract flag must not be set. If native token is non mintable only one burn contract
 // can be set and the specified address will be used to predeploy default EIP1559 burn contract.
-func (p *genesisParams) validateBurnContract() error {
-	if p.isBurnContractEnabled() {
-		burnContractInfo, err := parseBurnContractInfo(p.burnContract)
-		if err != nil {
-			return fmt.Errorf("invalid burn contract info provided: %w", err)
-		}
+// func (p *genesisParams) validateBurnContract() error {
+// 	if p.isBurnContractEnabled() {
+// 		burnContractInfo, err := parseBurnContractInfo(p.burnContract)
+// 		if err != nil {
+// 			return fmt.Errorf("invalid burn contract info provided: %w", err)
+// 		}
 
-		if p.nativeTokenConfig.IsMintable {
-			if burnContractInfo.Address != types.ZeroAddress {
-				return errors.New(
-					"only zero address is allowed as burn destination for mintable native token",
-				)
-			}
-		} else {
-			if burnContractInfo.Address == types.ZeroAddress {
-				return errors.New("it is not allowed to deploy burn contract to 0x0 address")
-			}
-		}
-	}
+// 		if p.nativeTokenConfig.IsMintable {
+// 			if burnContractInfo.Address != types.ZeroAddress {
+// 				return errors.New(
+// 					"only zero address is allowed as burn destination for mintable native token",
+// 				)
+// 			}
+// 		} else {
+// 			if burnContractInfo.Address == types.ZeroAddress {
+// 				return errors.New("it is not allowed to deploy burn contract to 0x0 address")
+// 			}
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (p *genesisParams) validateGenesisBaseFeeConfig() error {
 	if p.baseFeeConfig == "" {
@@ -582,22 +586,24 @@ func (p *genesisParams) validateProxyContractsAdmin() error {
 	return nil
 }
 
+// Hydra modification: we use the 0x0 address for burning and not using a separate native erc20 token,
+// thus, we don't need the following two functions
 // isBurnContractEnabled returns true in case burn contract info is provided
-func (p *genesisParams) isBurnContractEnabled() bool {
-	return p.burnContract != ""
-}
+// func (p *genesisParams) isBurnContractEnabled() bool {
+// 	return p.burnContract != ""
+// }
 
 // extractNativeTokenMetadata parses provided native token metadata (such as name, symbol and decimals count)
-func (p *genesisParams) extractNativeTokenMetadata() error {
-	tokenConfig, err := polybft.ParseRawTokenConfig(p.nativeTokenConfigRaw)
-	if err != nil {
-		return err
-	}
+// func (p *genesisParams) extractNativeTokenMetadata() error {
+// 	tokenConfig, err := polybft.ParseRawTokenConfig(p.nativeTokenConfigRaw)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	p.nativeTokenConfig = tokenConfig
+// 	p.nativeTokenConfig = tokenConfig
 
-	return nil
-}
+// 	return nil
+// }
 
 func (p *genesisParams) getResult() command.CommandResult {
 	return &GenesisResult{

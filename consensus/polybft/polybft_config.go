@@ -3,10 +3,7 @@ package polybft
 import (
 	"encoding/json"
 	"errors"
-	"math"
 	"math/big"
-	"strconv"
-	"strings"
 
 	"github.com/0xPolygon/polygon-edge/chain"
 	"github.com/0xPolygon/polygon-edge/consensus/polybft/validator"
@@ -16,7 +13,7 @@ import (
 
 const (
 	ConsensusName              = "polybft"
-	minNativeTokenParamsNumber = 4
+	minNativeTokenParamsNumber = 3
 
 	defaultNativeTokenName     = "Hydra"
 	defaultNativeTokenSymbol   = "HYDRA"
@@ -206,59 +203,60 @@ type TokenConfig struct {
 	Owner      types.Address `json:"owner"`
 }
 
-func ParseRawTokenConfig(rawConfig string) (*TokenConfig, error) {
-	if rawConfig == "" {
-		return DefaultTokenConfig, nil
-	}
+// Hydra modification: we don't use a separate native erc20 token, thus, we don't need this function
+// func ParseRawTokenConfig(rawConfig string) (*TokenConfig, error) {
+// 	if rawConfig == "" {
+// 		return DefaultTokenConfig, nil
+// 	}
 
-	params := strings.Split(rawConfig, ":")
-	if len(params) < minNativeTokenParamsNumber {
-		return nil, errInvalidTokenParams
-	}
+// 	params := strings.Split(rawConfig, ":")
+// 	if len(params) < minNativeTokenParamsNumber {
+// 		return nil, errInvalidTokenParams
+// 	}
 
-	// name
-	name := strings.TrimSpace(params[0])
-	if name == "" {
-		return nil, errInvalidTokenParams
-	}
+// 	// name
+// 	name := strings.TrimSpace(params[0])
+// 	if name == "" {
+// 		return nil, errInvalidTokenParams
+// 	}
 
-	// symbol
-	symbol := strings.TrimSpace(params[1])
-	if symbol == "" {
-		return nil, errInvalidTokenParams
-	}
+// 	// symbol
+// 	symbol := strings.TrimSpace(params[1])
+// 	if symbol == "" {
+// 		return nil, errInvalidTokenParams
+// 	}
 
-	// decimals
-	decimals, err := strconv.ParseUint(strings.TrimSpace(params[2]), 10, 8)
-	if err != nil || decimals > math.MaxUint8 {
-		return nil, errInvalidTokenParams
-	}
+// 	// decimals
+// 	decimals, err := strconv.ParseUint(strings.TrimSpace(params[2]), 10, 8)
+// 	if err != nil || decimals > math.MaxUint8 {
+// 		return nil, errInvalidTokenParams
+// 	}
 
-	// is mintable native token used
-	isMintable, err := strconv.ParseBool(strings.TrimSpace(params[3]))
-	if err != nil {
-		return nil, errInvalidTokenParams
-	}
+// 	// is mintable native token used
+// 	isMintable, err := strconv.ParseBool(strings.TrimSpace(params[3]))
+// 	if err != nil {
+// 		return nil, errInvalidTokenParams
+// 	}
 
-	// in case it is mintable native token, it is expected to have 5 parameters provided
-	if isMintable && len(params) != minNativeTokenParamsNumber+1 {
-		return nil, errInvalidTokenParams
-	}
+// 	// in case it is mintable native token, it is expected to have 5 parameters provided
+// 	if isMintable && len(params) != minNativeTokenParamsNumber+1 {
+// 		return nil, errInvalidTokenParams
+// 	}
 
-	// owner address
-	owner := types.ZeroAddress
-	if isMintable {
-		owner = types.StringToAddress(strings.TrimSpace(params[4]))
-	}
+// 	// owner address
+// 	owner := types.ZeroAddress
+// 	if isMintable {
+// 		owner = types.StringToAddress(strings.TrimSpace(params[4]))
+// 	}
 
-	return &TokenConfig{
-		Name:       name,
-		Symbol:     symbol,
-		Decimals:   uint8(decimals),
-		IsMintable: isMintable,
-		Owner:      owner,
-	}, nil
-}
+// 	return &TokenConfig{
+// 		Name:       name,
+// 		Symbol:     symbol,
+// 		Decimals:   uint8(decimals),
+// 		IsMintable: isMintable,
+// 		Owner:      owner,
+// 	}, nil
+// }
 
 // BurnContractInfo contains metadata for burn contract, which is part of EIP-1559 specification
 type BurnContractInfo struct {
