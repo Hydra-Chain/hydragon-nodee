@@ -83,15 +83,16 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		premineBalances[premine.Address] = premine
 	}
 
-	if !p.nativeTokenConfig.IsMintable {
-		// validate premine map, no premine is allowed if token is not mintable,
-		// except for the zero address
-		for a := range premineBalances {
-			if a != types.ZeroAddress {
-				return errNoPremineAllowed
-			}
-		}
-	}
+	// Hydra modification: we don't use native token and alaways premine balances to the specified accounts
+	// if !p.nativeTokenConfig.IsMintable {
+	// 	// validate premine map, no premine is allowed if token is not mintable,
+	// 	// except for the zero address
+	// 	for a := range premineBalances {
+	// 		if a != types.ZeroAddress {
+	// 			return errNoPremineAllowed
+	// 		}
+	// 	}
+	// }
 
 	initialValidators, err := p.getValidatorAccounts()
 	if err != nil {
@@ -156,23 +157,24 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		Bootnodes: p.bootnodes,
 	}
 
-	if p.isBurnContractEnabled() {
-		chainConfig.Params.BurnContract = make(map[uint64]types.Address, 1)
+	// Hydra modification: we use the 0x0 address for burning, thus, we don't need this
+	// if p.isBurnContractEnabled() {
+	// 	chainConfig.Params.BurnContract = make(map[uint64]types.Address, 1)
 
-		burnContractInfo, err := parseBurnContractInfo(p.burnContract)
-		if err != nil {
-			return err
-		}
+	// 	burnContractInfo, err := parseBurnContractInfo(p.burnContract)
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
-		if !p.nativeTokenConfig.IsMintable {
-			// burn contract can be specified on arbitrary address for non-mintable native tokens
-			chainConfig.Params.BurnContract[burnContractInfo.BlockNumber] = burnContractInfo.Address
-			chainConfig.Params.BurnContractDestinationAddress = burnContractInfo.DestinationAddress
-		} else {
-			// burnt funds are sent to zero address when dealing with mintable native tokens
-			chainConfig.Params.BurnContract[burnContractInfo.BlockNumber] = types.ZeroAddress
-		}
-	}
+	// 	if !p.nativeTokenConfig.IsMintable {
+	// 		// burn contract can be specified on arbitrary address for non-mintable native tokens
+	// 		chainConfig.Params.BurnContract[burnContractInfo.BlockNumber] = burnContractInfo.Address
+	// 		chainConfig.Params.BurnContractDestinationAddress = burnContractInfo.DestinationAddress
+	// 	} else {
+	// 		// burnt funds are sent to zero address when dealing with mintable native tokens
+	// 		chainConfig.Params.BurnContract[burnContractInfo.BlockNumber] = types.ZeroAddress
+	// 	}
+	// }
 
 	totalStake := big.NewInt(0)
 

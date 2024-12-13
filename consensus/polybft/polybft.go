@@ -920,22 +920,23 @@ func initProxies(transition *state.Transition, admin types.Address,
 	return nil
 }
 
-func getBurnContractAddress(
-	config *chain.Chain,
-	polyBFTConfig PolyBFTConfig,
-) (types.Address, bool) {
-	if config.Params.BurnContract != nil &&
-		len(config.Params.BurnContract) == 1 &&
-		!polyBFTConfig.NativeTokenConfig.IsMintable {
-		for _, address := range config.Params.BurnContract {
-			if _, ok := config.Genesis.Alloc[address]; ok {
-				return address, true
-			}
-		}
-	}
+// Hydra modification: we use the 0x0 address for burning, thus, we don't need this function
+// func getBurnContractAddress(
+// 	config *chain.Chain,
+// 	polyBFTConfig PolyBFTConfig,
+// ) (types.Address, bool) {
+// 	if config.Params.BurnContract != nil &&
+// 		len(config.Params.BurnContract) == 1 &&
+// 		!polyBFTConfig.NativeTokenConfig.IsMintable {
+// 		for _, address := range config.Params.BurnContract {
+// 			if _, ok := config.Genesis.Alloc[address]; ok {
+// 				return address, true
+// 			}
+// 		}
+// 	}
 
-	return types.ZeroAddress, false
-}
+// 	return types.ZeroAddress, false
+// }
 
 // A function used to initialize a big.Int slice with a given size and value
 func NewBigIntSlice(size int, value int64) []*big.Int {

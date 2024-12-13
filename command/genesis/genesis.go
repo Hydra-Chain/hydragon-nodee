@@ -71,12 +71,13 @@ func setFlags(cmd *cobra.Command) {
 		"the maximum amount of gas used by all transactions in a block",
 	)
 
-	cmd.Flags().StringVar(
-		&params.burnContract,
-		burnContractFlag,
-		"",
-		"the burn contract block and address (format: <block>:<address>[:<burn destination>])",
-	)
+	// Hydra modification: we use the 0x0 address for burning, thus, we don't need this flag
+	// cmd.Flags().StringVar(
+	// 	&params.burnContract,
+	// 	burnContractFlag,
+	// 	"",
+	// 	"the burn contract block and address (format: <block>:<address>[:<burn destination>])",
+	// )
 
 	cmd.Flags().StringVar(
 		&params.baseFeeConfig,
@@ -223,13 +224,14 @@ func setFlags(cmd *cobra.Command) {
 			"trie root from the corresponding triedb",
 		)
 
-		cmd.Flags().StringVar(
-			&params.nativeTokenConfigRaw,
-			nativeTokenConfigFlag,
-			"",
-			"native token configuration, provided in the following format: "+
-				"<name:symbol:decimals count:mintable flag:[mintable token owner address]>",
-		)
+		// Hydra modification: we don't use a separate native erc20 token, thus, we don't need this flag
+		// cmd.Flags().StringVar(
+		// 	&params.nativeTokenConfigRaw,
+		// 	nativeTokenConfigFlag,
+		// 	"",
+		// 	"native token configuration, provided in the following format: "+
+		// 		"<name:symbol:decimals count:mintable flag:[mintable token owner address]>",
+		// )
 
 		cmd.Flags().Uint64Var(
 			&params.blockTimeDrift,
