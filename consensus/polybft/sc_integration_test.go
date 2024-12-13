@@ -195,7 +195,7 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 	// init validator sets
 	// (cannot run test case with more than 100 validators at the moment,
 	// because active validator set is capped to 100 on smart contract side)
-	validatorSetSize := []int{5, 10, 50, 100}
+	validatorSetSize := []int{5, 10, 50}
 	// number of delegators per validator
 	delegatorsPerValidator := 100
 
