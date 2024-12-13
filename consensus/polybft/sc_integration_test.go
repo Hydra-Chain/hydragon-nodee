@@ -197,7 +197,7 @@ func TestIntegration_CommitEpoch(t *testing.T) {
 	// because active validator set is capped to 100 on smart contract side)
 	validatorSetSize := []int{5, 10, 50}
 	// number of delegators per validator
-	delegatorsPerValidator := 50
+	delegatorsPerValidator := 100
 
 	initialBalance := uint64(5e18) // 5 tokens
 	reward := oneCoin
