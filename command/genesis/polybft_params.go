@@ -83,7 +83,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 		premineBalances[premine.Address] = premine
 	}
 
-	// Hydra modification: we always use mintable native token and premine balances to specified accounts
+	// Hydra modification: we don't use native token and alaways premine balances to the specified accounts
 	// if !p.nativeTokenConfig.IsMintable {
 	// 	// validate premine map, no premine is allowed if token is not mintable,
 	// 	// except for the zero address

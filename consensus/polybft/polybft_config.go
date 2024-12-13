@@ -13,7 +13,7 @@ import (
 
 const (
 	ConsensusName              = "polybft"
-	minNativeTokenParamsNumber = 3
+	minNativeTokenParamsNumber = 4
 
 	defaultNativeTokenName     = "Hydra"
 	defaultNativeTokenSymbol   = "HYDRA"
