@@ -153,6 +153,7 @@ func (p *genesisParams) generatePolyBftChainConfig(o command.OutputFormatter) er
 			Engine: map[string]interface{}{
 				string(server.PolyBFTConsensus): polyBftConfig,
 			},
+			BlockGasTarget: 100000000,
 		},
 		Bootnodes: p.bootnodes,
 	}
