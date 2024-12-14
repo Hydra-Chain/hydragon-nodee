@@ -419,9 +419,10 @@ func (p *genesisParams) initGenesisConfig() error {
 			GasUsed:    command.DefaultGenesisGasUsed,
 		},
 		Params: &chain.Params{
-			ChainID: int64(p.chainID), //nolint:gosec
-			Forks:   enabledForks,
-			Engine:  p.consensusEngineConfig,
+			ChainID:        int64(p.chainID), //nolint:gosec
+			Forks:          enabledForks,
+			Engine:         p.consensusEngineConfig,
+			BlockGasTarget: 100000000,
 		},
 		Bootnodes: p.bootnodes,
 	}
