@@ -18,6 +18,7 @@ CHAIN_CUSTOM_OPTIONS=$(
 --premine 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c:0x314dc6448d932ae0a456589c0000
 --premine 0x8c293C5b70b6493856CF4C7419E1Fb137b97B25d:0xD3C21BCECCEDA1000000
 --proxy-contracts-admin 0x211881Bb4893dd733825A2D97e48bFc38cc70a0c
+--governance 0x94bc8eCfd8D8CD7CBE02b79F05b7b4B2eDEFe60E
 EOL
 )
 
@@ -53,7 +54,6 @@ case "$1" in
     --validators-path /data \
     --validators-prefix data- \
     --secrets-config /data/secretsManagerConfig.json \
-    --native-token-config "Hydra Token:dHYDRA:18:true:$(echo "$secrets" | jq -r '.[0] | .address')" \
     --bootnode "/dns4/node-1/tcp/1478/p2p/$(echo "$secrets" | jq -r '.[0] | .node_id')" \
     --bootnode "/dns4/node-2/tcp/1478/p2p/$(echo "$secrets" | jq -r '.[1] | .node_id')" \
     --bootnode "/dns4/node-3/tcp/1478/p2p/$(echo "$secrets" | jq -r '.[2] | .node_id')" \
