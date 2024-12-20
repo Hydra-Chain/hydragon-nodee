@@ -89,10 +89,10 @@ The foundation of your validator identity is built upon three distinct private k
 There are different options on how and where the secrets to be stored but we recommend storing the keys encrypted on your local file system and maintaining offline backups. To generate these keys, use the following command, which encrypts them locally:
 
 ```
-hydra secrets init --chain-id 8844 --data-dir node-secrets
+hydra secrets init --chain-id 4488 --data-dir node-secrets
 ```
 
-This command initiates the creation of your node's secrets for a testnet chain with ID 8844, storing them in a directory named node-secrets. During this process, you'll confirm each secret and establish a password for file encryption.
+This command initiates the creation of your node's secrets for the HydraChain with ID 4488, storing them in a directory named node-secrets. During this process, you'll confirm each secret and establish a password for file encryption.
 
 Successful execution results in a summary of your generated and initialized secrets, including your public key (address), BLS public key, and node ID.
 
@@ -157,7 +157,7 @@ This process may take some time, as the node needs to fully sync with the blockc
 
 After your node is operational and fully synced, you're ready to become a validator. This requires:
 
-- Funding Your Account: Obtain sufficient Hydra by visiting the [Faucet](#faucet) section. You can obtain funds to a second metamask account and transfer them to the validator address. Or alternatively you can import the private key of your validator into Metamask to operate with it directly.
+- (TestNet Only) Funding Your Account: Obtain sufficient Hydra by visiting the [Faucet](#faucet) section. You can obtain funds to a second metamask account and transfer them to the validator address. Or alternatively you can import the private key of your validator into Metamask to operate with it directly.
 
 **Note:** Currently, you will have to import the validator's private key into Metamask to be able to interact with the web UI which can be considered as a security issue, but we will provide better option in the future.
 
@@ -236,7 +236,7 @@ hydra hydragon commission --data-dir ./node-secrets --claim true --jsonrpc http:
 To reduce the risk of stalling caused by validators experiencing temporary issues or acting maliciously, we’ve implemented an ejection and ban mechanism. Anyone who recongizes a suspicious activity, and the rules are met, can execute the ban process. Below is an outline of how the system works (specific conditions are detailed in our [genesis contracts](https://github.com/Hydra-Chain/hydragon-core-contracts)):
 
 1. **Initial Ejection**: If your validator stops proposing or participating in consensus whether due to hardware failure, software issues, or malicious intent—the ban procedure will be initiated. The validator will be ejected, allowing time for recovery. If no action is taken, a ban may follow. The threshold to trigger this process is initially set at 18,000 blocks (~2 hours), depending on block creation speed.
-2. **Ban Procedure**: After ejection, you can rejoin by resolving the issue and running the appropriate command (explained [below](#re-activate)). However, if you fail to act within the final threshold (86,400 seconds or ~24 hours), your validator will be permanently banned. This will result in a penalty (currently 700 HYDRA) , a small reward for the reporter (currently 300 HYDRA; applied only if ban is executed by reporter different than the Governance), and the remaining funds being prepared for withdrawal. Once banned, you will no longer be able to participate as a validator.
+2. **Ban Procedure**: After ejection, you can rejoin by resolving the issue and running the appropriate command (explained [below](#re-activate)). However, if you fail to act within the final threshold (86,400 seconds or ~24 hours), your validator will be permanently banned. This will result in a penalty (currently 1,000 HYDRA) , of which 700 HYDRA will be burned and a small reward for the reporter (currently 300 HYDRA; applied only if ban is executed by reporter different than the Governance), and the remaining funds being prepared for withdrawal.
 
 #### Re-activate
 
@@ -339,7 +339,7 @@ https://rpc.testnet.hydrachain.org
 **Chain ID:**
 
 ```
-8844
+4488
 ```
 
 **Currency symbol:**
@@ -357,7 +357,7 @@ https://hydragon.hydrachain.org
 - Then, click `Save` to add the network.
 - After performing the above steps, you will be able to see the custom network when you access the network selector (same as the first step).
 
-### Faucet
+### Faucet (TestNet Only)
 
 In the Faucet section, users have the option to request a fixed amount of test HYDRA coins, granting them opportunity to explore the staking/delegation processes and other features. Please note that there will be a waiting period before users can request test tokens again.
 
