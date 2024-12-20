@@ -130,7 +130,7 @@ For more details on available commands and their usage, you can append the `--he
 
 The genesis.json file is crucial, containing details about the genesis block and node configurations.
 **Important: Do not alter this file to avoid potential loss of funds.**
-Future releases will automate this configuration. You can find the Testnet genesis file in the extracted folder containing the [release assets](#executable) and place it in your node directory.
+Future releases will automate this configuration. You can find the HydraChain genesis file in the extracted folder containing the [release assets](#executable) and place it in your node directory.
 
 #### Secrets Configuration File
 
@@ -313,7 +313,7 @@ Here are the Hydra Chain node CLI commands that currently can be used:
 
 ## Becoming a delegator
 
-We've implemented the initial version of a straightforward dashboard, enabling users to connect their wallet, request testing HYDRA coins from our Faucet, and access to [delegation](#delegation) section where one can delegate funds to validators. To access the Dashboard Interface, please visit [testnetapp.hydrachain.org](https://testnetapp.hydrachain.org).
+We've implemented the initial version of a straightforward Staking dashboard, where one can delegate funds to validators. To access the Dashboard Interface, please visit [stake.hydrachain.org](https://stake.hydrachain.org/).
 
 ### Adding Hydragon network to Metamask
 
@@ -327,13 +327,13 @@ In this section, we will explain how to add the Hydragon network to your Metamas
 **Network name:**
 
 ```
-Hydra Testnet (or any name that suits you)
+Hydra Chain
 ```
 
 **New RPC URL:**
 
 ```
-https://rpc.testnet.hydrachain.org
+https://rpc-mainnet.hydrachain.org
 ```
 
 **Chain ID:**
@@ -345,13 +345,13 @@ https://rpc.testnet.hydrachain.org
 **Currency symbol:**
 
 ```
-tHYDRA
+HYDRA
 ```
 
 **Block explorer URL (Optional):**
 
 ```
-https://hydragon.hydrachain.org
+https://skynet.hydrachain.org
 ```
 
 - Then, click `Save` to add the network.
@@ -370,7 +370,7 @@ In the Faucet section, users have the option to request a fixed amount of test H
 
 In the Delegation section, users can interact with an intuitive UI to delegate to active validators. There are two types of delegation available: normal delegation, which can be undelegated at any time. It offers a fixed APR. There is also a vested position delegation, which includes a lockup mechanism. With vested delegation, users can potentially earn up to almost 80% APR, depending on different economical parameters. It's important to note that penalties apply for undelegating from a still active vested positions. More details regarding APR calculations and vested delegation can be found in our upcoming public paper. Here's how to proceed:
 
-- Navigate to [testnetapp.hydrachain.org](https://testnetapp.hydrachain.org) to access the Delegation section of our platform. If you're already on the platform, you can find the `Delegation` section in the sidebar on the left.
+- Navigate to [stake.hydrachain.org](https://stake.hydrachain.org) to access the Delegation section of our platform. If you're already on the platform, you can find the `Delegation` section in the sidebar on the left.
 
 - Upon entering the Delegation section, you'll find an overview of your delegation, including the number of validators, the current APR, the total delegated HYDRA, and a table listing all the validators. Click on Actions (Details) in order to see more details for the selected validator.
 
